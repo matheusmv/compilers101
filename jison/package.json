@@ -1,0 +1,15 @@
+{
+  "name": "jison",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "bison": "jison echo.jison -o echo.js",
+    "build": "npm run bison && node beforeRollup.js",
+    "start": "npm run build && node index.js"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "jison": "^0.4.18"
+  }
+}
