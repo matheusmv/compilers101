@@ -14,8 +14,8 @@ WS [ \t\n]
 CHARACTER [a-zA-Z]
 DIGIT [0-9]
 
-INT [1-9]{DIGIT}*
-FLOAT {DIGIT}+\.{DIGIT}+
+INT [+-]?(0|[1-9]{DIGIT}*)
+FLOAT [+-]?{DIGIT}+\.{DIGIT}+
 CHAR '{CHARACTER}'
 STRING \"(.*)\"
 BOOL "true"|"false"
