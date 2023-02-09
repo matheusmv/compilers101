@@ -26,7 +26,7 @@
 %left '^'
 %right '!'
 %right '%'
-%leght UMINUS
+%left UMINUS
 
 %start exprs
 %%
