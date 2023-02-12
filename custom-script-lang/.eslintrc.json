@@ -17,5 +17,6 @@
   "plugins": ["@typescript-eslint"],
   "rules": {
     "no-useless-constructor": "off"
-  }
+  },
+  "ignorePatterns": ["node_modules", "dist"]
 }
