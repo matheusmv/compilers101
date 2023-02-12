@@ -6,7 +6,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "start": "node ./dist"
   },
   "devDependencies": {
     "@types/node": "^18.13.0",
