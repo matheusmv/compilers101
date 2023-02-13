@@ -25,11 +25,11 @@ WS : [\s\t\n\r]
 
 COMMENT : {SLASH}{SLASH}(.)*|{SLASH}{STAR}{NEW_LINE}?(.*){NEW_LINE}?{STAR}{SLASH}
 
-INDET : (_)*{CHAR}(_|{CHAR}|{DIGIT})*
-INT : [1-9]{DIGIT}*
+IDENT : (_)*{CHAR}(_|{CHAR}|{DIGIT})*
+INT : 0|[1-9]{DIGIT}*
 FLOAT : {DIGIT}+\.{DIGIT}+
 CHAR : '{CHAR}'
-STRING : \"({CHAR}|{DIGIT}|{NEW_LINE}|{CARRIAGE_RETURN}|{SPACE}|{TAB}|')*\" // need improvement
+STRING : \"(.*)\" // need improvement
 BOOL : "true"|"false"
 
 ADD : "+"
@@ -38,6 +38,7 @@ MUL : "*"
 QUO : "/"
 REM : "%"
 
+CPLMT : "~"
 AND : "&"
 OR : "|"
 XOR : "^"
@@ -70,7 +71,7 @@ NOT : "!"
 NEQ : "!="
 LEQ : "<="
 GEQ : ">="
-DEFINE : ":="
+ELLIPSIS : "..."
 
 LPAREN : "("
 LBRACK : "["
@@ -84,76 +85,18 @@ RBRACE : "}"
 SEMICOLON : ";"
 COLON : ":"
 
-VAR = INDET : "var"
-CONST = INDET : "const"
+LET = IDENT : "let"
+IF = IDENT : "if"
+ELSE = IDENT : "else"
+FUNC = IDENT : "func"
+RETURN = IDENT : "return"
+WHILE = IDENT : "while"
+FOR = IDENT : "for"
+BREAK = IDENT : "break"
+CONTINUE = IDENT: "continue"
+NIL = IDENT : "nil"
 
-IF = INDET : "if"
-ELSE = INDET : "else"
-
-FOR = INDET : "for"
-
-SWITCH = INDET : "switch"
-CASE = INDET : "case"
-DEFAULT = INDET : "default"
-
-CONTINUE = INDET : "continue"
-BREAK = INDET : "break"
-
-FUNCTION = INDET : "function"
-RETURN = INDET : "return"
-
-STRUCT = INDET : "struct"
-TYPE = INDET : "type"
-
-TYPE_INT = INDET : "int"
-TYPE_INT32 = INDET : "int32"
-TYPE_INT64 = INDET : "int64"
-
-TYPE_FLOAT32 = INDET : "float32"
-TYPE_FLOAT64 = INDET : "float64"
-
-TYPE_STRING = INDET : "string"
-TYPE_BOOL = INDET : "bool"
-TYPE_BYTE = INDET : "byte"
 #NonTerminals
-<declarations>
-<declaration>
-<var_decl>
-<const_decl>
-<type_decl>
-<identifier_list>
-<expression_list>
-<identifier>
-<type>
-<expression>
-<term> 
-<factor>
-<add_op>
-<mul_op>
-<literal>
-<int_literal>
-<float_literal>
-<char_literal>
-<string_literal>
-<bool_literal>
+
 #Grammar
-<declarations> ::= <declaration> <declarations> | <declaration> ;
-<declaration> ::= <var_decl> | <const_decl> | <type_decl> ;
-<var_decl> ::= VAR <identifier_list> <type> ASSIGN <expression_list> ;
-<const_decl> ::= CONST <identifier_list> <type> ASSIGN <expression_list>  ;
-<type_decl> ::= TYPE <identifier> <type> ;
-<identifier_list> ::= <identifier> COMMA <identifier_list> | <identifier> ;
-<expression_list> ::= <expression> COMMA <expression_list> | <expression> ;
-<identifier> ::= INDET ;
-<type> ::= <identifier> | TYPE_INT | TYPE_INT32 | TYPE_INT64 | TYPE_FLOAT32 | TYPE_FLOAT64 | TYPE_STRING | TYPE_BOOL | TYPE_BYTE ;
-<expression> ::= <term> <add_op> <expression> | <term> ;
-<term> ::= <factor> <mul_op> <term> | <factor> ;
-<factor> ::= <identifier> | <literal> | LPAREN <expression> RPAREN ;
-<add_op> ::= ADD | SUB ;
-<mul_op> ::= MUL | QUO ;
-<literal> ::= <int_literal> | <float_literal> | <string_literal> | <bool_literal> ;
-<int_literal> ::=  INT ;
-<float_literal> ::=  FLOAT ;
-<char_literal> ::= CHAR ;
-<string_literal> ::= STRING ;
-<bool_literal> ::= BOOL;
+
