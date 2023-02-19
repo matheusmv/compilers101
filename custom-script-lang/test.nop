@@ -70,3 +70,6 @@ true && true
 1 | 1 + 1
 i |= i + 1
 true || true && false
+
+1 ^ 1 + 1
+i ^= i + 1

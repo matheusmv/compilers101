@@ -18,7 +18,7 @@ export enum TokenType {
   CPLMT = '~',
   AND = '&', //
   OR = '|', //
-  XOR = '^',
+  XOR = '^', //
   SHL = '<<',
   SHR = '>>',
 
@@ -30,7 +30,7 @@ export enum TokenType {
 
   AND_ASSIGN = '&=', //
   OR_ASSIGN = '|=', //
-  XOR_ASSIGN = '^=',
+  XOR_ASSIGN = '^=', //
   SHL_ASSIGN = '<<=',
   SHR_ASSIGN = '>>=',
 

@@ -133,6 +133,18 @@ export class Lexer {
           token = this.newToken(TokenType.OR, this.currentLiteral);
         }
         break;
+      case '^':
+        if (this.peekChar() === '=') {
+          const prev = this.currentLiteral;
+          this.readChar();
+          token = this.newToken(
+            TokenType.XOR_ASSIGN,
+            prev + this.currentLiteral,
+          );
+        } else {
+          token = this.newToken(TokenType.XOR, this.currentLiteral);
+        }
+        break;
       case '<':
         token = this.newToken(TokenType.LSS, this.currentLiteral);
         break;
