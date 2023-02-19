@@ -191,7 +191,7 @@ export class FunctionStatement implements Statement {
 
     out += `${this.tokenLiteral()} ${this.identifier.toString()}(${this.params
       .map((param) => param.toString())
-      .join(', ')}) ${this.body.toString()}}`;
+      .join(', ')}) ${this.body.toString()}`;
 
     return out;
   }

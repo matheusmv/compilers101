@@ -30,3 +30,13 @@ let y = x;
 for (let i = 0; i < 10; i = i + 1) {
     y = y / 2;
 }
+
+let y = x;
+for (let i = 0; i < 10; i += 1) {
+    y = y / 2;
+}
+
+let y = x;
+for (let i = 0; i < 10; i++) {
+    y = y / 2;
+}

@@ -127,7 +127,9 @@ const precedences: Map<TokenType, Precedence> = new Map([
   [TokenType.MUL, Precedence.PROD],
   [TokenType.QUO, Precedence.PROD],
   [TokenType.REM, Precedence.PROD],
+  [TokenType.INC, Precedence.ASSIGN],
   [TokenType.ASSIGN, Precedence.ASSIGN],
+  [TokenType.ADD_ASSIGN, Precedence.ASSIGN],
   [TokenType.LPAREN, Precedence.CALL],
 ]);
 
@@ -156,6 +158,8 @@ const binaryExprHander: Map<TokenType, BinaryExpressionHandler> = new Map([
   [TokenType.LSS, parseBinaryExpression],
   [TokenType.GTR, parseBinaryExpression],
   [TokenType.LPAREN, parseCallExpression],
+  [TokenType.ADD_ASSIGN, parseAssignExpression],
+  [TokenType.INC, parseAssignExpression],
   [TokenType.ASSIGN, parseAssignExpression],
 ]);
 
@@ -298,10 +302,11 @@ function parseForStatement(p: Parser): ForStatement {
     return null;
   }
 
-  let body: BlockStatement = null;
-  if (p.peekTokenIs(TokenType.LBRACE)) {
-    body = parseBlockStatement(p);
+  if (!p.expectPeek(TokenType.LBRACE)) {
+    return null;
   }
+
+  const body = parseBlockStatement(p);
 
   return new ForStatement(token, init, condition, update, body);
 }
@@ -358,6 +363,7 @@ function parseExpression(p: Parser, precedence: Precedence): Expression {
   ) {
     const binaryHandler = binaryExprHander.get(p.peekToken.type);
     if (!binaryHandler) {
+      p.noBinaryExprHandlerError(p.curToken.type);
       return leftExpr;
     }
 
@@ -417,9 +423,33 @@ function parseBoolean(p: Parser): Expression {
 
 function parseAssignExpression(p: Parser, ident: Expression): Expression {
   const token = p.curToken;
-  p.nextToken();
-  const value = parseExpression(p, Precedence.LOWEST);
-  return new AssignExpression(token, ident, value);
+  switch (token.type) {
+    case TokenType.ADD_ASSIGN: {
+      p.nextToken();
+      const rExpr = parseExpression(p, Precedence.LOWEST);
+      const sumToken: Token = { type: TokenType.ADD, literal: '+' };
+      return new AssignExpression(
+        token,
+        ident,
+        new BinaryExpression(sumToken, ident, sumToken.literal, rExpr),
+      );
+    }
+    case TokenType.INC: {
+      const sumToken: Token = { type: TokenType.ADD, literal: '+' };
+      const intToken: Token = { type: TokenType.INT, literal: '1' };
+      const oneLiteral: IntegerLiteral = new IntegerLiteral(intToken, 1);
+      return new AssignExpression(
+        token,
+        ident,
+        new BinaryExpression(sumToken, ident, sumToken.literal, oneLiteral),
+      );
+    }
+    default: {
+      p.nextToken();
+      const value = parseExpression(p, Precedence.LOWEST);
+      return new AssignExpression(token, ident, value);
+    }
+  }
 }
 
 function parseIfExpression(p: Parser): Expression {
