@@ -41,7 +41,20 @@ export class Lexer {
         }
         break;
       case '-':
-        token = this.newToken(TokenType.SUB, this.currentLiteral);
+        if (this.peekChar() === '=') {
+          const prev = this.currentLiteral;
+          this.readChar();
+          token = this.newToken(
+            TokenType.SUB_ASSIGN,
+            prev + this.currentLiteral,
+          );
+        } else if (this.peekChar() === '-') {
+          const prev = this.currentLiteral;
+          this.readChar();
+          token = this.newToken(TokenType.DEC, prev + this.currentLiteral);
+        } else {
+          token = this.newToken(TokenType.SUB, this.currentLiteral);
+        }
         break;
       case '*':
         token = this.newToken(TokenType.MUL, this.currentLiteral);

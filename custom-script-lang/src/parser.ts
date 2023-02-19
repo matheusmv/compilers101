@@ -127,9 +127,11 @@ const precedences: Map<TokenType, Precedence> = new Map([
   [TokenType.MUL, Precedence.PROD],
   [TokenType.QUO, Precedence.PROD],
   [TokenType.REM, Precedence.PROD],
-  [TokenType.INC, Precedence.ASSIGN],
-  [TokenType.ASSIGN, Precedence.ASSIGN],
   [TokenType.ADD_ASSIGN, Precedence.ASSIGN],
+  [TokenType.SUB_ASSIGN, Precedence.ASSIGN],
+  [TokenType.INC, Precedence.ASSIGN],
+  [TokenType.DEC, Precedence.ASSIGN],
+  [TokenType.ASSIGN, Precedence.ASSIGN],
   [TokenType.LPAREN, Precedence.CALL],
 ]);
 
@@ -159,7 +161,9 @@ const binaryExprHander: Map<TokenType, BinaryExpressionHandler> = new Map([
   [TokenType.GTR, parseBinaryExpression],
   [TokenType.LPAREN, parseCallExpression],
   [TokenType.ADD_ASSIGN, parseAssignExpression],
+  [TokenType.SUB_ASSIGN, parseAssignExpression],
   [TokenType.INC, parseAssignExpression],
+  [TokenType.DEC, parseAssignExpression],
   [TokenType.ASSIGN, parseAssignExpression],
 ]);
 
@@ -434,6 +438,16 @@ function parseAssignExpression(p: Parser, ident: Expression): Expression {
         new BinaryExpression(sumToken, ident, sumToken.literal, rExpr),
       );
     }
+    case TokenType.SUB_ASSIGN: {
+      p.nextToken();
+      const rExpr = parseExpression(p, Precedence.LOWEST);
+      const subToken: Token = { type: TokenType.SUB, literal: '-' };
+      return new AssignExpression(
+        token,
+        ident,
+        new BinaryExpression(subToken, ident, subToken.literal, rExpr),
+      );
+    }
     case TokenType.INC: {
       const sumToken: Token = { type: TokenType.ADD, literal: '+' };
       const intToken: Token = { type: TokenType.INT, literal: '1' };
@@ -442,6 +456,16 @@ function parseAssignExpression(p: Parser, ident: Expression): Expression {
         token,
         ident,
         new BinaryExpression(sumToken, ident, sumToken.literal, oneLiteral),
+      );
+    }
+    case TokenType.DEC: {
+      const subToken: Token = { type: TokenType.SUB, literal: '-' };
+      const intToken: Token = { type: TokenType.INT, literal: '1' };
+      const oneLiteral: IntegerLiteral = new IntegerLiteral(intToken, 1);
+      return new AssignExpression(
+        token,
+        ident,
+        new BinaryExpression(subToken, ident, subToken.literal, oneLiteral),
       );
     }
     default: {

@@ -270,7 +270,7 @@ export class AssignExpression implements Expression {
   toString(): string {
     let out = '';
 
-    out += `${this.name.toString()} = ${this.value.toString()}`;
+    out += `(${this.name.toString()} = ${this.value.toString()})`;
 
     return out;
   }

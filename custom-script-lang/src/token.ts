@@ -22,8 +22,8 @@ export enum TokenType {
   SHL = '<<',
   SHR = '>>',
 
-  ADD_ASSIGN = '+=',
-  SUB_ASSIGN = '-=',
+  ADD_ASSIGN = '+=', //
+  SUB_ASSIGN = '-=', //
   MUL_ASSIGN = '*=',
   QUO_ASSIGN = '/=',
   REM_ASSIGN = '%=',
@@ -36,8 +36,8 @@ export enum TokenType {
 
   LAND = '&&',
   LOR = '||',
-  INC = '++',
-  DEC = '--',
+  INC = '++', //
+  DEC = '--', //
 
   EQL = '==', //
   LSS = '<', //
