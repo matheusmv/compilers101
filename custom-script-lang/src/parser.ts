@@ -129,6 +129,7 @@ const precedences: Map<TokenType, Precedence> = new Map([
   [TokenType.REM, Precedence.PROD],
   [TokenType.ADD_ASSIGN, Precedence.ASSIGN],
   [TokenType.SUB_ASSIGN, Precedence.ASSIGN],
+  [TokenType.MUL_ASSIGN, Precedence.ASSIGN],
   [TokenType.INC, Precedence.ASSIGN],
   [TokenType.DEC, Precedence.ASSIGN],
   [TokenType.ASSIGN, Precedence.ASSIGN],
@@ -162,6 +163,7 @@ const binaryExprHander: Map<TokenType, BinaryExpressionHandler> = new Map([
   [TokenType.LPAREN, parseCallExpression],
   [TokenType.ADD_ASSIGN, parseAssignExpression],
   [TokenType.SUB_ASSIGN, parseAssignExpression],
+  [TokenType.MUL_ASSIGN, parseAssignExpression],
   [TokenType.INC, parseAssignExpression],
   [TokenType.DEC, parseAssignExpression],
   [TokenType.ASSIGN, parseAssignExpression],
@@ -446,6 +448,16 @@ function parseAssignExpression(p: Parser, ident: Expression): Expression {
         token,
         ident,
         new BinaryExpression(subToken, ident, subToken.literal, rExpr),
+      );
+    }
+    case TokenType.MUL_ASSIGN: {
+      p.nextToken();
+      const rExpr = parseExpression(p, Precedence.LOWEST);
+      const mulToken: Token = { type: TokenType.MUL, literal: '*' };
+      return new AssignExpression(
+        token,
+        ident,
+        new BinaryExpression(mulToken, ident, mulToken.literal, rExpr),
       );
     }
     case TokenType.INC: {
