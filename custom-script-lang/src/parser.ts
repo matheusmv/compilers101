@@ -370,7 +370,6 @@ function parseExpression(p: Parser, precedence: Precedence): Expression {
 }
 
 function parseUnaryExpression(p: Parser): Expression {
-  console.log('aqui');
   const token = p.curToken;
   p.nextToken();
   const rightExpr = parseExpression(p, Precedence.UNARY);

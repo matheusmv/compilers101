@@ -17,8 +17,5 @@ const program = parser.parse();
 if (parser.errors.length > 0) {
   console.log(parser.getErrors());
 } else {
-  for (const stmt of program.stmts) {
-    console.log(stmt.toString());
-    console.log(stmt);
-  }
+  console.log(program.toString());
 }

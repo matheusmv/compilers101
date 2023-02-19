@@ -51,7 +51,7 @@ export class Program implements Statement {
     let out = '';
 
     for (const stmt of this.stmts) {
-      out += `${stmt.toString()}`;
+      out += `${stmt.toString()}\n`;
     }
 
     return out;
@@ -78,7 +78,6 @@ export class LetStatement implements Statement {
     if (this.value) {
       out += ` = ${this.value.toString()}`;
     }
-    out += ';';
 
     return out;
   }
@@ -96,9 +95,11 @@ export class BlockStatement implements Statement {
   toString(): string {
     let out = '';
 
+    out += '{';
     for (const stmt of this.stmts) {
       out += `${stmt.toString()}`;
     }
+    out += '}';
 
     return out;
   }
@@ -118,9 +119,8 @@ export class ReturnStatement implements Statement {
 
     out += `${this.tokenLiteral()}`;
     if (this.returnValue) {
-      out += `${this.returnValue.toString()}`;
+      out += ` ${this.returnValue.toString()}`;
     }
-    out += ';';
 
     return out;
   }
@@ -142,9 +142,7 @@ export class WhileStatement implements Statement {
   toString(): string {
     let out = '';
 
-    out += `${this.tokenLiteral()} (${
-      this.condition.toString
-    }) { ${this.body.toString()} }`;
+    out += `${this.tokenLiteral()} (${this.condition.toString()}) ${this.body.toString()}`;
 
     return out;
   }
@@ -168,7 +166,7 @@ export class ForStatement implements Statement {
   toString(): string {
     let out = '';
 
-    out += `${this.tokenLiteral()} (${this.init.toString()}; ${this.condition.toString()}; ${this.update.toString()}) { ${this.body.toString()} }`;
+    out += `${this.tokenLiteral()} (${this.init.toString()}; ${this.condition.toString()}; ${this.update.toString()}) ${this.body.toString()}`;
 
     return out;
   }
@@ -394,7 +392,7 @@ export class FunctionExpression implements Expression {
 
     out += `${this.tokenLiteral()} (${this.params
       .map((param) => param.toString())
-      .join(', ')}) ${this.body.toString()}}`;
+      .join(', ')}) ${this.body.toString()}`;
 
     return out;
   }
