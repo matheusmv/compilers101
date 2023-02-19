@@ -8,7 +8,6 @@ export enum TokenType {
   FLOAT = 'FLOAT',
   CHAR = 'CHAR',
   STRING = 'STRING',
-  BOOL = 'BOOL',
 
   ADD = '+',
   SUB = '-',
@@ -64,29 +63,38 @@ export enum TokenType {
   SEMICOLON = ';',
   COLON = ':',
 
-  CLASS = 'class',
-  ELSE = 'else',
-  FOR = 'for',
-  FUN = 'fun',
-  IF = 'if',
-  LEN = 'len',
-  NIL = 'nil',
-  PRINTLN = 'println',
-  RETURN = 'return',
-  SUPER = 'super',
-  THIS = 'this',
-  TYPE_INT = 'int',
-  TYPE_FLOAT = 'float',
-  TYPE_CHAR = 'char',
-  TYPE_STRING = 'string',
-  TYPE_BOOL = 'bool',
-  VAR = 'var',
-  WHILE = 'while',
+  FUNCTION = 'FUNCTION',
+  LET = 'LET',
+  TRUE = 'TRUE',
+  FALSE = 'FALSE',
+  IF = 'IF',
+  ELSE = 'ELSE',
+  RETURN = 'RETURN',
+  WHILE = 'WHILE',
+  FOR = 'FOR',
 }
 
 export interface Token {
+  literal: string;
   type: TokenType;
-  lexeme: string;
-  literal: any;
-  line: number;
+}
+
+const keywords: Map<string, TokenType> = new Map([
+  ['fn', TokenType.FUNCTION],
+  ['let', TokenType.LET],
+  ['true', TokenType.TRUE],
+  ['false', TokenType.FALSE],
+  ['if', TokenType.IF],
+  ['else', TokenType.ELSE],
+  ['return', TokenType.RETURN],
+  ['while', TokenType.WHILE],
+  ['for', TokenType.FOR],
+]);
+
+export function lookUpIdent(literal: string): TokenType {
+  if (keywords.has(literal)) {
+    return keywords.get(literal);
+  }
+
+  return TokenType.IDENT;
 }

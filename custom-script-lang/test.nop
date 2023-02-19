@@ -1,35 +1,22 @@
-// fibonacci
-fun fib(n int) int {
-    if (n <= 1) return n
-    return fib(n - 1) + fib(n - 2)
-}
+let five = 5;
+let ten = 10;
 
-for i := 0; i < 20; i++ {
-    println(fib(5))
-}
+let add = fn(x, y) {
+    x + y;
+};
 
-// sum of a sequence of integers
-fun sum(...n int) int {
-    acc := 0
+let result = add(five, ten);
 
-    for i := 0; i < len(n); i++ {
-        acc += n[i]
-    }
-
-    return acc
-}
-
-var enabled bool = true
-var theMeaningOfLife int = 42
-var PI float = 3.1415
-var f char = 'f'
-var name string = "John Doe"
-
-if (!enabled) {
-    println("access denied")
+if (5 < 10) {
+    return true;
 } else {
-    println("welcome, " + name)
+    return false;
 }
 
-println(PI)
-println(f)
+10 == 10;
+10 != 9;
+
+1 + 2 % 2;
+!true;
+-10 + -2 * 10;
+-1;

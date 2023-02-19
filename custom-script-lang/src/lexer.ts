@@ -1,362 +1,157 @@
-import { Token, TokenType } from './token.js';
+import { lookUpIdent, Token, TokenType } from './token.js';
 
-export class Scanner {
-  private readonly source: string;
-  private readonly keywords: Map<string, TokenType>;
+export class Lexer {
+  private position = 0;
+  private readPosition = 0;
+  private currentLiteral: string;
 
-  private readonly tokens: Token[] = [];
-
-  private start = 0;
-  private current = 0;
-  private line = 1;
-
-  constructor(source: string) {
-    this.source = source;
-    this.keywords = new Map([
-      ['int', TokenType.TYPE_INT],
-      ['float', TokenType.TYPE_FLOAT],
-      ['char', TokenType.TYPE_CHAR],
-      ['string', TokenType.TYPE_STRING],
-      ['bool', TokenType.TYPE_BOOL],
-      ['class', TokenType.CLASS],
-      ['else', TokenType.ELSE],
-      ['false', TokenType.BOOL],
-      ['for', TokenType.FOR],
-      ['fun', TokenType.FUN],
-      ['if', TokenType.IF],
-      ['len', TokenType.LEN],
-      ['nil', TokenType.NIL],
-      ['println', TokenType.PRINTLN],
-      ['return', TokenType.RETURN],
-      ['super', TokenType.SUPER],
-      ['this', TokenType.THIS],
-      ['true', TokenType.BOOL],
-      ['var', TokenType.VAR],
-      ['while', TokenType.WHILE],
-    ]);
+  constructor(private readonly source: string) {
+    this.readChar();
   }
 
-  tokenize(): Token[] {
-    while (!this.isAtEnd()) {
-      this.start = this.current;
-      this.scanToken();
-    }
+  nextToken(): Token {
+    let token: Token = null;
 
-    this.tokens.push({
-      type: TokenType.EOF,
-      lexeme: '',
-      literal: null,
-      line: this.line,
-    });
+    this.skipWhitespace();
 
-    return this.tokens;
-  }
-
-  private isAtEnd(): boolean {
-    return this.current >= this.source.length;
-  }
-
-  private scanToken(): void {
-    const token: string = this.advance();
-
-    if (/[ \r\t]/.test(token)) return;
-
-    if (token === '\n') {
-      this.line += 1;
-      return;
-    }
-
-    switch (token) {
-      case TokenType.ADD:
-        if (this.match('=')) {
-          this.addToken(TokenType.ADD_ASSIGN);
-        } else if (this.match('+')) {
-          this.addToken(TokenType.INC);
+    switch (this.currentLiteral) {
+      case '=':
+        if (this.peekChar() === '=') {
+          const prev = this.currentLiteral;
+          this.readChar();
+          token = this.newToken(TokenType.EQL, prev + this.currentLiteral);
         } else {
-          this.addToken(TokenType.ADD);
+          token = this.newToken(TokenType.ASSIGN, this.currentLiteral);
         }
         break;
-      case TokenType.SUB:
-        if (this.match('=')) {
-          this.addToken(TokenType.SUB_ASSIGN);
-        } else if (this.match('-')) {
-          this.addToken(TokenType.DEC);
+      case '+':
+        token = this.newToken(TokenType.ADD, this.currentLiteral);
+        break;
+      case '-':
+        token = this.newToken(TokenType.SUB, this.currentLiteral);
+        break;
+      case '*':
+        token = this.newToken(TokenType.MUL, this.currentLiteral);
+        break;
+      case '/':
+        token = this.newToken(TokenType.QUO, this.currentLiteral);
+        break;
+      case '%':
+        token = this.newToken(TokenType.REM, this.currentLiteral);
+        break;
+      case '!':
+        if (this.peekChar() === '=') {
+          const prev = this.currentLiteral;
+          this.readChar();
+          token = this.newToken(TokenType.NEQ, prev + this.currentLiteral);
         } else {
-          this.addToken(TokenType.SUB);
+          token = this.newToken(TokenType.NOT, this.currentLiteral);
         }
         break;
-      case TokenType.MUL:
-        this.addToken(this.match('=') ? TokenType.MUL_ASSIGN : TokenType.MUL);
+      case '<':
+        token = this.newToken(TokenType.LSS, this.currentLiteral);
         break;
-      case TokenType.QUO:
-        if (this.match('/')) {
-          this.comment();
-        } else if (this.match('=')) {
-          this.addToken(TokenType.QUO_ASSIGN);
-        } else {
-          this.addToken(TokenType.QUO);
-        }
+      case '>':
+        token = this.newToken(TokenType.GTR, this.currentLiteral);
         break;
-      case TokenType.REM:
-        this.addToken(this.match('=') ? TokenType.REM_ASSIGN : TokenType.REM);
+      case '(':
+        token = this.newToken(TokenType.LPAREN, this.currentLiteral);
         break;
-      case TokenType.CPLMT:
-        this.addToken(TokenType.CPLMT);
+      case ')':
+        token = this.newToken(TokenType.RPAREN, this.currentLiteral);
         break;
-      case TokenType.AND:
-        if (this.match('=')) {
-          this.addToken(TokenType.ADD_ASSIGN);
-        } else if (this.match('&')) {
-          this.addToken(TokenType.LAND);
-        } else {
-          this.addToken(TokenType.AND);
-        }
+      case '{':
+        token = this.newToken(TokenType.LBRACE, this.currentLiteral);
         break;
-      case TokenType.OR:
-        if (this.match('=')) {
-          this.addToken(TokenType.OR_ASSIGN);
-        } else if (this.match('&')) {
-          this.addToken(TokenType.LOR);
-        } else {
-          this.addToken(TokenType.OR);
-        }
+      case '}':
+        token = this.newToken(TokenType.RBRACE, this.currentLiteral);
         break;
-      case TokenType.XOR:
-        if (this.match('=')) {
-          this.addToken(TokenType.XOR_ASSIGN);
-        } else {
-          this.addToken(TokenType.XOR);
-        }
+      case '[':
+        token = this.newToken(TokenType.LBRACK, this.currentLiteral);
         break;
-      case TokenType.LSS:
-        if (this.match('<') && this.match('=')) {
-          this.addToken(TokenType.SHL_ASSIGN);
-        } else if (this.match('<')) {
-          this.addToken(TokenType.SHL);
-        } else if (this.match('=')) {
-          this.addToken(TokenType.LEQ);
-        } else {
-          this.addToken(TokenType.LSS);
-        }
+      case ']':
+        token = this.newToken(TokenType.RBRACK, this.currentLiteral);
         break;
-      case TokenType.GTR:
-        if (this.match('>') && this.match('=')) {
-          this.addToken(TokenType.SHR_ASSIGN);
-        } else if (this.match('>')) {
-          this.addToken(TokenType.SHR);
-        } else if (this.match('=')) {
-          this.addToken(TokenType.GEQ);
-        } else {
-          this.addToken(TokenType.GTR);
-        }
+      case ';':
+        token = this.newToken(TokenType.SEMICOLON, this.currentLiteral);
         break;
-      case TokenType.NOT:
-        if (this.match('=')) {
-          this.addToken(TokenType.NEQ);
-        } else {
-          this.addToken(TokenType.NOT);
-        }
+      case ',':
+        token = this.newToken(TokenType.COMMA, this.currentLiteral);
         break;
-      case TokenType.ASSIGN:
-        if (this.match('=')) {
-          this.addToken(TokenType.EQL);
-        } else {
-          this.addToken(TokenType.ASSIGN);
-        }
-        break;
-      case TokenType.COLON:
-        if (this.match('=')) {
-          this.addToken(TokenType.DEFINE);
-        } else {
-          this.addToken(TokenType.COLON);
-        }
-        break;
-      case TokenType.PERIOD:
-        if (this.match('.')) {
-          const type = this.match('.') ? TokenType.ELLIPSIS : TokenType.ILLEGAL;
-          if (type === TokenType.ILLEGAL) {
-            console.error(
-              `line: ${this.line}, Error: Unexpected character '${token}'.`,
-            );
-          }
-          this.addToken(type);
-        } else {
-          this.addToken(TokenType.PERIOD);
-        }
-        break;
-      case TokenType.LPAREN:
-        this.addToken(TokenType.LPAREN);
-        break;
-      case TokenType.LBRACK:
-        this.addToken(TokenType.LBRACK);
-        break;
-      case TokenType.LBRACE:
-        this.addToken(TokenType.LBRACE);
-        break;
-      case TokenType.COMMA:
-        this.addToken(TokenType.COMMA);
-        break;
-      case TokenType.RPAREN:
-        this.addToken(TokenType.RPAREN);
-        break;
-      case TokenType.RBRACK:
-        this.addToken(TokenType.RBRACK);
-        break;
-      case TokenType.RBRACE:
-        this.addToken(TokenType.RBRACE);
-        break;
-      case TokenType.SEMICOLON:
-        this.addToken(TokenType.SEMICOLON);
-        break;
-      case "'":
-        this.character();
-        break;
-      case '"':
-        this.string();
+      case '\0':
+        token = this.newToken(TokenType.EOF, '');
         break;
       default:
-        if (this.isDigit(token)) {
-          this.number();
-        } else if (this.isAlpha(token)) {
-          this.identifier();
+        if (this.isCharacter(this.currentLiteral)) {
+          const ident = this.readIdentifier();
+          return this.newToken(lookUpIdent(ident), ident);
+        } else if (this.isDigit(this.currentLiteral)) {
+          return this.newToken(TokenType.INT, this.readNumber());
         } else {
-          this.addTokenWithLiteral(TokenType.ILLEGAL, token);
-          console.error(
-            `line: ${this.line}, Error: Unexpected character '${token}'.`,
-          );
+          token = this.newToken(TokenType.ILLEGAL, this.currentLiteral);
         }
+    }
+
+    this.readChar();
+
+    return token;
+  }
+
+  private newToken(type: TokenType, literal: string): Token {
+    return { type: type, literal: literal };
+  }
+
+  private readIdentifier(): string {
+    const start = this.position;
+    while (this.isCharacter(this.currentLiteral)) {
+      this.readChar();
+    }
+    return this.source.slice(start, this.position);
+  }
+
+  private readNumber(): string {
+    const start = this.position;
+    while (this.isDigit(this.currentLiteral)) {
+      this.readChar();
+    }
+    return this.source.slice(start, this.position);
+  }
+
+  private skipWhitespace(): void {
+    while (
+      this.currentLiteral === ' ' ||
+      this.currentLiteral === '\t' ||
+      this.currentLiteral === '\n' ||
+      this.currentLiteral === '\r'
+    ) {
+      this.readChar();
     }
   }
 
-  private advance(): string {
-    this.current += 1;
-    return this.source.charAt(this.current - 1);
+  private readChar(): void {
+    if (this.readPosition >= this.source.length) {
+      this.currentLiteral = '\0';
+    } else {
+      this.currentLiteral = this.source[this.readPosition];
+      this.position = this.readPosition;
+      this.readPosition += 1;
+    }
   }
 
-  private addToken(type: TokenType): void {
-    this.addTokenWithLiteral(type, null);
+  private peekChar(): string {
+    if (this.readPosition >= this.source.length) return '\0';
+    return this.source[this.readPosition];
   }
 
-  private addTokenWithLiteral(type: TokenType, literal: any): void {
-    const lexeme = this.source.substring(this.start, this.current);
-    this.tokens.push({
-      type: type,
-      lexeme: lexeme,
-      literal: literal,
-      line: this.line,
-    });
-  }
-
-  private match(expected: string): boolean {
-    if (this.isAtEnd()) return false;
-    if (this.source.charAt(this.current) !== expected) return false;
-
-    this.current += 1;
-
-    return true;
-  }
-
-  private peek(): string {
-    if (this.isAtEnd()) return '\0';
-
-    return this.source.charAt(this.current);
-  }
-
-  private peekNext(): string {
-    if (this.current + 1 >= this.source.length) return '\0';
-
-    return this.source.charAt(this.current + 1);
-  }
-
-  private isDigit(token: string): boolean {
-    return token >= '0' && token <= '9';
-  }
-
-  private isAlpha(token: string): boolean {
+  private isCharacter(char: string): boolean {
     return (
-      (token >= 'a' && token <= 'z') ||
-      (token >= 'A' && token <= 'Z') ||
-      token == '_'
+      ('a' <= char && char <= 'z') ||
+      ('A' <= char && char <= 'Z') ||
+      char == '_'
     );
   }
 
-  private isAlphaNumeric(token: string): boolean {
-    return this.isAlpha(token) || this.isDigit(token);
-  }
-
-  private comment(): void {
-    let comment = '';
-
-    while (this.peek() !== '\n' && !this.isAtEnd()) {
-      comment += this.peek();
-      this.advance();
-    }
-
-    this.addTokenWithLiteral(TokenType.COMMENT, comment.trim());
-  }
-
-  private identifier(): void {
-    while (this.isAlphaNumeric(this.peek())) this.advance();
-
-    const identifier = this.source.substring(this.start, this.current);
-    const type = this.keywords.get(identifier) ?? TokenType.IDENT;
-
-    if (type === TokenType.BOOL)
-      this.addTokenWithLiteral(type, identifier === 'true' ? true : false);
-    else this.addToken(type);
-  }
-
-  private number(): void {
-    while (this.isDigit(this.peek())) this.advance();
-
-    let type: TokenType = TokenType.INT;
-
-    if (this.peek() === '.' && this.isDigit(this.peekNext())) {
-      type = TokenType.FLOAT;
-
-      this.advance();
-
-      while (this.isDigit(this.peek())) this.advance();
-    }
-
-    const literal = this.source.substring(this.start, this.current);
-    this.addTokenWithLiteral(type, Number(literal));
-  }
-
-  private character(): void {
-    if (this.peek() === "'") this.advance();
-
-    let length = 0;
-    while (this.peek() !== "'" && !this.isAtEnd()) {
-      length += 1;
-      this.advance();
-    }
-
-    if (length > 1 || this.isAtEnd()) {
-      console.error(`line: ${this.line}, Error: unclosed character literal`);
-      return;
-    }
-
-    this.advance();
-
-    const literal = this.source.substring(this.start + 1, this.current - 1);
-    this.addTokenWithLiteral(TokenType.CHAR, literal);
-  }
-
-  private string(): void {
-    while (this.peek() !== '"' && !this.isAtEnd()) {
-      if (this.peek() === '\n') this.line += 1;
-      this.advance();
-    }
-
-    if (this.isAtEnd()) {
-      console.error(`line: ${this.line}, Error: Unterminated string.`);
-      return;
-    }
-
-    this.advance();
-
-    const literal = this.source.substring(this.start + 1, this.current - 1);
-    this.addTokenWithLiteral(TokenType.STRING, literal);
+  private isDigit(char: string): boolean {
+    return '0' <= char && char <= '9';
   }
 }
