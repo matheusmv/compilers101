@@ -69,7 +69,16 @@ export class Lexer {
         }
         break;
       case '/':
-        token = this.newToken(TokenType.QUO, this.currentLiteral);
+        if (this.peekChar() === '=') {
+          const prev = this.currentLiteral;
+          this.readChar();
+          token = this.newToken(
+            TokenType.QUO_ASSIGN,
+            prev + this.currentLiteral,
+          );
+        } else {
+          token = this.newToken(TokenType.QUO, this.currentLiteral);
+        }
         break;
       case '%':
         token = this.newToken(TokenType.REM, this.currentLiteral);

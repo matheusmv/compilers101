@@ -25,7 +25,7 @@ export enum TokenType {
   ADD_ASSIGN = '+=', //
   SUB_ASSIGN = '-=', //
   MUL_ASSIGN = '*=', //
-  QUO_ASSIGN = '/=',
+  QUO_ASSIGN = '/=', //
   REM_ASSIGN = '%=',
 
   AND_ASSIGN = '&=',
