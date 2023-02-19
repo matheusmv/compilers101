@@ -20,7 +20,7 @@ export enum TokenType {
   OR = '|', //
   XOR = '^', //
   SHL = '<<', //
-  SHR = '>>',
+  SHR = '>>', //
 
   ADD_ASSIGN = '+=', //
   SUB_ASSIGN = '-=', //
@@ -32,7 +32,7 @@ export enum TokenType {
   OR_ASSIGN = '|=', //
   XOR_ASSIGN = '^=', //
   SHL_ASSIGN = '<<=', //
-  SHR_ASSIGN = '>>=',
+  SHR_ASSIGN = '>>=', //
 
   LAND = '&&', //
   LOR = '||', //
@@ -47,7 +47,7 @@ export enum TokenType {
 
   NEQ = '!=',
   LEQ = '<=', //
-  GEQ = '>=',
+  GEQ = '>=', //
   DEFINE = ':=',
   ELLIPSIS = '...',
 
