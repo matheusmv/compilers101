@@ -149,6 +149,7 @@ const precedences: Map<TokenType, Precedence> = new Map([
   [TokenType.QUO_ASSIGN, Precedence.ASSIGN],
   [TokenType.REM_ASSIGN, Precedence.ASSIGN],
   [TokenType.AND_ASSIGN, Precedence.ASSIGN],
+  [TokenType.OR_ASSIGN, Precedence.ASSIGN],
   [TokenType.INC, Precedence.ASSIGN],
   [TokenType.DEC, Precedence.ASSIGN],
   [TokenType.ASSIGN, Precedence.ASSIGN],
@@ -177,7 +178,9 @@ const binaryExprHander: Map<TokenType, BinaryExpressionHandler> = new Map([
   [TokenType.QUO, parseBinaryExpression],
   [TokenType.REM, parseBinaryExpression],
   [TokenType.LAND, parseBinaryExpression],
+  [TokenType.LOR, parseBinaryExpression],
   [TokenType.AND, parseBinaryExpression],
+  [TokenType.OR, parseBinaryExpression],
   [TokenType.EQL, parseBinaryExpression],
   [TokenType.NEQ, parseBinaryExpression],
   [TokenType.LSS, parseBinaryExpression],
@@ -189,6 +192,7 @@ const binaryExprHander: Map<TokenType, BinaryExpressionHandler> = new Map([
   [TokenType.QUO_ASSIGN, parseAssignExpression],
   [TokenType.REM_ASSIGN, parseAssignExpression],
   [TokenType.AND_ASSIGN, parseAssignExpression],
+  [TokenType.OR_ASSIGN, parseAssignExpression],
   [TokenType.INC, parseAssignExpression],
   [TokenType.DEC, parseAssignExpression],
   [TokenType.ASSIGN, parseAssignExpression],
@@ -513,6 +517,16 @@ function parseAssignExpression(p: Parser, ident: Expression): Expression {
         token,
         ident,
         new BinaryExpression(andToken, ident, andToken.literal, rExpr),
+      );
+    }
+    case TokenType.OR_ASSIGN: {
+      p.nextToken();
+      const rExpr = parseExpression(p, Precedence.LOWEST);
+      const orToken: Token = { type: TokenType.OR, literal: '|' };
+      return new AssignExpression(
+        token,
+        ident,
+        new BinaryExpression(orToken, ident, orToken.literal, rExpr),
       );
     }
     case TokenType.INC: {
