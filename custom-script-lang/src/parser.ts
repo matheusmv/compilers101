@@ -109,7 +109,10 @@ export class Parser {
 
 enum Precedence {
   LOWEST = 1,
+  LOR,
+  LAND,
   COND,
+  BIN,
   SUM,
   PROD,
   UNARY,
@@ -118,23 +121,38 @@ enum Precedence {
 }
 
 const precedences: Map<TokenType, Precedence> = new Map([
+  [TokenType.LOR, Precedence.LOR],
+  [TokenType.LAND, Precedence.LAND],
+
   [TokenType.EQL, Precedence.COND],
   [TokenType.NEQ, Precedence.COND],
   [TokenType.LSS, Precedence.COND],
   [TokenType.GTR, Precedence.COND],
+
+  [TokenType.SHL, Precedence.BIN],
+  [TokenType.OR, Precedence.BIN],
+  [TokenType.XOR, Precedence.BIN],
+  [TokenType.SHR, Precedence.BIN],
+  [TokenType.AND, Precedence.BIN],
+  [TokenType.CPLMT, Precedence.BIN],
+
   [TokenType.ADD, Precedence.SUM],
   [TokenType.SUB, Precedence.SUM],
+
   [TokenType.MUL, Precedence.PROD],
   [TokenType.QUO, Precedence.PROD],
   [TokenType.REM, Precedence.PROD],
+
   [TokenType.ADD_ASSIGN, Precedence.ASSIGN],
   [TokenType.SUB_ASSIGN, Precedence.ASSIGN],
   [TokenType.MUL_ASSIGN, Precedence.ASSIGN],
   [TokenType.QUO_ASSIGN, Precedence.ASSIGN],
   [TokenType.REM_ASSIGN, Precedence.ASSIGN],
+  [TokenType.AND_ASSIGN, Precedence.ASSIGN],
   [TokenType.INC, Precedence.ASSIGN],
   [TokenType.DEC, Precedence.ASSIGN],
   [TokenType.ASSIGN, Precedence.ASSIGN],
+
   [TokenType.LPAREN, Precedence.CALL],
 ]);
 
@@ -158,6 +176,8 @@ const binaryExprHander: Map<TokenType, BinaryExpressionHandler> = new Map([
   [TokenType.MUL, parseBinaryExpression],
   [TokenType.QUO, parseBinaryExpression],
   [TokenType.REM, parseBinaryExpression],
+  [TokenType.LAND, parseBinaryExpression],
+  [TokenType.AND, parseBinaryExpression],
   [TokenType.EQL, parseBinaryExpression],
   [TokenType.NEQ, parseBinaryExpression],
   [TokenType.LSS, parseBinaryExpression],
@@ -168,6 +188,7 @@ const binaryExprHander: Map<TokenType, BinaryExpressionHandler> = new Map([
   [TokenType.MUL_ASSIGN, parseAssignExpression],
   [TokenType.QUO_ASSIGN, parseAssignExpression],
   [TokenType.REM_ASSIGN, parseAssignExpression],
+  [TokenType.AND_ASSIGN, parseAssignExpression],
   [TokenType.INC, parseAssignExpression],
   [TokenType.DEC, parseAssignExpression],
   [TokenType.ASSIGN, parseAssignExpression],
@@ -482,6 +503,16 @@ function parseAssignExpression(p: Parser, ident: Expression): Expression {
         token,
         ident,
         new BinaryExpression(remToken, ident, remToken.literal, rExpr),
+      );
+    }
+    case TokenType.AND_ASSIGN: {
+      p.nextToken();
+      const rExpr = parseExpression(p, Precedence.LOWEST);
+      const andToken: Token = { type: TokenType.AND, literal: '&' };
+      return new AssignExpression(
+        token,
+        ident,
+        new BinaryExpression(andToken, ident, andToken.literal, rExpr),
       );
     }
     case TokenType.INC: {

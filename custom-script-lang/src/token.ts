@@ -16,7 +16,7 @@ export enum TokenType {
   REM = '%', //
 
   CPLMT = '~',
-  AND = '&',
+  AND = '&', //
   OR = '|',
   XOR = '^',
   SHL = '<<',
@@ -26,15 +26,15 @@ export enum TokenType {
   SUB_ASSIGN = '-=', //
   MUL_ASSIGN = '*=', //
   QUO_ASSIGN = '/=', //
-  REM_ASSIGN = '%=',
+  REM_ASSIGN = '%=', //
 
-  AND_ASSIGN = '&=',
+  AND_ASSIGN = '&=', //
   OR_ASSIGN = '|=',
   XOR_ASSIGN = '^=',
   SHL_ASSIGN = '<<=',
   SHR_ASSIGN = '>>=',
 
-  LAND = '&&',
+  LAND = '&&', //
   LOR = '||',
   INC = '++', //
   DEC = '--', //

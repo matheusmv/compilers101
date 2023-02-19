@@ -101,6 +101,22 @@ export class Lexer {
           token = this.newToken(TokenType.NOT, this.currentLiteral);
         }
         break;
+      case '&':
+        if (this.peekChar() === '=') {
+          const prev = this.currentLiteral;
+          this.readChar();
+          token = this.newToken(
+            TokenType.AND_ASSIGN,
+            prev + this.currentLiteral,
+          );
+        } else if (this.peekChar() === '&') {
+          const prev = this.currentLiteral;
+          this.readChar();
+          token = this.newToken(TokenType.LAND, prev + this.currentLiteral);
+        } else {
+          token = this.newToken(TokenType.AND, this.currentLiteral);
+        }
+        break;
       case '<':
         token = this.newToken(TokenType.LSS, this.currentLiteral);
         break;
