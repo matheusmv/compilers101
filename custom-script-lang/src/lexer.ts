@@ -146,7 +146,26 @@ export class Lexer {
         }
         break;
       case '<':
-        token = this.newToken(TokenType.LSS, this.currentLiteral);
+        if (this.peekChar() === '<') {
+          const prev = this.currentLiteral;
+          this.readChar();
+          if (this.peekChar() === '=') {
+            const end = this.currentLiteral;
+            this.readChar();
+            token = this.newToken(
+              TokenType.SHL_ASSIGN,
+              prev + end + this.currentLiteral,
+            );
+          } else {
+            token = this.newToken(TokenType.SHL, prev + this.currentLiteral);
+          }
+        } else if (this.peekChar() === '=') {
+          const prev = this.currentLiteral;
+          this.readChar();
+          token = this.newToken(TokenType.LEQ, prev + this.currentLiteral);
+        } else {
+          token = this.newToken(TokenType.LSS, this.currentLiteral);
+        }
         break;
       case '>':
         token = this.newToken(TokenType.GTR, this.currentLiteral);

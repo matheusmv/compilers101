@@ -126,6 +126,7 @@ const precedences: Map<TokenType, Precedence> = new Map([
 
   [TokenType.EQL, Precedence.COND],
   [TokenType.NEQ, Precedence.COND],
+  [TokenType.LEQ, Precedence.COND],
   [TokenType.LSS, Precedence.COND],
   [TokenType.GTR, Precedence.COND],
 
@@ -151,6 +152,7 @@ const precedences: Map<TokenType, Precedence> = new Map([
   [TokenType.AND_ASSIGN, Precedence.ASSIGN],
   [TokenType.OR_ASSIGN, Precedence.ASSIGN],
   [TokenType.XOR_ASSIGN, Precedence.ASSIGN],
+  [TokenType.SHL_ASSIGN, Precedence.ASSIGN],
   [TokenType.INC, Precedence.ASSIGN],
   [TokenType.DEC, Precedence.ASSIGN],
   [TokenType.ASSIGN, Precedence.ASSIGN],
@@ -183,8 +185,10 @@ const binaryExprHander: Map<TokenType, BinaryExpressionHandler> = new Map([
   [TokenType.AND, parseBinaryExpression],
   [TokenType.OR, parseBinaryExpression],
   [TokenType.XOR, parseBinaryExpression],
+  [TokenType.SHL, parseBinaryExpression],
   [TokenType.EQL, parseBinaryExpression],
   [TokenType.NEQ, parseBinaryExpression],
+  [TokenType.LEQ, parseBinaryExpression],
   [TokenType.LSS, parseBinaryExpression],
   [TokenType.GTR, parseBinaryExpression],
   [TokenType.LPAREN, parseCallExpression],
@@ -196,6 +200,7 @@ const binaryExprHander: Map<TokenType, BinaryExpressionHandler> = new Map([
   [TokenType.AND_ASSIGN, parseAssignExpression],
   [TokenType.OR_ASSIGN, parseAssignExpression],
   [TokenType.XOR_ASSIGN, parseAssignExpression],
+  [TokenType.SHL_ASSIGN, parseAssignExpression],
   [TokenType.INC, parseAssignExpression],
   [TokenType.DEC, parseAssignExpression],
   [TokenType.ASSIGN, parseAssignExpression],
@@ -540,6 +545,16 @@ function parseAssignExpression(p: Parser, ident: Expression): Expression {
         token,
         ident,
         new BinaryExpression(xorToken, ident, xorToken.literal, rExpr),
+      );
+    }
+    case TokenType.SHL_ASSIGN: {
+      p.nextToken();
+      const rExpr = parseExpression(p, Precedence.LOWEST);
+      const shlToken: Token = { type: TokenType.SHL, literal: '<<' };
+      return new AssignExpression(
+        token,
+        ident,
+        new BinaryExpression(shlToken, ident, shlToken.literal, rExpr),
       );
     }
     case TokenType.INC: {
