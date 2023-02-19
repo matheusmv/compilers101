@@ -189,6 +189,9 @@ export class Lexer {
           token = this.newToken(TokenType.GTR, this.currentLiteral);
         }
         break;
+      case '~':
+        token = this.newToken(TokenType.CPLMT, this.currentLiteral);
+        break;
       case '(':
         token = this.newToken(TokenType.LPAREN, this.currentLiteral);
         break;

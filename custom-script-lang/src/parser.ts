@@ -171,6 +171,7 @@ const unaryExprHandler: Map<TokenType, UnaryExpressionHandler> = new Map([
   [TokenType.LPAREN, parseGroupedExpression],
   [TokenType.NOT, parseUnaryExpression],
   [TokenType.SUB, parseUnaryExpression],
+  [TokenType.CPLMT, parseUnaryExpression],
   [TokenType.IF, parseIfExpression],
   [TokenType.FUNCTION, parseFunctionExpression],
 ]);

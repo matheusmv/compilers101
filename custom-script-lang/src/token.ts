@@ -15,7 +15,7 @@ export enum TokenType {
   QUO = '/', //
   REM = '%', //
 
-  CPLMT = '~',
+  CPLMT = '~', //
   AND = '&', //
   OR = '|', //
   XOR = '^', //
@@ -45,7 +45,7 @@ export enum TokenType {
   ASSIGN = '=', //
   NOT = '!', //
 
-  NEQ = '!=',
+  NEQ = '!=', //
   LEQ = '<=', //
   GEQ = '>=', //
   DEFINE = ':=',
