@@ -10,9 +10,9 @@ let result = add(five, ten);
 result;
 
 result = if (5 < 10) {
-    return true;
+    true;
 } else {
-    return false;
+    false;
 }
 
 result;
