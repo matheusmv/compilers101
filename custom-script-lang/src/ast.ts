@@ -175,7 +175,9 @@ export class ForStatement implements Statement {
   toString(): string {
     let out = '';
 
-    out += `${this.tokenLiteral()} (${this.init.toString()}; ${this.condition.toString()}; ${this.update.toString()}) ${this.body.toString()}`;
+    out += `${this.tokenLiteral()} (${this.init?.toString() ?? ''}; ${
+      this.condition?.toString() ?? ''
+    }; ${this.update?.toString() ?? ''}) ${this.body.toString()}`;
 
     return out;
   }

@@ -297,11 +297,12 @@ function evalForStatement(
 
   while (isTruthy(evalNode(forStmt.condition, innerEnv))) {
     const result = evalBlockStatement(forStmt.body, innerEnv);
-
-    // break, return, goto
-    switch (result.type()) {
-      case ObjectValueType.RETURN:
-        return NIL;
+    if (result) {
+      // break, return, goto
+      switch (result.type()) {
+        case ObjectValueType.RETURN:
+          return NIL;
+      }
     }
 
     if (forStmt.update) {

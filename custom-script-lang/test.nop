@@ -102,3 +102,9 @@ fn fib(num) {
 fib(10);
 
 ~(1 + 1)
+
+let testWhile = 0;
+for (let y = 0; testWhile < 10; y++) {
+    testWhile += y;
+}
+testWhile == 10;
