@@ -277,11 +277,12 @@ function parseReturnStatement(p: Parser): ReturnStatement {
 
   p.nextToken();
 
-  const returnValue = parseExpression(p, Precedence.LOWEST);
-
-  if (p.peekTokenIs(TokenType.SEMICOLON)) {
-    p.nextToken();
+  let returnValue: Expression = null;
+  if (!p.curTokenIs(TokenType.SEMICOLON)) {
+    returnValue = parseExpression(p, Precedence.LOWEST);
   }
+
+  if (p.peekTokenIs(TokenType.SEMICOLON)) p.nextToken();
 
   return new ReturnStatement(token, returnValue);
 }

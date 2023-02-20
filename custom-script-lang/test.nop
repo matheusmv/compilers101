@@ -7,11 +7,15 @@ let add = fn(x, y) {
 
 let result = add(five, ten);
 
-if (5 < 10) {
+result;
+
+result = if (5 < 10) {
     return true;
 } else {
     return false;
 }
+
+result;
 
 10 == 10;
 10 != 9;
@@ -104,7 +108,10 @@ fib(10);
 ~(1 + 1)
 
 let testWhile = 0;
-for (let y = 0; testWhile < 10; y++) {
-    testWhile += y;
+for (let y = 0; y < 10; y++) {
+    if (y == 5) { 
+        testWhile = y
+    }
 }
-testWhile == 10;
+
+testWhile == 5;

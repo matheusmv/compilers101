@@ -40,7 +40,7 @@ export function evalNode(
   node: Node,
   env: Environment<ObjectValue>,
 ): ObjectValue {
-  switch (node.kind()) {
+  switch (node?.kind()) {
     case 'ProgramStatement': {
       const program = node as Program;
       return evalProgram(program.stmts, env);
@@ -266,10 +266,11 @@ function evalWhileStatement(
 ): ObjectValue {
   while (isTruthy(evalNode(whileStmt.condition, env))) {
     const result = evalBlockStatement(whileStmt.body, env);
-
-    switch (result.type()) {
-      case ObjectValueType.RETURN:
-        return NIL;
+    if (result) {
+      switch (result.type()) {
+        case ObjectValueType.RETURN:
+          return NIL;
+      }
     }
   }
   return NIL;
