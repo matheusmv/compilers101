@@ -1,6 +1,7 @@
 import { Token } from './token.js';
 
-interface Node {
+export interface Node {
+  kind(): StatementKind | ExpressionKind;
   tokenLiteral(): string;
   toString(): string;
 }
@@ -15,9 +16,7 @@ type StatementKind =
   | 'FunctionStatement'
   | 'ExpressionStatement';
 
-export interface Statement extends Node {
-  kind: StatementKind;
-}
+export type Statement = Node;
 
 type ExpressionKind =
   | 'Identifier'
@@ -30,12 +29,12 @@ type ExpressionKind =
   | 'CallExpression'
   | 'FunctionExpression';
 
-export interface Expression extends Node {
-  kind: ExpressionKind;
-}
+export type Expression = Node;
 
 export class Program implements Statement {
-  kind: StatementKind = 'ProgramStatement';
+  kind(): StatementKind {
+    return 'ProgramStatement';
+  }
 
   constructor(public stmts: Statement[]) {}
 
@@ -59,7 +58,9 @@ export class Program implements Statement {
 }
 
 export class LetStatement implements Statement {
-  kind: StatementKind = 'LetStatement';
+  kind(): StatementKind {
+    return 'LetStatement';
+  }
 
   constructor(
     public token: Token,
@@ -84,7 +85,9 @@ export class LetStatement implements Statement {
 }
 
 export class BlockStatement implements Statement {
-  kind: StatementKind = 'BlockStatement';
+  kind(): StatementKind {
+    return 'BlockStatement';
+  }
 
   constructor(public token: Token, public stmts: Statement[]) {}
 
@@ -106,7 +109,9 @@ export class BlockStatement implements Statement {
 }
 
 export class ReturnStatement implements Statement {
-  kind: StatementKind = 'ReturnStatement';
+  kind(): StatementKind {
+    return 'ReturnStatement';
+  }
 
   constructor(public token: Token, public returnValue?: Expression) {}
 
@@ -127,7 +132,9 @@ export class ReturnStatement implements Statement {
 }
 
 export class WhileStatement implements Statement {
-  kind: StatementKind = 'WhileStatement';
+  kind(): StatementKind {
+    return 'WhileStatement';
+  }
 
   constructor(
     public token: Token,
@@ -149,7 +156,9 @@ export class WhileStatement implements Statement {
 }
 
 export class ForStatement implements Statement {
-  kind: StatementKind = 'ForStatement';
+  kind(): StatementKind {
+    return 'ForStatement';
+  }
 
   constructor(
     public token: Token,
@@ -173,7 +182,9 @@ export class ForStatement implements Statement {
 }
 
 export class FunctionStatement implements Statement {
-  kind: StatementKind = 'FunctionStatement';
+  kind(): StatementKind {
+    return 'FunctionStatement';
+  }
 
   constructor(
     public token: Token,
@@ -198,7 +209,9 @@ export class FunctionStatement implements Statement {
 }
 
 export class ExpressionStatement implements Statement {
-  kind: StatementKind = 'ExpressionStatement';
+  kind(): StatementKind {
+    return 'ExpressionStatement';
+  }
 
   constructor(public token: Token, public expr?: Expression) {}
 
@@ -213,7 +226,9 @@ export class ExpressionStatement implements Statement {
 }
 
 export class Identifier implements Expression {
-  kind: ExpressionKind = 'Identifier';
+  kind(): ExpressionKind {
+    return 'Identifier';
+  }
 
   constructor(public token: Token, public value: string) {}
 
@@ -227,7 +242,9 @@ export class Identifier implements Expression {
 }
 
 export class IntegerLiteral implements Expression {
-  kind: ExpressionKind = 'IntegerLiteral';
+  kind(): ExpressionKind {
+    return 'IntegerLiteral';
+  }
 
   constructor(public token: Token, public value: number) {}
 
@@ -241,7 +258,9 @@ export class IntegerLiteral implements Expression {
 }
 
 export class BooleanLiteral implements Expression {
-  kind: ExpressionKind = 'BooleanLiteral';
+  kind(): ExpressionKind {
+    return 'BooleanLiteral';
+  }
 
   constructor(public token: Token, public value: boolean) {}
 
@@ -255,7 +274,9 @@ export class BooleanLiteral implements Expression {
 }
 
 export class AssignExpression implements Expression {
-  kind: ExpressionKind = 'AssignExpression';
+  kind(): ExpressionKind {
+    return 'AssignExpression';
+  }
 
   constructor(
     public token: Token,
@@ -277,7 +298,9 @@ export class AssignExpression implements Expression {
 }
 
 export class IfExpression implements Expression {
-  kind: ExpressionKind = 'IfExpression';
+  kind(): ExpressionKind {
+    return 'IfExpression';
+  }
 
   constructor(
     public token: Token,
@@ -304,7 +327,9 @@ export class IfExpression implements Expression {
 }
 
 export class BinaryExpression implements Expression {
-  kind: ExpressionKind = 'BinaryExpression';
+  kind(): ExpressionKind {
+    return 'BinaryExpression';
+  }
 
   constructor(
     public token: Token,
@@ -329,7 +354,9 @@ export class BinaryExpression implements Expression {
 }
 
 export class UnaryExpression implements Expression {
-  kind: ExpressionKind = 'UnaryExpression';
+  kind(): ExpressionKind {
+    return 'UnaryExpression';
+  }
 
   constructor(
     public token: Token,
@@ -351,7 +378,9 @@ export class UnaryExpression implements Expression {
 }
 
 export class CallExpression implements Expression {
-  kind: ExpressionKind = 'CallExpression';
+  kind(): ExpressionKind {
+    return 'CallExpression';
+  }
 
   constructor(
     public token: Token,
@@ -375,7 +404,9 @@ export class CallExpression implements Expression {
 }
 
 export class FunctionExpression implements Expression {
-  kind: ExpressionKind = 'FunctionExpression';
+  kind(): ExpressionKind {
+    return 'FunctionExpression';
+  }
 
   constructor(
     public token: Token,

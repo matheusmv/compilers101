@@ -1,6 +1,9 @@
 import { readFileSync } from 'fs';
 import { argv, exit } from 'process';
+import { Environment } from './environment.js';
+import { evalNode } from './eval.js';
 import { Lexer } from './lexer.js';
+import { ObjectValue } from './object.js';
 import { Parser } from './parser.js';
 
 const filePath: string = argv[2];
@@ -17,5 +20,9 @@ const program = parser.parse();
 if (parser.errors.length > 0) {
   console.log(parser.getErrors());
 } else {
-  console.log(program.toString());
+  const env: Environment<ObjectValue> = new Environment();
+  for (const stmt of program.stmts) {
+    console.log(stmt.toString());
+    console.log(evalNode(stmt, env));
+  }
 }

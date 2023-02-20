@@ -1,77 +1,77 @@
 export enum TokenType {
-  ILLEGAL = 'ILLEGAL', //
-  EOF = 'EOF', //
+  ILLEGAL = 'ILLEGAL',
+  EOF = 'EOF',
   COMMENT = 'COMMENT',
 
-  IDENT = 'IDENT', //
-  INT = 'INT', //
+  IDENT = 'IDENT',
+  INT = 'INT',
   FLOAT = 'FLOAT',
   CHAR = 'CHAR',
   STRING = 'STRING',
 
-  ADD = '+', //
-  SUB = '-', //
-  MUL = '*', //
-  QUO = '/', //
-  REM = '%', //
+  ADD = '+',
+  SUB = '-',
+  MUL = '*',
+  QUO = '/',
+  REM = '%',
 
-  CPLMT = '~', //
-  AND = '&', //
-  OR = '|', //
-  XOR = '^', //
-  SHL = '<<', //
-  SHR = '>>', //
+  CPLMT = '~',
+  AND = '&',
+  OR = '|',
+  XOR = '^',
+  SHL = '<<',
+  SHR = '>>',
 
-  ADD_ASSIGN = '+=', //
-  SUB_ASSIGN = '-=', //
-  MUL_ASSIGN = '*=', //
-  QUO_ASSIGN = '/=', //
-  REM_ASSIGN = '%=', //
+  ADD_ASSIGN = '+=',
+  SUB_ASSIGN = '-=',
+  MUL_ASSIGN = '*=',
+  QUO_ASSIGN = '/=',
+  REM_ASSIGN = '%=',
 
-  AND_ASSIGN = '&=', //
-  OR_ASSIGN = '|=', //
-  XOR_ASSIGN = '^=', //
-  SHL_ASSIGN = '<<=', //
-  SHR_ASSIGN = '>>=', //
+  AND_ASSIGN = '&=',
+  OR_ASSIGN = '|=',
+  XOR_ASSIGN = '^=',
+  SHL_ASSIGN = '<<=',
+  SHR_ASSIGN = '>>=',
 
-  LAND = '&&', //
-  LOR = '||', //
-  INC = '++', //
-  DEC = '--', //
+  LAND = '&&',
+  LOR = '||',
+  INC = '++',
+  DEC = '--',
 
-  EQL = '==', //
-  LSS = '<', //
-  GTR = '>', //
-  ASSIGN = '=', //
-  NOT = '!', //
+  EQL = '==',
+  LSS = '<',
+  GTR = '>',
+  ASSIGN = '=',
+  NOT = '!',
 
-  NEQ = '!=', //
-  LEQ = '<=', //
-  GEQ = '>=', //
+  NEQ = '!=',
+  LEQ = '<=',
+  GEQ = '>=',
   DEFINE = ':=',
   ELLIPSIS = '...',
 
-  LPAREN = '(', //
-  LBRACK = '[', //
-  LBRACE = '{', //
-  COMMA = ',', //
+  LPAREN = '(',
+  LBRACK = '[',
+  LBRACE = '{',
+  COMMA = ',',
   PERIOD = '.',
 
-  RPAREN = ')', //
-  RBRACK = ']', //
-  RBRACE = '}', //
-  SEMICOLON = ';', //
+  RPAREN = ')',
+  RBRACK = ']',
+  RBRACE = '}',
+  SEMICOLON = ';',
   COLON = ':',
 
-  FUNCTION = 'FUNCTION', //
-  LET = 'LET', //
-  TRUE = 'TRUE', //
-  FALSE = 'FALSE', //
-  IF = 'IF', //
-  ELSE = 'ELSE', //
-  RETURN = 'RETURN', //
-  WHILE = 'WHILE', //
-  FOR = 'FOR', //
+  FUNCTION = 'FUNCTION',
+  LET = 'LET',
+  TRUE = 'TRUE',
+  FALSE = 'FALSE',
+  IF = 'IF',
+  ELSE = 'ELSE',
+  RETURN = 'RETURN',
+  WHILE = 'WHILE',
+  FOR = 'FOR',
 }
 
 export interface Token {
