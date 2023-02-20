@@ -52,7 +52,7 @@ export class Parser {
   }
 
   peekError(type: TokenType): void {
-    const msg = `expected next token to be ${type}, got ${type} instead`;
+    const msg = `expected next token to be ${type}, got ${this.peekToken.type} instead`;
     this.errors.push(msg);
   }
 
@@ -412,7 +412,7 @@ function parseExpression(p: Parser, precedence: Precedence): Expression {
   ) {
     const binaryHandler = binaryExprHander.get(p.peekToken.type);
     if (!binaryHandler) {
-      p.noBinaryExprHandlerError(p.curToken.type);
+      p.noBinaryExprHandlerError(p.peekToken.type);
       return leftExpr;
     }
 

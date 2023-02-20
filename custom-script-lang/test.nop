@@ -99,4 +99,6 @@ fn fib(num) {
     return fib(num - 1) + fib(num - 2)
 }
 
-fib(10)
+fib(10);
+
+~(1 + 1)
