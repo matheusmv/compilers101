@@ -13,6 +13,7 @@ import {
   IfExpression,
   IntegerLiteral,
   LetStatement,
+  NilLiteral,
   Program,
   ReturnStatement,
   Statement,
@@ -171,6 +172,7 @@ const unaryExprHandler: Map<TokenType, UnaryExpressionHandler> = new Map([
   [TokenType.INT, parseInteger],
   [TokenType.TRUE, parseBoolean],
   [TokenType.FALSE, parseBoolean],
+  [TokenType.NIL, parseNil],
   [TokenType.LPAREN, parseGroupedExpression],
   [TokenType.NOT, parseUnaryExpression],
   [TokenType.SUB, parseUnaryExpression],
@@ -476,6 +478,10 @@ function parseBoolean(p: Parser): Expression {
   return new BooleanLiteral(p.curToken, p.curTokenIs(TokenType.TRUE));
 }
 
+function parseNil(p: Parser): Expression {
+  return new NilLiteral(p.curToken);
+}
+
 function parseAssignExpression(p: Parser, ident: Expression): Expression {
   const token = p.curToken;
   switch (token.type) {
@@ -606,7 +612,7 @@ function parseUpdateExpression(p: Parser, ident: Expression): UpdateExpression {
       return new UpdateExpression(token, ident);
     default:
       p.errors.push(
-        `unknown postfix operation: ${ident.tokenLiteral()}${token.literal}`,
+        `unknown postfix operation: ${ident?.toString()}${token.literal}`,
       );
       return null;
   }

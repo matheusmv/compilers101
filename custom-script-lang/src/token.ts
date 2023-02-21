@@ -72,6 +72,7 @@ export enum TokenType {
   RETURN = 'RETURN',
   WHILE = 'WHILE',
   FOR = 'FOR',
+  NIL = 'NIL',
 }
 
 export interface Token {
@@ -89,6 +90,7 @@ const keywords: Map<string, TokenType> = new Map([
   ['return', TokenType.RETURN],
   ['while', TokenType.WHILE],
   ['for', TokenType.FOR],
+  ['nil', TokenType.NIL],
 ]);
 
 export function lookUpIdent(literal: string): TokenType {

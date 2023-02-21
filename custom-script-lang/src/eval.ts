@@ -101,6 +101,9 @@ export function evalNode(
       const boolLiteral = node as BooleanLiteral;
       return nativeBoolToBooleanObject(boolLiteral.value);
     }
+    case 'NilLiteral': {
+      return NIL;
+    }
     case 'FunctionStatement': {
       const funcStmt = node as FunctionStatement;
       const name = funcStmt.identifier;

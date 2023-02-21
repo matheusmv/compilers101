@@ -22,6 +22,7 @@ type ExpressionKind =
   | 'Identifier'
   | 'IntegerLiteral'
   | 'BooleanLiteral'
+  | 'NilLiteral'
   | 'AssignExpression'
   | 'IfExpression'
   | 'BinaryExpression'
@@ -273,6 +274,22 @@ export class BooleanLiteral implements Expression {
 
   toString(): string {
     return this.token.literal;
+  }
+}
+
+export class NilLiteral implements Expression {
+  kind(): StatementKind | ExpressionKind {
+    return 'NilLiteral';
+  }
+
+  constructor(public token: Token) {}
+
+  tokenLiteral(): string {
+    return this.token.literal;
+  }
+
+  toString(): string {
+    return `nil`;
   }
 }
 
