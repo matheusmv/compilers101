@@ -654,6 +654,7 @@ function parseCallExpression(p: Parser, func: Expression): Expression {
     const exprs: Expression[] = [];
 
     if (p.peekTokenIs(TokenType.RPAREN)) {
+      p.nextToken();
       return exprs;
     }
 
@@ -668,6 +669,10 @@ function parseCallExpression(p: Parser, func: Expression): Expression {
 
     if (!p.expectPeek(TokenType.RPAREN)) {
       return null;
+    }
+
+    if (p.curTokenIs(TokenType.SEMICOLON)) {
+      p.nextToken();
     }
 
     return exprs;
