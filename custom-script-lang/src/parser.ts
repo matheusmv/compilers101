@@ -483,107 +483,82 @@ function parseNil(p: Parser): Expression {
 }
 
 function parseAssignExpression(p: Parser, ident: Expression): Expression {
+  const buildAssignOpExpr = (
+    token: Token,
+    ident: Expression,
+    opToken: Token,
+    left: Expression,
+    right: Expression,
+  ) => {
+    return new AssignExpression(
+      token,
+      ident,
+      new BinaryExpression(opToken, left, opToken.literal, right),
+    );
+  };
+
   const token = p.curToken;
+
   switch (token.type) {
     case TokenType.ADD_ASSIGN: {
       p.nextToken();
       const rExpr = parseExpression(p, Precedence.LOWEST);
       const sumToken: Token = { type: TokenType.ADD, literal: '+' };
-      return new AssignExpression(
-        token,
-        ident,
-        new BinaryExpression(sumToken, ident, sumToken.literal, rExpr),
-      );
+      return buildAssignOpExpr(token, ident, sumToken, ident, rExpr);
     }
     case TokenType.SUB_ASSIGN: {
       p.nextToken();
       const rExpr = parseExpression(p, Precedence.LOWEST);
       const subToken: Token = { type: TokenType.SUB, literal: '-' };
-      return new AssignExpression(
-        token,
-        ident,
-        new BinaryExpression(subToken, ident, subToken.literal, rExpr),
-      );
+      return buildAssignOpExpr(token, ident, subToken, ident, rExpr);
     }
     case TokenType.MUL_ASSIGN: {
       p.nextToken();
       const rExpr = parseExpression(p, Precedence.LOWEST);
       const mulToken: Token = { type: TokenType.MUL, literal: '*' };
-      return new AssignExpression(
-        token,
-        ident,
-        new BinaryExpression(mulToken, ident, mulToken.literal, rExpr),
-      );
+      return buildAssignOpExpr(token, ident, mulToken, ident, rExpr);
     }
     case TokenType.QUO_ASSIGN: {
       p.nextToken();
       const rExpr = parseExpression(p, Precedence.LOWEST);
       const quoToken: Token = { type: TokenType.QUO, literal: '/' };
-      return new AssignExpression(
-        token,
-        ident,
-        new BinaryExpression(quoToken, ident, quoToken.literal, rExpr),
-      );
+      return buildAssignOpExpr(token, ident, quoToken, ident, rExpr);
     }
     case TokenType.REM_ASSIGN: {
       p.nextToken();
       const rExpr = parseExpression(p, Precedence.LOWEST);
       const remToken: Token = { type: TokenType.REM, literal: '%' };
-      return new AssignExpression(
-        token,
-        ident,
-        new BinaryExpression(remToken, ident, remToken.literal, rExpr),
-      );
+      return buildAssignOpExpr(token, ident, remToken, ident, rExpr);
     }
     case TokenType.AND_ASSIGN: {
       p.nextToken();
       const rExpr = parseExpression(p, Precedence.LOWEST);
       const andToken: Token = { type: TokenType.AND, literal: '&' };
-      return new AssignExpression(
-        token,
-        ident,
-        new BinaryExpression(andToken, ident, andToken.literal, rExpr),
-      );
+      return buildAssignOpExpr(token, ident, andToken, ident, rExpr);
     }
     case TokenType.OR_ASSIGN: {
       p.nextToken();
       const rExpr = parseExpression(p, Precedence.LOWEST);
       const orToken: Token = { type: TokenType.OR, literal: '|' };
-      return new AssignExpression(
-        token,
-        ident,
-        new BinaryExpression(orToken, ident, orToken.literal, rExpr),
-      );
+      return buildAssignOpExpr(token, ident, orToken, ident, rExpr);
     }
     case TokenType.XOR_ASSIGN: {
       p.nextToken();
       const rExpr = parseExpression(p, Precedence.LOWEST);
       const xorToken: Token = { type: TokenType.XOR, literal: '^' };
-      return new AssignExpression(
-        token,
-        ident,
-        new BinaryExpression(xorToken, ident, xorToken.literal, rExpr),
-      );
+      return buildAssignOpExpr(token, ident, xorToken, ident, rExpr);
     }
     case TokenType.SHL_ASSIGN: {
       p.nextToken();
       const rExpr = parseExpression(p, Precedence.LOWEST);
       const shlToken: Token = { type: TokenType.SHL, literal: '<<' };
-      return new AssignExpression(
-        token,
-        ident,
-        new BinaryExpression(shlToken, ident, shlToken.literal, rExpr),
-      );
+      return buildAssignOpExpr(token, ident, shlToken, ident, rExpr);
     }
     case TokenType.SHR_ASSIGN: {
       p.nextToken();
       const rExpr = parseExpression(p, Precedence.LOWEST);
       const shrToken: Token = { type: TokenType.SHL, literal: '>>' };
-      return new AssignExpression(
-        token,
-        ident,
-        new BinaryExpression(shrToken, ident, shrToken.literal, rExpr),
-      );
+      return buildAssignOpExpr(token, ident, shrToken, ident, rExpr);
     }
     default: {
       p.nextToken();
