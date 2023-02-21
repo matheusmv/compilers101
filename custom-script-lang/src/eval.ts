@@ -18,6 +18,7 @@ import {
   ReturnStatement,
   Statement,
   UnaryExpression,
+  UpdateExpression,
   WhileStatement,
 } from './ast.js';
 import { Environment } from './environment.js';
@@ -31,6 +32,7 @@ import {
   ObjectValueType,
   Return,
 } from './object.js';
+import { Token, TokenType } from './token.js';
 
 const NIL = new Nil();
 const TRUE = new BooleanObject(true);
@@ -137,8 +139,59 @@ export function evalNode(
       const assignExpr = node as AssignExpression;
       const result = evalAssignExpression(assignExpr, env);
       if (isError(result)) return result;
-      return result; // TODO expression?
+      return result;
     }
+    case 'UpdateExpression': {
+      const updateExpr = node as UpdateExpression;
+      return evalUpdateExpression(updateExpr, env);
+    }
+  }
+}
+
+// TODO: this can be coded in a better way, please refactor this garbage
+function evalUpdateExpression(
+  updateExpr: UpdateExpression,
+  env: Environment<ObjectValue>,
+): ObjectValue {
+  const oldValue = evalNode(updateExpr.ident, env);
+
+  switch (updateExpr.token.literal) {
+    case '++': {
+      const exprResult = evalNode(
+        new AssignExpression(
+          { type: TokenType.ASSIGN, literal: '=' },
+          updateExpr.ident,
+          new BinaryExpression(
+            { type: TokenType.ADD, literal: '+' },
+            updateExpr.ident,
+            '+',
+            new IntegerLiteral({ type: TokenType.INT, literal: 'INT' }, 1),
+          ),
+        ),
+        env,
+      );
+      if (isError(exprResult)) return exprResult;
+      return oldValue;
+    }
+    case '--': {
+      const exprResult = evalNode(
+        new AssignExpression(
+          { type: TokenType.ASSIGN, literal: '=' },
+          updateExpr.ident,
+          new BinaryExpression(
+            { type: TokenType.ADD, literal: '-' },
+            updateExpr.ident,
+            '-',
+            new IntegerLiteral({ type: TokenType.INT, literal: 'INT' }, 1),
+          ),
+        ),
+        env,
+      );
+      if (isError(exprResult)) return exprResult;
+      return oldValue;
+    }
+    default:
+      return newError(`unknown operator: ${updateExpr.token.literal}`);
   }
 }
 

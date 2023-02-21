@@ -27,7 +27,8 @@ type ExpressionKind =
   | 'BinaryExpression'
   | 'UnaryExpression'
   | 'CallExpression'
-  | 'FunctionExpression';
+  | 'FunctionExpression'
+  | 'UpdateExpression';
 
 export type Expression = Node;
 
@@ -98,9 +99,9 @@ export class BlockStatement implements Statement {
   toString(): string {
     let out = '';
 
-    out += '{';
+    out += '{ ';
     for (const stmt of this.stmts) {
-      out += `${stmt.toString()}`;
+      out += `${stmt.toString()} `;
     }
     out += '}';
 
@@ -428,5 +429,21 @@ export class FunctionExpression implements Expression {
       .join(', ')}) ${this.body.toString()}`;
 
     return out;
+  }
+}
+
+export class UpdateExpression implements Expression {
+  kind(): StatementKind | ExpressionKind {
+    return 'UpdateExpression';
+  }
+
+  constructor(public token: Token, public ident: Expression) {}
+
+  tokenLiteral(): string {
+    return this.token.literal;
+  }
+
+  toString(): string {
+    return `(${this.ident.toString()}${this.tokenLiteral()})`;
   }
 }

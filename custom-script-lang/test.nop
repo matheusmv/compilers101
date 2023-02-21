@@ -105,7 +105,7 @@ fn fib(num) {
 
 fib(10);
 
-~(1 + 1)
+~(1 + -1)
 
 let testWhile = 0;
 for (let y = 0; y < 10; y++) {
@@ -115,3 +115,7 @@ for (let y = 0; y < 10; y++) {
 }
 
 testWhile == 5;
+
+let z = 1;
+
+z += 1 + z++;

@@ -17,6 +17,7 @@ import {
   ReturnStatement,
   Statement,
   UnaryExpression,
+  UpdateExpression,
   WhileStatement,
 } from './ast.js';
 import { Lexer } from './lexer.js';
@@ -116,6 +117,7 @@ enum Precedence {
   SUM,
   PROD,
   UNARY,
+  UPDT,
   ASSIGN,
   CALL,
 }
@@ -145,6 +147,9 @@ const precedences: Map<TokenType, Precedence> = new Map([
   [TokenType.QUO, Precedence.PROD],
   [TokenType.REM, Precedence.PROD],
 
+  [TokenType.INC, Precedence.UPDT],
+  [TokenType.DEC, Precedence.UPDT],
+
   [TokenType.ADD_ASSIGN, Precedence.ASSIGN],
   [TokenType.SUB_ASSIGN, Precedence.ASSIGN],
   [TokenType.MUL_ASSIGN, Precedence.ASSIGN],
@@ -155,8 +160,6 @@ const precedences: Map<TokenType, Precedence> = new Map([
   [TokenType.XOR_ASSIGN, Precedence.ASSIGN],
   [TokenType.SHL_ASSIGN, Precedence.ASSIGN],
   [TokenType.SHR_ASSIGN, Precedence.ASSIGN],
-  [TokenType.INC, Precedence.ASSIGN],
-  [TokenType.DEC, Precedence.ASSIGN],
   [TokenType.ASSIGN, Precedence.ASSIGN],
 
   [TokenType.LPAREN, Precedence.CALL],
@@ -196,7 +199,10 @@ const binaryExprHander: Map<TokenType, BinaryExpressionHandler> = new Map([
   [TokenType.LSS, parseBinaryExpression],
   [TokenType.GEQ, parseBinaryExpression],
   [TokenType.GTR, parseBinaryExpression],
-  [TokenType.LPAREN, parseCallExpression],
+
+  [TokenType.INC, parseUpdateExpression],
+  [TokenType.DEC, parseUpdateExpression],
+
   [TokenType.ADD_ASSIGN, parseAssignExpression],
   [TokenType.SUB_ASSIGN, parseAssignExpression],
   [TokenType.MUL_ASSIGN, parseAssignExpression],
@@ -207,9 +213,8 @@ const binaryExprHander: Map<TokenType, BinaryExpressionHandler> = new Map([
   [TokenType.XOR_ASSIGN, parseAssignExpression],
   [TokenType.SHL_ASSIGN, parseAssignExpression],
   [TokenType.SHR_ASSIGN, parseAssignExpression],
-  [TokenType.INC, parseAssignExpression],
-  [TokenType.DEC, parseAssignExpression],
   [TokenType.ASSIGN, parseAssignExpression],
+  [TokenType.LPAREN, parseCallExpression],
 ]);
 
 function parseStatement(p: Parser): Statement {
@@ -574,31 +579,36 @@ function parseAssignExpression(p: Parser, ident: Expression): Expression {
         new BinaryExpression(shrToken, ident, shrToken.literal, rExpr),
       );
     }
-    case TokenType.INC: {
-      const sumToken: Token = { type: TokenType.ADD, literal: '+' };
-      const intToken: Token = { type: TokenType.INT, literal: '1' };
-      const oneLiteral: IntegerLiteral = new IntegerLiteral(intToken, 1);
-      return new AssignExpression(
-        token,
-        ident,
-        new BinaryExpression(sumToken, ident, sumToken.literal, oneLiteral),
-      );
-    }
-    case TokenType.DEC: {
-      const subToken: Token = { type: TokenType.SUB, literal: '-' };
-      const intToken: Token = { type: TokenType.INT, literal: '1' };
-      const oneLiteral: IntegerLiteral = new IntegerLiteral(intToken, 1);
-      return new AssignExpression(
-        token,
-        ident,
-        new BinaryExpression(subToken, ident, subToken.literal, oneLiteral),
-      );
-    }
     default: {
       p.nextToken();
       const value = parseExpression(p, Precedence.LOWEST);
       return new AssignExpression(token, ident, value);
     }
+  }
+}
+
+function parseUpdateExpression(p: Parser, ident: Expression): UpdateExpression {
+  const token = p.curToken;
+
+  if (ident.kind() !== 'Identifier') {
+    p.errors.push(
+      `invalid left-hand side expression in postfix operation: ${ident.toString()}${
+        token.literal
+      }`,
+    );
+    return null;
+  }
+
+  switch (token.type) {
+    case TokenType.INC:
+      return new UpdateExpression(token, ident);
+    case TokenType.DEC:
+      return new UpdateExpression(token, ident);
+    default:
+      p.errors.push(
+        `unknown postfix operation: ${ident.tokenLiteral()}${token.literal}`,
+      );
+      return null;
   }
 }
 
