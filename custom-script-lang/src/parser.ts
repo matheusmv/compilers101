@@ -590,9 +590,9 @@ function parseAssignExpression(p: Parser, ident: Expression): Expression {
 function parseUpdateExpression(p: Parser, ident: Expression): UpdateExpression {
   const token = p.curToken;
 
-  if (ident.kind() !== 'Identifier') {
+  if (ident?.kind() !== 'Identifier') {
     p.errors.push(
-      `invalid left-hand side expression in postfix operation: ${ident.toString()}${
+      `invalid left-hand side expression in postfix operation: ${ident?.toString()}${
         token.literal
       }`,
     );

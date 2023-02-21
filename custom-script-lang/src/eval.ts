@@ -32,7 +32,7 @@ import {
   ObjectValueType,
   Return,
 } from './object.js';
-import { Token, TokenType } from './token.js';
+import { TokenType } from './token.js';
 
 const NIL = new Nil();
 const TRUE = new BooleanObject(true);
