@@ -2,23 +2,30 @@
 
 %{
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
 
 #include "token.h"
+
+void log_token_info(const TokenType& token_type, const char* literal) {
+    std::cout << to_string(token_type) << " : " << literal << std::endl;
+}
 
 %}
 
 WS [ \t\n]
 
 CHARACTER [a-zA-Z]
-DIGIT [0-9]
+DIGIT     [0-9]
 
-INT [+-]?(0|[1-9]{DIGIT}*)
-FLOAT [+-]?{DIGIT}+\.{DIGIT}+
-CHAR '{CHARACTER}'
+ML_COMMENT "/*"(.*)"*/"
+SL_COMMENT "//"(.*)
+COMMENT {ML_COMMENT}|{SL_COMMENT}
+
+INT    (0|[1-9]){DIGIT}*
+FLOAT  (0|[1-9])?{DIGIT}*\.{DIGIT}+
+CHAR   '(.*)'
 STRING \"(.*)\"
-BOOL "true"|"false"
+BOOL   "true"|"false"
 
 IDENT (_)*{CHARACTER}(_|{CHARACTER}|{DIGIT})*
 
@@ -26,22 +33,51 @@ IDENT (_)*{CHARACTER}(_|{CHARACTER}|{DIGIT})*
 
 {WS}+       {};
 
-{INT}       { printf("%s: %s\n", token_str(T_INT), yytext);     };
-{FLOAT}     { printf("%s: %s\n", token_str(T_FLOAT), yytext);   };
-{CHAR}      { printf("%s: %s\n", token_str(T_CHAR), yytext);    };
-{STRING}    { printf("%s: %s\n", token_str(T_STRING), yytext);  };
-{BOOL}      { printf("%s: %s\n", token_str(T_BOOL), yytext);    };
+{COMMENT}   {
+                log_token_info(TokenType::TT_COMMENT, YYText());
+            };
 
-{IDENT}     { printf("%s: %s\n", token_str(T_IDENT), yytext);   };
+{INT}       {
+                log_token_info(TokenType::TT_INT, YYText());
+            };
 
-.           { printf("%s: %s\n", token_str(T_ILLEGAL), yytext); };
+{FLOAT}     {
+                log_token_info(TokenType::TT_FLOAT, YYText());
+            };
 
-<<EOF>>  { return T_EOF; };
+{CHAR}      {
+                log_token_info(TokenType::TT_CHAR, YYText());
+            };
+
+{STRING}    {
+                log_token_info(TokenType::TT_STRING, YYText());
+            };
+
+{BOOL}      {
+                log_token_info(lookup(YYText()), YYText());
+            };
+
+{IDENT}     {
+                if (is_identifier(YYText())) {
+                    log_token_info(lookup(YYText()), YYText());
+                } else {
+                    log_token_info(TokenType::TT_ILLEGAL, YYText());
+                }
+            };
+
+.           {
+                log_token_info(TokenType::TT_ILLEGAL, YYText());
+            };
+
+<<EOF>>     {
+                return (int) TokenType::TT_EOF;
+            };
 
 %%
 
-int main(void) {
-    yylex();
+int main() {
+    yyFlexLexer scanner;
+    scanner.yylex();
 
-    return EXIT_SUCCESS;
+    return 0;
 }

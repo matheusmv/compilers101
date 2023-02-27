@@ -1,17 +1,17 @@
 BIN=echo
-LEX_SRC=lex.yy.c
+LEX_SRC=lex.yy.cc
 
-CC=gcc
-LEX=flex
+CC=g++
+LEX=flex++
 
-CFLAGS=-Wall -std=c11
+CFLAGS=-Wall -std=c++17
 
 all: $(BIN)
 
-$(BIN): $(LEX_SRC) *.c
+$(BIN): $(LEX_SRC) *.cpp
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(LEX_SRC): *.l
+$(LEX_SRC): echo.l
 	$(LEX) $^
 
 clean:

@@ -1,90 +1,100 @@
-#ifndef TOKEN_H
-#define TOKEN_H
+#pragma once
 
-#include <stdint.h>
-#include <stdbool.h>
+#include <cstddef>
+#include <string>
 
-#define LOWEST_PRECEDENCE  0;
-#define UNARY_PRECEDENCE   6;
-#define HIGHEST_PRECEDENCE 7;
+enum class TokenType {
+    TT_ILLEGAL,
+    TT_EOF,
+    TT_COMMENT,
 
-typedef enum token_t {
-        T_ILLEGAL,
-        T_EOF,
-        T_COMMENT,
+    literal_start,
+    TT_IDENT,  // main
+    TT_INT,    // 1500
+    TT_FLOAT,  // 15.35
+    TT_CHAR,   // 'A'
+    TT_STRING, // "abc"
+    literal_end,
 
-        literal_start,
-        T_IDENT,  // main
-        T_INT,    // 1500
-        T_FLOAT,  // 15.35
-        T_CHAR,   // 'a'
-        T_STRING, // 'abc'
-        T_BOOL,   // true
-        literal_end,
+    operator_start,
+    TT_ADD, // +
+    TT_SUB, // -
+    TT_MUL, // *
+    TT_QUO, // /
+    TT_REM, // %
 
-        operator_start,
-        T_ADD, // +
-	T_SUB, // -
-	T_MUL, // *
-	T_QUO, // /
-	T_REM, // %
+    TT_TILDE, // ~
+    TT_AND, // &
+    TT_OR,  // |
+    TT_XOR, // ^
+    TT_SHL, // <<
+    TT_SHR, // >>
 
-	T_AND, // &
-	T_OR,  // |
-	T_XOR, // ^
-	T_SHL, // <<
-	T_SHR, // >>
+    TT_ADD_ASSIGN, // +=
+    TT_SUB_ASSIGN, // -=
+    TT_MUL_ASSIGN, // *=
+    TT_QUO_ASSIGN, // /=
+    TT_REM_ASSIGN, // %=
 
-	T_ADD_ASSIGN, // +=
-	T_SUB_ASSIGN, // -=
-	T_MUL_ASSIGN, // *=
-	T_QUO_ASSIGN, // /=
-	T_REM_ASSIGN, // %=
+    TT_AND_ASSIGN, // &=
+    TT_OR_ASSIGN,  // |=
+    TT_XOR_ASSIGN, // ^=
+    TT_SHL_ASSIGN, // <<=
+    TT_SHR_ASSIGN, // >>=
 
-	T_AND_ASSIGN, // &=
-	T_OR_ASSIGN,  // |=
-	T_XOR_ASSIGN, // ^=
-	T_SHL_ASSIGN, // <<=
-	T_SHR_ASSIGN, // >>=
+    TT_LAND, // &&
+    TT_LOR,  // ||
+    TT_INC,  // ++
+    TT_DEC,  // --
 
-	T_LAND,  // &&
-	T_LOR,   // ||
-	T_INC,   // ++
-	T_DEC,   // --
+    TT_EQL,    // ==
+    TT_LSS,    // <
+    TT_GTR,    // >
+    TT_ASSIGN, // =
+    TT_NOT,    // !
 
-	T_EQL,    // ==
-	T_LSS,    // <
-	T_GTR,    // >
-	T_ASSIGN, // =
-	T_NOT,    // !
+    TT_NEQ,    // !=
+    TT_LEQ,    // <=
+    TT_GEQ,    // >=
+    TT_DEFINE, // :=
 
-	T_NEQ,    // !=
-	T_LEQ,    // <=
-	T_GEQ,    // >=
-	T_DEFINE, // :=
+    TT_LPAREN, // (
+    TT_LBRACK, // [
+    TT_LBRACE, // {
+    TT_COMMA,  // ,
+    TT_PERIOD, // .
 
-	T_LPAREN, // (
-	T_LBRACK, // [
-	T_LBRACE, // {
-	T_COMMA,  // ,
-	T_PERIOD, // .
+    TT_RPAREN,    // )
+    TT_RBRACK,    // ]
+    TT_RBRACE,    // }
+    TT_SEMICOLON, // ;
+    TT_COLON,     // :
+    operator_end,
 
-	T_RPAREN,    // )
-	T_RBRACK,    // ]
-	T_RBRACE,    // }
-	T_SEMICOLON, // ;
-	T_COLON,     // :
-        operator_end,
+    keyword_start,
+    FUNCTION, // func
+    LET,      // let
+    TRUE,     // true
+    FALSE,    // false
+    IF,       // if
+    ELSE,     // else
+    RETURN,   // return
+    WHILE,    // while
+    FOR,      // for
+    NIL,      // nil
+    keyword_end
+};
 
-        keyword_start,
+struct Token {
+    TokenType type;
+    std::string literal;
+    std::size_t line;
+};
 
-        // TODO
-
-        keyword_end
-} token_t;
-
-const char* token_str(token_t token);
-
-int32_t token_precedence(token_t token);
-
-#endif /* TOKEN_H */
+const std::string& to_string(const TokenType& token_type);
+TokenType lookup(const std::string& literal);
+bool is_literal(const TokenType& token_type);
+bool is_operator(const TokenType& token_type);
+bool is_keyword(const TokenType& token_type);
+bool is_keyword(const std::string& literal);
+bool is_identifier(const std::string& literal);
