@@ -26,7 +26,7 @@ valgrind:
 $(BIN): $(LEX_SRC) *.cpp
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(LEX_SRC): echo.l
+$(LEX_SRC): *.l
 	$(LEX) $^
 
 clean:

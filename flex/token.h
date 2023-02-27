@@ -24,11 +24,11 @@ enum class TokenType {
     TT_REM, // %
 
     TT_TILDE, // ~
-    TT_AND, // &
-    TT_OR,  // |
-    TT_XOR, // ^
-    TT_SHL, // <<
-    TT_SHR, // >>
+    TT_AND,   // &
+    TT_OR,    // |
+    TT_XOR,   // ^
+    TT_SHL,   // <<
+    TT_SHR,   // >>
 
     TT_ADD_ASSIGN, // +=
     TT_SUB_ASSIGN, // -=
@@ -53,10 +53,11 @@ enum class TokenType {
     TT_ASSIGN, // =
     TT_NOT,    // !
 
-    TT_NEQ,    // !=
-    TT_LEQ,    // <=
-    TT_GEQ,    // >=
-    TT_DEFINE, // :=
+    TT_NEQ,      // !=
+    TT_LEQ,      // <=
+    TT_GEQ,      // >=
+    TT_DEFINE,   // :=
+    TT_ELLIPSIS, // ...
 
     TT_LPAREN, // (
     TT_LBRACK, // [
@@ -79,6 +80,8 @@ enum class TokenType {
     IF,       // if
     ELSE,     // else
     RETURN,   // return
+    BREAK,    // break
+    CONTINUE, // continue
     WHILE,    // while
     FOR,      // for
     NIL,      // nil
