@@ -16,7 +16,7 @@ VALGRIND=valgrind -s \
 all: CFLAGS += -O2
 all: $(BIN)
 
-debub: CFLAGS += -O0 -g
+debug: CFLAGS += -O0 -g
 debug: $(BIN)
 
 valgrind: debug
