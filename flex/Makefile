@@ -6,7 +6,22 @@ LEX=flex++
 
 CFLAGS=-Wall -std=c++17
 
+VALGRIND=valgrind -s \
+		 --tool=memcheck \
+		 --leak-check=full \
+		 --leak-resolution=med \
+		 --track-origins=yes \
+		 --vgdb=no
+
+all: CFLAGS += -O2
 all: $(BIN)
+
+debub: CFLAGS += -O0 -g
+debug: $(BIN)
+
+valgrind: debug
+valgrind:
+	$(VALGRIND) ./$(BIN)
 
 $(BIN): $(LEX_SRC) *.cpp
 	$(CC) $(CFLAGS) $^ -o $@
