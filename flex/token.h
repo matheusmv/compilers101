@@ -4,7 +4,7 @@
 #include <string>
 
 enum class TokenType {
-    TT_ILLEGAL,
+    TT_ILLEGAL = -1,
     TT_EOF,
     TT_COMMENT,
 
