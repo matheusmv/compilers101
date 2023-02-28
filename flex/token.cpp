@@ -1,6 +1,6 @@
 #include "token.h"
 
-#include <functional>
+#include <algorithm>
 #include <unordered_map>
 
 static const std::unordered_map<TokenType, std::string> tokens = {
@@ -97,6 +97,12 @@ static const std::unordered_map<std::string, TokenType> keywords = {
     {"nil", TokenType::NIL},
 };
 
+std::ostream& operator<<(std::ostream& out, const Token& token) {
+    return out << "{ TokenType: " << to_string(token.type)
+               << ", Literal: " << token.literal
+               << ", Line: " << token.line << " }";
+}
+
 const std::string& to_string(const TokenType& token_type) {
     if (tokens.find(token_type) != tokens.end()) {
         return tokens.at(token_type);
@@ -132,11 +138,7 @@ bool is_keyword(const std::string& literal) {
 }
 
 bool is_identifier(const std::string& literal) {
-    if (literal.empty() || is_keyword(literal)) {
-        return false;
-    }
-
-    if (std::isdigit(literal[0])) {
+    if (literal.empty() || is_keyword(literal) || std::isdigit(literal[0])) {
         return false;
     }
 

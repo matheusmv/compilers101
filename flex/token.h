@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <iostream>
 #include <string>
 
 enum class TokenType {
@@ -93,6 +94,8 @@ struct Token {
     std::string literal;
     std::size_t line;
 };
+
+std::ostream& operator<<(std::ostream& out, const Token& token);
 
 const std::string& to_string(const TokenType& token_type);
 TokenType lookup(const std::string& literal);

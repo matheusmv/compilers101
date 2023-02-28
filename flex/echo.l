@@ -8,11 +8,9 @@
 
 #include "token.h"
 
-static std::size_t line_number = 1;
+#define RETURN_AS_INT(TT) return static_cast<int>(TT);
 
-void log_token_info(const TokenType& token_type, const char* literal, const std::size_t& line) {
-    std::printf("{ TokenType: %s, Literal: %s, Line: %ld }\n", to_string(token_type).c_str(), literal, line);
-}
+std::size_t line_number = 1;
 
 %}
 
@@ -20,18 +18,16 @@ WS [ \t]
 NL \n
 
 SL_COMMENT "//"(.*)
-ML_COMMENT "/*"{NL}*(.*){NL}*"*/"
+ML_COMMENT "/*"({WS}|{NL})*(.*)({WS}|{NL})*"*/"
 
 CHARACTER [a-zA-Z]
 DIGIT     [0-9]
 
+IDENT  (_)*{CHARACTER}(_|{CHARACTER}|{DIGIT})*
 INT    {DIGIT}+
 FLOAT  {DIGIT}*\.{DIGIT}+
 CHAR   '(.*)'
 STRING \"(.*)\"
-BOOL   "true"|"false"
-
-IDENT (_)*{CHARACTER}(_|{CHARACTER}|{DIGIT})*
 
 ADD "+"
 SUB "-"
@@ -103,79 +99,76 @@ COLON     ":"
     }
 };
 
-{INT}    { log_token_info(TokenType::TT_INT, yytext, line_number); };
-{FLOAT}  { log_token_info(TokenType::TT_FLOAT, yytext, line_number); };
-{CHAR}   { log_token_info(TokenType::TT_CHAR, yytext, line_number); };
-{STRING} { log_token_info(TokenType::TT_STRING, yytext, line_number); };
-{BOOL}   { log_token_info(lookup(yytext), yytext, line_number); };
-{IDENT}  {
+{IDENT} {
     std::string literal = yytext;
     if (is_identifier(literal) || is_keyword(literal)) {
-        log_token_info(lookup(literal), literal.c_str(), line_number);
+        RETURN_AS_INT(lookup(literal))
     } else {
-        log_token_info(TokenType::TT_ILLEGAL, literal.c_str(), line_number);
+        RETURN_AS_INT(TokenType::TT_ILLEGAL)
     }
 };
+{INT}    { RETURN_AS_INT(TokenType::TT_INT) };
+{FLOAT}  { RETURN_AS_INT(TokenType::TT_FLOAT) };
+{CHAR}   { RETURN_AS_INT(TokenType::TT_CHAR) };
+{STRING} { RETURN_AS_INT(TokenType::TT_STRING) };
 
-{ADD} { log_token_info(TokenType::TT_ADD, yytext, line_number); };
-{SUB} { log_token_info(TokenType::TT_SUB, yytext, line_number); };
-{MUL} { log_token_info(TokenType::TT_MUL, yytext, line_number); };
-{QUO} { log_token_info(TokenType::TT_QUO, yytext, line_number); };
-{REM} { log_token_info(TokenType::TT_REM, yytext, line_number); };
+{ADD} { RETURN_AS_INT(TokenType::TT_ADD) };
+{SUB} { RETURN_AS_INT(TokenType::TT_SUB) };
+{MUL} { RETURN_AS_INT(TokenType::TT_MUL) };
+{QUO} { RETURN_AS_INT(TokenType::TT_QUO) };
+{REM} { RETURN_AS_INT(TokenType::TT_REM) };
 
-{TILDE} { log_token_info(TokenType::TT_TILDE, yytext, line_number); };
-{AND}   { log_token_info(TokenType::TT_AND, yytext, line_number); };
-{OR}    { log_token_info(TokenType::TT_OR, yytext, line_number); };
-{XOR}   { log_token_info(TokenType::TT_XOR, yytext, line_number); };
-{SHL}   { log_token_info(TokenType::TT_SHL, yytext, line_number); };
-{SHR}   { log_token_info(TokenType::TT_SHR, yytext, line_number); };
+{TILDE} { RETURN_AS_INT(TokenType::TT_TILDE) };
+{AND}   { RETURN_AS_INT(TokenType::TT_AND) };
+{OR}    { RETURN_AS_INT(TokenType::TT_OR) };
+{XOR}   { RETURN_AS_INT(TokenType::TT_XOR) };
+{SHL}   { RETURN_AS_INT(TokenType::TT_SHL) };
+{SHR}   { RETURN_AS_INT(TokenType::TT_SHR) };
 
-{ADD_ASSIGN} { log_token_info(TokenType::TT_ADD_ASSIGN, yytext, line_number); };
-{SUB_ASSIGN} { log_token_info(TokenType::TT_SUB_ASSIGN, yytext, line_number); };
-{MUL_ASSIGN} { log_token_info(TokenType::TT_MUL_ASSIGN, yytext, line_number); };
-{QUO_ASSIGN} { log_token_info(TokenType::TT_QUO_ASSIGN, yytext, line_number); };
-{REM_ASSIGN} { log_token_info(TokenType::TT_REM_ASSIGN, yytext, line_number); };
+{ADD_ASSIGN} { RETURN_AS_INT(TokenType::TT_ADD_ASSIGN) };
+{SUB_ASSIGN} { RETURN_AS_INT(TokenType::TT_SUB_ASSIGN) };
+{MUL_ASSIGN} { RETURN_AS_INT(TokenType::TT_MUL_ASSIGN) };
+{QUO_ASSIGN} { RETURN_AS_INT(TokenType::TT_QUO_ASSIGN) };
+{REM_ASSIGN} { RETURN_AS_INT(TokenType::TT_REM_ASSIGN) };
 
-{AND_ASSIGN} { log_token_info(TokenType::TT_AND_ASSIGN, yytext, line_number); };
-{OR_ASSIGN}  { log_token_info(TokenType::TT_OR_ASSIGN, yytext, line_number); };
-{XOR_ASSIGN} { log_token_info(TokenType::TT_XOR_ASSIGN, yytext, line_number); };
-{SHL_ASSIGN} { log_token_info(TokenType::TT_SHL_ASSIGN, yytext, line_number); };
-{SHR_ASSIGN} { log_token_info(TokenType::TT_SHR_ASSIGN, yytext, line_number); };
+{AND_ASSIGN} { RETURN_AS_INT(TokenType::TT_AND_ASSIGN) };
+{OR_ASSIGN}  { RETURN_AS_INT(TokenType::TT_OR_ASSIGN) };
+{XOR_ASSIGN} { RETURN_AS_INT(TokenType::TT_XOR_ASSIGN) };
+{SHL_ASSIGN} { RETURN_AS_INT(TokenType::TT_SHL_ASSIGN) };
+{SHR_ASSIGN} { RETURN_AS_INT(TokenType::TT_SHR_ASSIGN) };
 
-{LAND} { log_token_info(TokenType::TT_LAND, yytext, line_number); };
-{LOR}  { log_token_info(TokenType::TT_LOR, yytext, line_number); };
-{INC}  { log_token_info(TokenType::TT_INC, yytext, line_number); };
-{DEC}  { log_token_info(TokenType::TT_DEC, yytext, line_number); };
+{LAND} { RETURN_AS_INT(TokenType::TT_LAND) };
+{LOR}  { RETURN_AS_INT(TokenType::TT_LOR) };
+{INC}  { RETURN_AS_INT(TokenType::TT_INC) };
+{DEC}  { RETURN_AS_INT(TokenType::TT_DEC) };
 
-{EQL}    { log_token_info(TokenType::TT_EQL, yytext, line_number); };
-{LSS}    { log_token_info(TokenType::TT_LSS, yytext, line_number); };
-{GTR}    { log_token_info(TokenType::TT_GTR, yytext, line_number); };
-{ASSIGN} { log_token_info(TokenType::TT_ASSIGN, yytext, line_number); };
-{NOT}    { log_token_info(TokenType::TT_NOT, yytext, line_number); };
+{EQL}    { RETURN_AS_INT(TokenType::TT_EQL) };
+{LSS}    { RETURN_AS_INT(TokenType::TT_LSS) };
+{GTR}    { RETURN_AS_INT(TokenType::TT_GTR) };
+{ASSIGN} { RETURN_AS_INT(TokenType::TT_ASSIGN) };
+{NOT}    { RETURN_AS_INT(TokenType::TT_NOT) };
 
-{NEQ}      { log_token_info(TokenType::TT_NEQ, yytext, line_number); };
-{LEQ}      { log_token_info(TokenType::TT_LEQ, yytext, line_number); };
-{GEQ}      { log_token_info(TokenType::TT_GEQ, yytext, line_number); };
-{DEFINE}   { log_token_info(TokenType::TT_DEFINE, yytext, line_number); };
-{ELLIPSIS} { log_token_info(TokenType::TT_ELLIPSIS, yytext, line_number); };
+{NEQ}      { RETURN_AS_INT(TokenType::TT_NEQ) };
+{LEQ}      { RETURN_AS_INT(TokenType::TT_LEQ) };
+{GEQ}      { RETURN_AS_INT(TokenType::TT_GEQ) };
+{DEFINE}   { RETURN_AS_INT(TokenType::TT_DEFINE) };
+{ELLIPSIS} { RETURN_AS_INT(TokenType::TT_ELLIPSIS) };
 
-{LPAREN} { log_token_info(TokenType::TT_LPAREN, yytext, line_number); };
-{LBRACK} { log_token_info(TokenType::TT_LBRACK, yytext, line_number); };
-{LBRACE} { log_token_info(TokenType::TT_LBRACE, yytext, line_number); };
-{COMMA}  { log_token_info(TokenType::TT_COMMA, yytext, line_number); };
-{PERIOD} { log_token_info(TokenType::TT_PERIOD, yytext, line_number); };
+{LPAREN} { RETURN_AS_INT(TokenType::TT_LPAREN) };
+{LBRACK} { RETURN_AS_INT(TokenType::TT_LBRACK) };
+{LBRACE} { RETURN_AS_INT(TokenType::TT_LBRACE) };
+{COMMA}  { RETURN_AS_INT(TokenType::TT_COMMA) };
+{PERIOD} { RETURN_AS_INT(TokenType::TT_PERIOD) };
 
-{RPAREN}    { log_token_info(TokenType::TT_RPAREN, yytext, line_number); };
-{RBRACK}    { log_token_info(TokenType::TT_RBRACK, yytext, line_number); };
-{RBRACE}    { log_token_info(TokenType::TT_RBRACE, yytext, line_number); };
-{SEMICOLON} { log_token_info(TokenType::TT_SEMICOLON, yytext, line_number); };
-{COLON}     { log_token_info(TokenType::TT_COLON, yytext, line_number); };
+{RPAREN}    { RETURN_AS_INT(TokenType::TT_RPAREN) };
+{RBRACK}    { RETURN_AS_INT(TokenType::TT_RBRACK) };
+{RBRACE}    { RETURN_AS_INT(TokenType::TT_RBRACE) };
+{SEMICOLON} { RETURN_AS_INT(TokenType::TT_SEMICOLON) };
+{COLON}     { RETURN_AS_INT(TokenType::TT_COLON) };
 
-. { log_token_info(TokenType::TT_ILLEGAL, yytext, line_number); };
 
-<<EOF>> {
-    log_token_info(TokenType::TT_EOF, yytext, line_number);
-    return EOF;
-};
+. { RETURN_AS_INT(TokenType::TT_ILLEGAL) };
+
+<<EOF>> { RETURN_AS_INT(TokenType::TT_EOF) };
 
 %%
