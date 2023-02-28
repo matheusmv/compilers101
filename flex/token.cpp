@@ -142,7 +142,7 @@ bool is_identifier(const std::string& literal) {
         return false;
     }
 
-    return std::all_of(literal.cbegin(), literal.cend(), [&](const auto& character) {
+    return std::all_of(literal.cbegin(), literal.cend(), [](const auto& character) {
         return std::isalpha(character) || std::isdigit(character) || character == '_';
     });
 }
