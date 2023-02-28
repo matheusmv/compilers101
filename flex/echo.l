@@ -9,8 +9,8 @@
 
 static std::size_t line_number = 1;
 
-void log_token_info(const TokenType& token_type, const char* literal, const std::size_t line) {
-    std::printf("{ TokenType: %s, Literal: %s, Line: %ld }\n",to_string(token_type).c_str(), literal, line);
+void log_token_info(const TokenType& token_type, const char* literal, const std::size_t& line) {
+    std::printf("{ TokenType: %s, Literal: %s, Line: %ld }\n", to_string(token_type).c_str(), literal, line);
 }
 
 %}
@@ -19,13 +19,13 @@ WS [ \t]
 NL \n
 
 SL_COMMENT "//"(.*)
-ML_COMMENT "/*"({WS}|{NL})*(.*)({WS}|{NL})*"*/"
+ML_COMMENT "/*"{NL}*(.*){NL}*"*/"
 
 CHARACTER [a-zA-Z]
 DIGIT     [0-9]
 
-INT    (0|[1-9]){DIGIT}*
-FLOAT  (0|[1-9])?{DIGIT}*\.{DIGIT}+
+INT    {DIGIT}+
+FLOAT  {DIGIT}*\.{DIGIT}+
 CHAR   '(.*)'
 STRING \"(.*)\"
 BOOL   "true"|"false"
@@ -90,7 +90,7 @@ COLON     ":"
 
 {WS}* {};
 
-{NL}  {  line_number += 1;   };
+{NL}  {   line_number += 1;   };
 
 {SL_COMMENT} {};
 {ML_COMMENT} {
@@ -146,11 +146,11 @@ COLON     ":"
 {INC}  {   log_token_info(TokenType::TT_INC, YYText(), line_number);    };
 {DEC}  {   log_token_info(TokenType::TT_DEC, YYText(), line_number);    };
 
-{EQL}       {   log_token_info(TokenType::TT_EQL, YYText(), line_number);      };
-{LSS}       {   log_token_info(TokenType::TT_LSS, YYText(), line_number);      };
-{GTR}       {   log_token_info(TokenType::TT_GTR, YYText(), line_number);      };
-{ASSIGN}    {   log_token_info(TokenType::TT_ASSIGN, YYText(), line_number);   };
-{NOT}       {   log_token_info(TokenType::TT_NOT, YYText(), line_number);      };
+{EQL}    {   log_token_info(TokenType::TT_EQL, YYText(), line_number);      };
+{LSS}    {   log_token_info(TokenType::TT_LSS, YYText(), line_number);      };
+{GTR}    {   log_token_info(TokenType::TT_GTR, YYText(), line_number);      };
+{ASSIGN} {   log_token_info(TokenType::TT_ASSIGN, YYText(), line_number);   };
+{NOT}    {   log_token_info(TokenType::TT_NOT, YYText(), line_number);      };
 
 {NEQ}      {   log_token_info(TokenType::TT_NEQ, YYText(), line_number);        };
 {LEQ}      {   log_token_info(TokenType::TT_LEQ, YYText(), line_number);        };

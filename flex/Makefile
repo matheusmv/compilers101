@@ -17,6 +17,7 @@ all: CFLAGS += -O2
 all: $(BIN)
 
 debug: CFLAGS += -O0 -g
+debug: LEX += -d -v
 debug: $(BIN)
 
 valgrind: debug
