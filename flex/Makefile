@@ -1,6 +1,8 @@
 BIN=echo
 LEX_SRC=lex.yy.cc
 
+SOURCE_FILES=$(wildcard *.cpp)
+
 CC=g++
 LEX=flex++
 
@@ -24,7 +26,7 @@ valgrind: debug
 valgrind:
 	$(VALGRIND) ./$(BIN)
 
-$(BIN): $(LEX_SRC) *.cpp
+$(BIN): $(LEX_SRC) $(SOURCE_FILES)
 	$(CC) $(CFLAGS) $^ -o $@
 
 $(LEX_SRC): *.l

@@ -22,7 +22,7 @@ std::vector<Token> tokenize(const std::string& file_path) {
 
     std::vector<Token> tokens;
 
-    TokenType tt = static_cast<TokenType>(l->yylex());
+    auto tt = static_cast<TokenType>(l->yylex());
     while (tt != TokenType::TT_EOF) {
         tokens.emplace_back(new_token(tt, l->YYText(), line_number));
         tt = static_cast<TokenType>(l->yylex());
