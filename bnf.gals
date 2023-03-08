@@ -164,9 +164,12 @@ TYPE_VOID = IDENT : "void"
 
 <literal_type_list>
 
-<function_literal>
+<function_type>
 <function_expr>
 <function_param_list>
+
+<cast_expr>
+<cast_op>
 #Grammar
 <program> ::= <stmt>
 	| <stmt> <program>
@@ -314,7 +317,7 @@ TYPE_VOID = IDENT : "void"
 
 <postfix_op> ::= INC | DEC ;
 
-<call_expr> ::= <primary_expr>
+<call_expr> ::= <cast_expr>
 	| <identifier> <call_expr_arg_expr_list>
 	;
 <call_expr_arg_expr_list> ::= LPAREN RPAREN
@@ -325,12 +328,17 @@ TYPE_VOID = IDENT : "void"
 	| <arg_expr_list> COMMA <assignment_expr>
 	;
 
-<primary_expr> ::= <identifier> | <literal> | LPAREN <expr> RPAREN;
+<cast_expr> ::= <primary_expr>
+	| <cast_op> <primary_expr>
+	;
+<cast_op> ::= TYPE_INT | TYPE_FLOAT | TYPE_CHAR | TYPE_STRING ;
+
+<primary_expr> ::= <identifier> | <literal> | LPAREN <expr> RPAREN | <function_expr> ;
 
 <identifier> ::= IDENT ;
 
-<literal> ::= <int_literal> | <float_literal> | <char_literal> | <string_literal> | <boolean_literal> | <nil_literal> | <function_expr> ;
-<literal_type> ::= TYPE_INT | TYPE_FLOAT | TYPE_CHAR | TYPE_STRING | TYPE_BOOL | TYPE_VOID | <function_literal> ;
+<literal> ::= <int_literal> | <float_literal> | <char_literal> | <string_literal> | <boolean_literal> | <nil_literal> ;
+<literal_type> ::= TYPE_INT | TYPE_FLOAT | TYPE_CHAR | TYPE_STRING | TYPE_BOOL | TYPE_VOID | <function_type> ;
 
 <int_literal> ::= INT ;
 <float_literal> ::= FLOAT ;
@@ -343,7 +351,7 @@ TYPE_VOID = IDENT : "void"
 	| <literal_type_list> COMMA <literal_type>
 	;
 
-<function_literal> ::= FUNC LPAREN RPAREN COLON <literal_type>
+<function_type> ::= FUNC LPAREN RPAREN COLON <literal_type>
 	| FUNC LPAREN <literal_type_list> RPAREN COLON <literal_type>
 	;
 <function_expr> ::= FUNC LPAREN RPAREN <block_stmt>
