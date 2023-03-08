@@ -1,0 +1,356 @@
+#Options
+GenerateScanner = true
+GenerateParser = true
+Language = Java
+ScannerName = Lexico
+ParserName = Sintatico
+SemanticName = Semantico
+ScannerCaseSensitive = true
+ScannerTable = Full
+Input = Stream
+Parser = SLR
+#RegularDefinitions
+DIGIT : [0-9]
+CHAR : [a-zA-Z]
+SLASH : "/"
+STAR : "*"
+
+NEW_LINE : \n
+CARRIAGE_RETURN : \r
+SPACE : \s
+TAB : \t
+WS : [\s\t\n\r]
+#Tokens
+: {WS}*
+
+: {SLASH}{SLASH}(.)*|{SLASH}{STAR}{NEW_LINE}?(.*){NEW_LINE}?{STAR}{SLASH}
+
+IDENT : _|{CHAR}(_|{CHAR}|{DIGIT})*
+INT : {DIGIT}+
+FLOAT : {DIGIT}*\.{DIGIT}+
+CHAR : '(.*)'
+STRING : \"(.*)\"
+
+ADD : "+"
+SUB : "-"
+MUL : "*"
+QUO : "/"
+REM : "%"
+
+TILDE : "~"
+AND : "&"
+OR : "|"
+XOR : "^"
+SHL : "<<"
+SHR : ">>"
+
+ADD_ASSIGN : "+="
+SUB_ASSIGN : "-="
+MUL_ASSIGN : "*="
+QUO_ASSIGN : "/="
+REM_ASSIGN : "%="
+
+AND_ASSIGN : "&="
+OR_ASSIGN : "|="
+XOR_ASSIGN : "^="
+SHL_ASSIGN : "<<="
+SHR_ASSIGN : ">>="
+
+LAND : "&&"
+LOR : "||"
+INC : "++"
+DEC : "--"
+
+EQL : "=="
+LSS : "<"
+GTR : ">"
+ASSIGN : "="
+NOT : "!"
+
+NEQ : "!="
+LEQ : "<="
+GEQ : ">="
+ELLIPSIS : "..."
+
+LPAREN : "("
+LBRACK : "["
+LBRACE : "{"
+COMMA : ","
+PERIOD : "."
+
+RPAREN : ")"
+RBRACK : "]"
+RBRACE : "}"
+SEMICOLON : ";"
+COLON : ":"
+
+LET = IDENT : "let"
+IF = IDENT : "if"
+ELSE = IDENT : "else"
+FUNC = IDENT : "func"
+RETURN = IDENT : "return"
+WHILE = IDENT : "while"
+FOR = IDENT : "for"
+BREAK = IDENT : "break"
+CONTINUE = IDENT: "continue"
+NIL = IDENT : "nil"
+TRUE = IDENT : "true"
+FALSE = IDENT : "false"
+
+TYPE_INT = IDENT : "int"
+TYPE_FLOAT = IDENT : "float"
+TYPE_CHAR = IDENT : "char"
+TYPE_STRING = IDENT : "string"
+TYPE_BOOL = IDENT : "bool"
+TYPE_VOID = IDENT : "void"
+#NonTerminals
+<program>
+
+<stmt>
+<let_stmt>
+<block_stmt>
+<block_stmt_body>
+<return_stmt>
+<if_stmt>
+<while_stmt>
+<for_stmt>
+<for_arg_expr_list>
+<function_stmt>
+<expr_stmt>
+
+<expr>
+<assignment_expr>
+<assignment_op>
+<logical_or_expr>
+<logical_or_op>
+<logical_and_expr>
+<logical_and_op>
+<or_expr>
+<or_op>
+<xor_expr>
+<xor_op>
+<and_expr>
+<and_op>
+<equality_expr>
+<equality_op>
+<relational_expr>
+<relational_op>
+<shift_expr>
+<shift_op>
+<additive_expr>
+<additive_op> 
+<multiplicative_expr>
+<multiplicative_op>
+<unary_expr>
+<unary_op>
+<postfix_expr>
+<postfix_op>
+<call_expr>
+<call_expr_arg_expr_list>
+<arg_expr_list>
+<primary_expr>
+
+<identifier>
+
+<literal>
+<literal_type>
+
+<int_literal>
+<float_literal>
+<char_literal>
+<string_literal>
+<boolean_literal>
+<nil_literal>
+
+<literal_type_list>
+
+<function_literal>
+<function_expr>
+<function_param_list>
+#Grammar
+<program> ::= <stmt>
+	| <stmt> <program>
+	;
+
+<stmt> ::= <let_stmt>
+	| <block_stmt>
+	| <return_stmt>
+	| <if_stmt>
+	| <while_stmt>
+	| <for_stmt>
+	| <function_stmt>
+	| <expr_stmt>
+	;
+
+<let_stmt> ::= LET <identifier> COLON <literal_type> ASSIGN <expr_stmt>
+	| LET <identifier> ASSIGN <expr_stmt>
+	;
+
+<block_stmt> ::= LBRACE RBRACE
+	| LBRACE <block_stmt_body> RBRACE
+	;
+<block_stmt_body> ::= <stmt>
+	| <stmt> <block_stmt_body>
+	;
+
+<return_stmt> ::= RETURN SEMICOLON
+	| RETURN <expr_stmt>
+	;
+
+<if_stmt> ::= IF LPAREN <expr> RPAREN <block_stmt> ELSE <block_stmt>
+	|IF LPAREN <expr> RPAREN <block_stmt>
+	|IF LPAREN <expr> RPAREN <return_stmt>
+	;
+
+<while_stmt> ::= WHILE LPAREN <expr> RPAREN <block_stmt> ;
+
+<for_stmt> ::= FOR LPAREN <for_arg_expr_list> RPAREN <block_stmt> ;
+<for_arg_expr_list> ::= SEMICOLON SEMICOLON
+	| <let_stmt> <expr_stmt> <expr>
+	| <expr_stmt> <expr_stmt> <expr>
+	| <let_stmt> <expr_stmt>
+	| <expr_stmt> <expr_stmt>
+	| SEMICOLON <expr_stmt>
+	;
+
+<function_stmt> ::= FUNC <identifier> LPAREN RPAREN <block_stmt>
+	| FUNC <identifier> LPAREN RPAREN COLON <literal_type> <block_stmt>
+	| FUNC <identifier> LPAREN <function_param_list> RPAREN COLON <literal_type> <block_stmt>
+	| FUNC <identifier> LPAREN <function_param_list> RPAREN <block_stmt>
+	;
+
+<expr_stmt> ::= <expr> SEMICOLON ;
+
+<expr> ::= <assignment_expr>
+	| <expr> COMMA <assignment_expr>
+	;
+
+<assignment_expr> ::= <logical_or_expr>
+	| <unary_expr> <assignment_op> <assignment_expr>
+	;
+
+<assignment_op> ::= ASSIGN
+	| ADD_ASSIGN
+	| SUB_ASSIGN
+	| MUL_ASSIGN
+	| QUO_ASSIGN
+	| REM_ASSIGN
+	| AND_ASSIGN
+	| OR_ASSIGN
+	| XOR_ASSIGN
+	| SHL_ASSIGN
+	| SHR_ASSIGN
+	;
+
+<logical_or_expr> ::= <logical_and_expr>
+	| <logical_or_expr> <logical_or_op> <logical_and_expr>
+	;
+
+<logical_or_op> ::= LOR ;
+
+<logical_and_expr> ::= <or_expr>
+	| <logical_and_expr> <logical_and_op> <or_expr>
+	;
+
+<logical_and_op> ::= LAND ;
+
+<or_expr> ::= <xor_expr>
+	| <or_expr> <or_op> <xor_expr>
+	;
+
+<or_op> ::= OR ;
+
+<xor_expr> ::= <and_expr>
+	| <xor_expr> <xor_op> <and_expr>
+	;
+
+<xor_op> ::= XOR ;
+
+<and_expr> ::= <equality_expr>
+	| <and_expr> <and_op> <equality_expr>
+	;
+
+<and_op> ::= AND ;
+
+<equality_expr> ::= <relational_expr>
+	| <equality_expr> <equality_op> <relational_expr>
+	;
+
+<equality_op> ::= EQL | NEQ ;
+
+<relational_expr> ::= <shift_expr>
+	| <relational_expr> <relational_op> <shift_expr>
+	;
+
+<relational_op> ::= LSS | GTR | LEQ | GEQ ;
+
+<shift_expr> ::= <additive_expr>
+	| <shift_expr> <shift_op> <additive_expr>
+	;
+
+<shift_op> ::= SHL | SHR ;
+
+<additive_expr> ::= <multiplicative_expr>
+	| <additive_expr> <additive_op> <multiplicative_expr>
+	; 
+
+<additive_op> ::= ADD | SUB ;
+
+<multiplicative_expr> ::= <unary_expr>
+	| <multiplicative_expr> <multiplicative_op> <unary_expr>
+	;
+
+<multiplicative_op> ::= MUL | QUO | REM ;
+
+<unary_expr> ::= <postfix_expr>
+	| <unary_op> <unary_expr>
+	;
+
+<unary_op> ::= ADD | SUB | TILDE | NOT ;
+
+<postfix_expr> ::= <call_expr>
+	| <postfix_expr> <postfix_op>
+	;
+
+<postfix_op> ::= INC | DEC ;
+
+<call_expr> ::= <primary_expr>
+	| <identifier> <call_expr_arg_expr_list>
+	;
+<call_expr_arg_expr_list> ::= LPAREN RPAREN
+	| LPAREN <arg_expr_list> RPAREN
+	;
+
+<arg_expr_list> ::= <assignment_expr>
+	| <arg_expr_list> COMMA <assignment_expr>
+	;
+
+<primary_expr> ::= <identifier> | <literal> | LPAREN <expr> RPAREN;
+
+<identifier> ::= IDENT ;
+
+<literal> ::= <int_literal> | <float_literal> | <char_literal> | <string_literal> | <boolean_literal> | <nil_literal> | <function_expr> ;
+<literal_type> ::= TYPE_INT | TYPE_FLOAT | TYPE_CHAR | TYPE_STRING | TYPE_BOOL | TYPE_VOID | <function_literal> ;
+
+<int_literal> ::= INT ;
+<float_literal> ::= FLOAT ;
+<char_literal> ::= CHAR ;
+<string_literal> ::= STRING ;
+<boolean_literal> ::= TRUE | FALSE ;
+<nil_literal> ::= NIL ;
+
+<literal_type_list> ::= <literal_type>
+	| <literal_type_list> COMMA <literal_type>
+	;
+
+<function_literal> ::= FUNC LPAREN RPAREN COLON <literal_type>
+	| FUNC LPAREN <literal_type_list> RPAREN COLON <literal_type>
+	;
+<function_expr> ::= FUNC LPAREN RPAREN <block_stmt>
+	| FUNC LPAREN RPAREN COLON <literal_type> <block_stmt>
+	| FUNC LPAREN <function_param_list> RPAREN <block_stmt>
+	| FUNC LPAREN <function_param_list> RPAREN COLON <literal_type> <block_stmt>
+	;
+<function_param_list> ::= <identifier> COLON <literal_type>
+	| <function_param_list> COMMA <identifier> COLON <literal_type>
+	;
