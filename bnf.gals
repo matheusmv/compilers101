@@ -319,6 +319,7 @@ TYPE_VOID = IDENT : "void"
 
 <call_expr> ::= <cast_expr>
 	| <identifier> <call_expr_arg_expr_list>
+	| <function_expr> <call_expr_arg_expr_list>
 	;
 <call_expr_arg_expr_list> ::= LPAREN RPAREN
 	| LPAREN <arg_expr_list> RPAREN
