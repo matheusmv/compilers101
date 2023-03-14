@@ -86,6 +86,7 @@ SEMICOLON : ";"
 COLON : ":"
 
 LET = IDENT : "let"
+CONST = IDENT : "const"
 IF = IDENT : "if"
 ELSE = IDENT : "else"
 FUNC = IDENT : "func"
@@ -97,6 +98,7 @@ CONTINUE = IDENT: "continue"
 NIL = IDENT : "nil"
 TRUE = IDENT : "true"
 FALSE = IDENT : "false"
+STRUCT = IDENT : "struct"
 
 TYPE_INT = IDENT : "int"
 TYPE_FLOAT = IDENT : "float"
@@ -108,8 +110,17 @@ TYPE_VOID = IDENT : "void"
 <program>
 
 <stmt>
+<struct_stmt>
+<struct_expr>
+<struct_stmt_list>
+<struct_property>
 <comment_stmt>
+<decl_stmt>
+<assign_list>
+<typed_assign>
+<untyped_assign>
 <let_stmt>
+<const_stmt>
 <block_stmt>
 <block_stmt_body>
 <return_stmt>
@@ -172,13 +183,18 @@ TYPE_VOID = IDENT : "void"
 
 <cast_expr>
 <cast_op>
+
+<array_type>
+<array>
+<array_items>
 #Grammar
 <program> ::= <stmt>
 	| <stmt> <program>
 	;
 
-<stmt> ::= <comment_stmt>
-	| <let_stmt>
+<stmt> ::= <struct_stmt>
+	| <comment_stmt>
+	| <decl_stmt>
 	| <block_stmt>
 	| <return_stmt>
 	| <if_stmt>
@@ -188,10 +204,33 @@ TYPE_VOID = IDENT : "void"
 	| <expr_stmt>
 	;
 
+<struct_stmt> ::= STRUCT <identifier> LBRACE <struct_stmt_list> RBRACE
+	| STRUCT <identifier> LBRACE RBRACE
+	;
+<struct_expr> ::= STRUCT LBRACE <struct_stmt_list> RBRACE
+	| STRUCT LBRACE RBRACE
+	;
+<struct_stmt_list> ::= <struct_property>
+	| <struct_property> <struct_stmt_list>
+	;
+<struct_property> ::= <identifier> COLON <literal_type>
+	| <identifier> COLON <struct_expr>
+	;
+
 <comment_stmt> ::= SL_COMMENT | ML_COMMENT ;
 
-<let_stmt> ::= LET <identifier> COLON <literal_type> ASSIGN <expr_stmt>
-	| LET <identifier> ASSIGN <expr_stmt>
+<decl_stmt> ::= <let_stmt> | <const_stmt> ;
+
+<typed_assign> ::= <identifier> COLON <literal_type> ASSIGN <expr_stmt> ;
+<untyped_assign> ::= <identifier> ASSIGN <expr_stmt> ;
+
+<let_stmt> ::= LET <typed_assign>
+	| LET <untyped_assign>
+	| LET <identifier> SEMICOLON
+	;
+
+<const_stmt> ::= CONST <typed_assign>
+	| CONST <untyped_assign>
 	;
 
 <block_stmt> ::= LBRACE RBRACE
@@ -339,12 +378,21 @@ TYPE_VOID = IDENT : "void"
 	;
 <cast_op> ::= TYPE_INT | TYPE_FLOAT | TYPE_CHAR | TYPE_STRING ;
 
-<primary_expr> ::= <identifier> | <literal> | LPAREN <expr> RPAREN | <function_expr> ;
+<primary_expr> ::= <identifier> | <literal> | LPAREN <expr> RPAREN | <function_expr> | <struct_expr> | <array> ;
 
 <identifier> ::= IDENT ;
 
 <literal> ::= <int_literal> | <float_literal> | <char_literal> | <string_literal> | <boolean_literal> | <nil_literal> ;
-<literal_type> ::= TYPE_INT | TYPE_FLOAT | TYPE_CHAR | TYPE_STRING | TYPE_BOOL | TYPE_VOID | <nil_literal> | <function_type> ;
+<literal_type> ::= TYPE_INT
+	| TYPE_FLOAT
+	| TYPE_CHAR
+	| TYPE_STRING
+	| TYPE_BOOL
+	| TYPE_VOID
+	| <nil_literal>
+	| <function_type>
+	| <array_type>
+	;
 
 <int_literal> ::= INT ;
 <float_literal> ::= FLOAT ;
@@ -368,4 +416,12 @@ TYPE_VOID = IDENT : "void"
 	;
 <function_param_list> ::= <identifier> COLON <literal_type>
 	| <function_param_list> COMMA <identifier> COLON <literal_type>
+	;
+
+<array_type> ::= LBRACK RBRACK <literal_type> ;
+<array> ::= LBRACK RBRACK
+	| LBRACK <array_items> RBRACK
+	;
+<array_items> ::= <primary_expr>
+	| <primary_expr> COMMA <array_items>
 	;
