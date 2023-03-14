@@ -23,7 +23,8 @@ WS : [\s\t\n\r]
 #Tokens
 : {WS}*
 
-: {SLASH}{SLASH}(.)*|{SLASH}{STAR}{NEW_LINE}?(.*){NEW_LINE}?{STAR}{SLASH}
+SL_COMMENT : {SLASH}{SLASH}(.*)
+ML_COMMENT : {SLASH}{STAR}{WS}*(.*){WS}*{STAR}{SLASH}
 
 IDENT : _|{CHAR}(_|{CHAR}|{DIGIT})*
 INT : {DIGIT}+
@@ -107,6 +108,7 @@ TYPE_VOID = IDENT : "void"
 <program>
 
 <stmt>
+<comment_stmt>
 <let_stmt>
 <block_stmt>
 <block_stmt_body>
@@ -175,7 +177,8 @@ TYPE_VOID = IDENT : "void"
 	| <stmt> <program>
 	;
 
-<stmt> ::= <let_stmt>
+<stmt> ::= <comment_stmt>
+	| <let_stmt>
 	| <block_stmt>
 	| <return_stmt>
 	| <if_stmt>
@@ -184,6 +187,8 @@ TYPE_VOID = IDENT : "void"
 	| <function_stmt>
 	| <expr_stmt>
 	;
+
+<comment_stmt> ::= SL_COMMENT | ML_COMMENT ;
 
 <let_stmt> ::= LET <identifier> COLON <literal_type> ASSIGN <expr_stmt>
 	| LET <identifier> ASSIGN <expr_stmt>
@@ -217,8 +222,8 @@ TYPE_VOID = IDENT : "void"
 	;
 
 <function_stmt> ::= FUNC <identifier> LPAREN RPAREN <block_stmt>
-	| FUNC <identifier> LPAREN RPAREN COLON <literal_type> <block_stmt>
-	| FUNC <identifier> LPAREN <function_param_list> RPAREN COLON <literal_type> <block_stmt>
+	| FUNC <identifier> LPAREN RPAREN COLON <literal_type_list> <block_stmt>
+	| FUNC <identifier> LPAREN <function_param_list> RPAREN COLON <literal_type_list> <block_stmt>
 	| FUNC <identifier> LPAREN <function_param_list> RPAREN <block_stmt>
 	;
 
@@ -339,7 +344,7 @@ TYPE_VOID = IDENT : "void"
 <identifier> ::= IDENT ;
 
 <literal> ::= <int_literal> | <float_literal> | <char_literal> | <string_literal> | <boolean_literal> | <nil_literal> ;
-<literal_type> ::= TYPE_INT | TYPE_FLOAT | TYPE_CHAR | TYPE_STRING | TYPE_BOOL | TYPE_VOID | <function_type> ;
+<literal_type> ::= TYPE_INT | TYPE_FLOAT | TYPE_CHAR | TYPE_STRING | TYPE_BOOL | TYPE_VOID | <nil_literal> | <function_type> ;
 
 <int_literal> ::= INT ;
 <float_literal> ::= FLOAT ;
@@ -350,15 +355,16 @@ TYPE_VOID = IDENT : "void"
 
 <literal_type_list> ::= <literal_type>
 	| <literal_type_list> COMMA <literal_type>
+	| <literal_type_list> OR <literal_type>
 	;
 
 <function_type> ::= FUNC LPAREN RPAREN COLON <literal_type>
 	| FUNC LPAREN <literal_type_list> RPAREN COLON <literal_type>
 	;
 <function_expr> ::= FUNC LPAREN RPAREN <block_stmt>
-	| FUNC LPAREN RPAREN COLON <literal_type> <block_stmt>
+	| FUNC LPAREN RPAREN COLON <literal_type_list> <block_stmt>
 	| FUNC LPAREN <function_param_list> RPAREN <block_stmt>
-	| FUNC LPAREN <function_param_list> RPAREN COLON <literal_type> <block_stmt>
+	| FUNC LPAREN <function_param_list> RPAREN COLON <literal_type_list> <block_stmt>
 	;
 <function_param_list> ::= <identifier> COLON <literal_type>
 	| <function_param_list> COMMA <identifier> COLON <literal_type>

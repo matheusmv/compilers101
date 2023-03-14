@@ -1,0 +1,61 @@
+// atividade compiladores
+
+/*
+Terça - 14/03/2023
+*/
+
+func main() {
+    let two: int = 2;
+    let PI: float = 3.1415;
+    let newLine: char = '\n';
+    let name: string = "matheus matias\n";
+    let trueVal: bool = true;
+    let falseVal: bool = false;
+
+    for (let i = 0; i < 10; i++) {
+        print(i);
+    }
+
+    let i: int = 10;
+    while (i > 0) {
+        print(i);
+        i--;
+    }
+
+    // fibonacci recursivo
+    let fib = func(num: int): int {
+        if (num <= 1) return num;
+        return fib(num - 1) + fib(num - 2);
+    };
+
+    /*
+     * converte o input (string) para (int)
+     */
+    let userInput: int = int(input("num: "));
+    print(fib(10));
+}
+
+func add(a: int, b: int): int {
+    return a + b;
+}
+
+func sub(a: int, b: int): int {
+    return a - b;
+}
+
+func mul(a: int, b: int): int {
+    return a * b;
+}
+
+func div(a: int, b: int): int | nil {
+    if (b == 0) {
+        print("Error: division by zero");
+        return nil;
+    }
+
+    return a / b;
+}
+
+func rem(a: int, b: int): int {
+    return a % b;
+}
