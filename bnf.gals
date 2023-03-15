@@ -158,9 +158,14 @@ TYPE_VOID = IDENT : "void"
 <unary_op>
 <postfix_expr>
 <postfix_op>
+<member_expr>
+<array_member>
+<struct_member>
 <call_expr>
 <call_expr_arg_expr_list>
 <arg_expr_list>
+<cast_expr>
+<cast_op>
 <primary_expr>
 
 <identifier>
@@ -180,9 +185,6 @@ TYPE_VOID = IDENT : "void"
 <function_type>
 <function_expr>
 <function_param_list>
-
-<cast_expr>
-<cast_op>
 
 <array_type>
 <array>
@@ -355,11 +357,18 @@ TYPE_VOID = IDENT : "void"
 
 <unary_op> ::= ADD | SUB | TILDE | NOT ;
 
-<postfix_expr> ::= <call_expr>
+<postfix_expr> ::= <member_expr>
 	| <postfix_expr> <postfix_op>
 	;
 
 <postfix_op> ::= INC | DEC ;
+
+<member_expr> ::= <call_expr>
+	| <member_expr> <array_member>
+	| <member_expr> <struct_member>
+	;
+<array_member> ::= LBRACK <expr> RBRACK ;
+<struct_member> ::= PERIOD <call_expr> ;
 
 <call_expr> ::= <cast_expr>
 	| <identifier> <call_expr_arg_expr_list>
@@ -378,7 +387,13 @@ TYPE_VOID = IDENT : "void"
 	;
 <cast_op> ::= TYPE_INT | TYPE_FLOAT | TYPE_CHAR | TYPE_STRING ;
 
-<primary_expr> ::= <identifier> | <literal> | LPAREN <expr> RPAREN | <function_expr> | <struct_expr> | <array> ;
+<primary_expr> ::= <identifier>
+	| <literal>
+	| LPAREN <expr> RPAREN
+	| <function_expr>
+	| <struct_expr>
+	| <array>
+	;
 
 <identifier> ::= IDENT ;
 
@@ -392,6 +407,7 @@ TYPE_VOID = IDENT : "void"
 	| <nil_literal>
 	| <function_type>
 	| <array_type>
+	| <identifier>
 	;
 
 <int_literal> ::= INT ;
