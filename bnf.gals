@@ -110,9 +110,12 @@ TYPE_VOID = IDENT : "void"
 <program>
 
 <stmt>
+<struct_type>
 <struct_stmt>
 <struct_expr>
 <struct_stmt_list>
+<struct_expr_list>
+<struct_arg>
 <struct_property>
 <comment_stmt>
 <decl_stmt>
@@ -168,17 +171,8 @@ TYPE_VOID = IDENT : "void"
 <cast_op>
 <primary_expr>
 
-<identifier>
-
 <literal>
 <literal_type>
-
-<int_literal>
-<float_literal>
-<char_literal>
-<string_literal>
-<boolean_literal>
-<nil_literal>
 
 <literal_type_list>
 
@@ -189,6 +183,14 @@ TYPE_VOID = IDENT : "void"
 <array_type>
 <array>
 <array_items>
+
+<identifier>
+<int_literal>
+<float_literal>
+<char_literal>
+<string_literal>
+<boolean_literal>
+<nil_literal>
 #Grammar
 <program> ::= <stmt>
 	| <stmt> <program>
@@ -204,19 +206,6 @@ TYPE_VOID = IDENT : "void"
 	| <for_stmt>
 	| <function_stmt>
 	| <expr_stmt>
-	;
-
-<struct_stmt> ::= STRUCT <identifier> LBRACE <struct_stmt_list> RBRACE
-	| STRUCT <identifier> LBRACE RBRACE
-	;
-<struct_expr> ::= STRUCT LBRACE <struct_stmt_list> RBRACE
-	| STRUCT LBRACE RBRACE
-	;
-<struct_stmt_list> ::= <struct_property>
-	| <struct_property> <struct_stmt_list>
-	;
-<struct_property> ::= <identifier> COLON <literal_type>
-	| <identifier> COLON <struct_expr>
 	;
 
 <comment_stmt> ::= SL_COMMENT | ML_COMMENT ;
@@ -395,8 +384,6 @@ TYPE_VOID = IDENT : "void"
 	| <array>
 	;
 
-<identifier> ::= IDENT ;
-
 <literal> ::= <int_literal> | <float_literal> | <char_literal> | <string_literal> | <boolean_literal> | <nil_literal> ;
 <literal_type> ::= TYPE_INT
 	| TYPE_FLOAT
@@ -407,15 +394,8 @@ TYPE_VOID = IDENT : "void"
 	| <nil_literal>
 	| <function_type>
 	| <array_type>
-	| <identifier>
+	| <struct_type>
 	;
-
-<int_literal> ::= INT ;
-<float_literal> ::= FLOAT ;
-<char_literal> ::= CHAR ;
-<string_literal> ::= STRING ;
-<boolean_literal> ::= TRUE | FALSE ;
-<nil_literal> ::= NIL ;
 
 <literal_type_list> ::= <literal_type>
 	| <literal_type_list> COMMA <literal_type>
@@ -441,3 +421,33 @@ TYPE_VOID = IDENT : "void"
 <array_items> ::= <primary_expr>
 	| <primary_expr> COMMA <array_items>
 	;
+
+<struct_type> ::= <identifier> ;
+<struct_stmt> ::= STRUCT LBRACE <struct_stmt_list> RBRACE
+	| STRUCT LBRACE RBRACE
+	| STRUCT  LBRACE <struct_stmt_list> RBRACE
+	| STRUCT <identifier> LBRACE RBRACE
+	;
+<struct_expr> ::= <struct_type> LBRACE <struct_expr_list> RBRACE 
+	;
+<struct_stmt_list> ::= <struct_property>
+	| <struct_property> <struct_stmt_list>
+	;
+<struct_expr_list> ::= <struct_arg>
+	| <struct_arg> <struct_expr_list>
+	;
+<struct_arg> ::= <identifier> COLON <expr>
+	| <identifier> COLON <struct_expr>
+	| <expr>
+	;
+<struct_property> ::= <identifier> COLON <literal_type>
+	| <identifier> COLON <struct_stmt>
+	;
+
+<identifier> ::= IDENT ;
+<int_literal> ::= INT ;
+<float_literal> ::= FLOAT ;
+<char_literal> ::= CHAR ;
+<string_literal> ::= STRING ;
+<boolean_literal> ::= TRUE | FALSE ;
+<nil_literal> ::= NIL ;

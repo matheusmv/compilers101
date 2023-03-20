@@ -1,8 +1,38 @@
 // atividade compiladores
 
 /*
-Terça - 14/03/2023
+Segunda - 20/03/2023
 */
+
+struct User {
+  id: int
+  username: string
+  password: string
+  email: string
+  address: struct {
+    street: string
+    zip: string
+  }
+}
+
+const users: []User = [User{}, User{}, User{}, User{}];
+const userOne: User = users[0];
+
+func logUserDetails(user: User) {
+  print(user.id);
+  print(user.username);
+  print(user.email);
+  print(user.address.street);
+  print(user.address.zip);
+}
+
+logUserDetails(userOne);
+
+const numbers: []int = [1, 2, 3, 4, 5];
+const numbers: []int = [];
+const numbers = [1, 2, 3, 4, 5];
+const numbers = [];
+const one: int = numbers[0];
 
 func main() {
     let two: int = 2;
