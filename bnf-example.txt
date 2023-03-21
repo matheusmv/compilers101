@@ -5,18 +5,15 @@ Segunda - 20/03/2023
 */
 
 struct User {
-  id: int
-  username: string
-  password: string
-  email: string
-  address: struct {
-    street: string
-    zip: string
-  }
+    id: int
+    username: string
+    password: string
+    email: string
+    address: struct {
+        street: string
+        zip: string
+    }
 }
-
-const users: []User = [User{}, User{}, User{}, User{}];
-const userOne: User = users[0];
 
 func logUserDetails(user: User) {
   print(user.id);
@@ -26,15 +23,26 @@ func logUserDetails(user: User) {
   print(user.address.zip);
 }
 
-logUserDetails(userOne);
-
-const numbers: []int = [1, 2, 3, 4, 5];
-const numbers: []int = [];
-const numbers = [1, 2, 3, 4, 5];
-const numbers = [];
-const one: int = numbers[0];
-
 func main() {
+    const john: User = User{id: getId(), username: "", password: "", email: "", address: struct{
+        street: string
+        zip: string
+    }{
+        street: "",
+        zip: ""
+    }};
+
+    const users: []User = [john, User{}, User{}, User{}];
+    const userOne: User = users[0];
+
+    logUserDetails(userOne);
+
+    const numbers: []int = [1, 2, 3, 4, 5];
+    const numbers: []int = [];
+    const numbers = [1, 2, 3, 4, 5];
+    const numbers = [];
+    const one: int = numbers[0];
+
     let two: int = 2;
     let PI: float = 3.1415;
     let newLine: char = '\n';

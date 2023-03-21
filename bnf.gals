@@ -110,13 +110,17 @@ TYPE_VOID = IDENT : "void"
 <program>
 
 <stmt>
+
 <struct_type>
+
 <struct_stmt>
-<struct_expr>
 <struct_stmt_list>
-<struct_expr_list>
-<struct_arg>
 <struct_property>
+
+<struct_expr>
+<struct_expr_list>
+<struct_expr_arg>
+
 <comment_stmt>
 <decl_stmt>
 <assign_list>
@@ -217,6 +221,7 @@ TYPE_VOID = IDENT : "void"
 
 <let_stmt> ::= LET <typed_assign>
 	| LET <untyped_assign>
+	| LET <identifier> COLON <literal_type> SEMICOLON
 	| LET <identifier> SEMICOLON
 	;
 
@@ -267,8 +272,7 @@ TYPE_VOID = IDENT : "void"
 	| <unary_expr> <assignment_op> <assignment_expr>
 	;
 
-<assignment_op> ::= ASSIGN
-	| ADD_ASSIGN
+<assignment_op> ::= ADD_ASSIGN
 	| SUB_ASSIGN
 	| MUL_ASSIGN
 	| QUO_ASSIGN
@@ -380,8 +384,8 @@ TYPE_VOID = IDENT : "void"
 	| <literal>
 	| LPAREN <expr> RPAREN
 	| <function_expr>
-	| <struct_expr>
 	| <array>
+	| <struct_expr> // cause conflict
 	;
 
 <literal> ::= <int_literal> | <float_literal> | <char_literal> | <string_literal> | <boolean_literal> | <nil_literal> ;
@@ -418,30 +422,34 @@ TYPE_VOID = IDENT : "void"
 <array> ::= LBRACK RBRACK
 	| LBRACK <array_items> RBRACK
 	;
-<array_items> ::= <primary_expr>
-	| <primary_expr> COMMA <array_items>
+<array_items> ::= <logical_or_expr>
+	| <logical_or_expr> COMMA <array_items>
 	;
 
 <struct_type> ::= <identifier> ;
-<struct_stmt> ::= STRUCT LBRACE <struct_stmt_list> RBRACE
-	| STRUCT LBRACE RBRACE
+<struct_stmt> ::= STRUCT LBRACE RBRACE
 	| STRUCT  LBRACE <struct_stmt_list> RBRACE
-	| STRUCT <identifier> LBRACE RBRACE
-	;
-<struct_expr> ::= <struct_type> LBRACE <struct_expr_list> RBRACE 
+	| STRUCT <struct_type> LBRACE RBRACE
+	| STRUCT <struct_type> LBRACE <struct_stmt_list> RBRACE
+	| STRUCT <struct_type> LBRACE RBRACE
 	;
 <struct_stmt_list> ::= <struct_property>
 	| <struct_property> <struct_stmt_list>
 	;
-<struct_expr_list> ::= <struct_arg>
-	| <struct_arg> <struct_expr_list>
-	;
-<struct_arg> ::= <identifier> COLON <expr>
-	| <identifier> COLON <struct_expr>
-	| <expr>
-	;
 <struct_property> ::= <identifier> COLON <literal_type>
 	| <identifier> COLON <struct_stmt>
+	;
+
+<struct_expr> ::= STRUCT LBRACE RBRACE LBRACE RBRACE
+	| STRUCT LBRACE <struct_stmt_list> RBRACE LBRACE RBRACE
+	| STRUCT LBRACE <struct_stmt_list> RBRACE LBRACE <struct_expr_list> RBRACE
+	| <struct_type> LBRACE RBRACE
+	| <struct_type> LBRACE <struct_expr_list> RBRACE
+	;
+<struct_expr_list> ::= <struct_expr_arg>
+	|<struct_expr_arg> COMMA <struct_expr_list>
+	;
+<struct_expr_arg> ::= <identifier> COLON <logical_or_expr>
 	;
 
 <identifier> ::= IDENT ;
