@@ -1,0 +1,37 @@
+// atividade compiladores
+
+/*
+    Segunda - 17/04/2023
+
+    Esse parser suporta as seguintes operações matemáticas e com variáveis:
+
+    Adição (+)
+    Subtração (-)
+    Multiplicação (*)
+    Divisão (/)
+    Potenciação (^)
+    Radiciação (sqrt)
+    Atribuição de valor a variáveis (:=)
+    Entrada de dados pelo console (input)
+    Impressão de valores no console (print)
+
+    Além disso, o parser também suporta comentários e identificadores de variáveis, que são representados por strings.
+    O parser reconhece números reais e inteiros. O operador de radiciação possui precedência maior do que os operadores
+    de adição, subtração, multiplicação e divisão, enquanto o operador de potenciação possui precedência maior do que o
+    operador de radiciação.
+
+    - comando para compilar e executar: make run
+    - comando para limpar diretório: make clean
+*/
+
+x := 12 + (3 * (3 + 1.1) / 2)
+print(x)
+
+y := input("Digite um valor: ")
+print(y + x)
+
+print(1 + 2 ^ 10)
+
+print(sqrt(16))
+
+print(w)
