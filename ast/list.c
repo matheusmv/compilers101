@@ -266,6 +266,24 @@ void* list_find_first(List** list, bool (*cb)(const void**)) {
     return NULL;
 }
 
+List* list_map(List** list, void* (*cb)(void**), void (*new_destructor)(void**)) {
+    if (list == NULL || *list == NULL || cb == NULL)
+        return NULL;
+
+    void (*destroy)(void**) = new_destructor != NULL ? new_destructor : (*list)->destroy;
+
+    List* new_list = list_new(destroy);
+    if (new_list == NULL) {
+        return NULL;
+    }
+
+    for (ListNode* node = (*list)->head; node != NULL; node = node->next) {
+        list_insert_last(&new_list, cb(&node->value));
+    }
+
+    return new_list;
+}
+
 char* list_join_str(List** list, const char* delimiter, char* (*to_string)(const void**), void (*free_str)(char**)) {
     if (list == NULL || *list == NULL || delimiter == NULL || to_string == NULL) {
         return NULL;

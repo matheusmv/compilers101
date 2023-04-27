@@ -39,6 +39,7 @@ void* list_get_at(List** list, size_t index);
 
 void list_for_each(List** list, void (*cb)(const void**));
 void* list_find_first(List** list, bool (*cb)(const void**));
+List* list_map(List** list, void* (*cb)(void**), void (*new_destructor)(void**));
 char* list_join_str(List** list, const char* delimiter,
     char* (*to_string)(const void**),
     void (*free_str)(char**));
