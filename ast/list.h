@@ -39,6 +39,6 @@ void* list_get_at(List** list, size_t index);
 
 void list_for_each(List** list, void (*cb)(const void**));
 void* list_find_first(List** list, bool (*cb)(const void**));
-char* list_join_str(List** list, const char* delimier,
+char* list_join_str(List** list, const char* delimiter,
     char* (*to_string)(const void**),
     void (*free_str)(char**));

@@ -238,7 +238,7 @@ void list_remove_at(List** list, size_t index, void** return_buffer) {
 }
 
 void* list_get_at(List** list, size_t index) {
-    if (!list_is_initialized(list) || index > list_size(list))
+    if (!list_is_initialized(list) || list_is_empty(list) || index > list_size(list))
         return NULL;
 
     return get_node(list, index)->value;
