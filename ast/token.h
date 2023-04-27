@@ -24,6 +24,8 @@ typedef enum TokenType {
 
     TOKEN_LOR,  // ||
     TOKEN_LAND, // &&
+
+    TOKEN_NOT, // !
 } TokenType;
 
 

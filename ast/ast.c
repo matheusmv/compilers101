@@ -2,13 +2,14 @@
 #include "list.h"
 #include "token.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 
 BinaryExpr* binary_expr_new(Expr* left, Token* operator, Expr* right) {
     BinaryExpr* expr = NULL;
     expr = malloc(sizeof(BinaryExpr));
     if (expr == NULL) {
+        expr_free(&left);
+        token_free(&operator);
+        expr_free(&right);
         return NULL;
     }
 
@@ -25,18 +26,15 @@ void binary_expr_to_string(BinaryExpr** binaryExpr) {
     if (binaryExpr == NULL || *binaryExpr == NULL)
         return;
 
-    Expr* left = (*binaryExpr)->left;
-    if (left != NULL && left->to_string != NULL)
-        left->to_string(&left->expr);
+    expr_to_string(&(*binaryExpr)->left);
 
-    Token* operator = (*binaryExpr)->op;
-    if (operator != NULL && operator->literal != NULL)
-        printf(" %s ", operator->literal);
+    printf(" ");
 
-    Expr* right = (*binaryExpr)->right;
-    if (right != NULL && right->to_string != NULL) {
-        right->to_string(&right->expr);
-    }
+    token_to_string(&(*binaryExpr)->op);
+
+    printf(" ");
+
+    expr_to_string(&(*binaryExpr)->right);
 }
 
 void binary_expr_free(BinaryExpr** binaryExpr) {
@@ -55,6 +53,7 @@ GroupExpr* group_expr_new(Expr* expression) {
     GroupExpr* expr = NULL;
     expr = malloc(sizeof(GroupExpr));
     if (expr == NULL) {
+        expr_free(&expression);
         return NULL;
     }
 
@@ -69,13 +68,11 @@ void group_expr_to_string(GroupExpr** groupExpr) {
     if (groupExpr == NULL || *groupExpr == NULL)
         return;
 
-    printf("( ");
+    printf("(");
 
-    Expr* expr = (*groupExpr)->expression;
-    if (expr != NULL && expr->to_string != NULL)
-        expr->to_string(&expr->expr);
+    expr_to_string(&(*groupExpr)->expression);
 
-    printf(" )");
+    printf(")");
 }
 
 void group_expr_free(GroupExpr** groupExpr) {
@@ -92,6 +89,8 @@ AssignExpr* assign_expr_new(Token* name, Expr* expression) {
     AssignExpr* expr = NULL;
     expr = malloc(sizeof(AssignExpr));
     if (expr == NULL) {
+        token_free(&name);
+        expr_free(&expression);
         return NULL;
     }
 
@@ -113,9 +112,7 @@ void assign_expr_to_string(AssignExpr** assignExpr) {
 
     printf(" = ");
 
-    Expr* expr = (*assignExpr)->expression;
-    if (expr != NULL && expr->to_string != NULL)
-        expr->to_string(&expr->expr);
+    expr_to_string(&(*assignExpr)->expression);
 }
 
 void assign_expr_free(AssignExpr** assignExpr) {
@@ -133,6 +130,8 @@ CallExpr* call_expr_new(Expr* calle, List* arguments) {
     CallExpr* expr = NULL;
     expr = malloc(sizeof(CallExpr));
     if (expr == NULL) {
+        expr_free(&calle);
+        list_free(&arguments);
         return NULL;
     }
 
@@ -155,18 +154,13 @@ void call_expr_to_string(CallExpr** callExpr) {
     if (callExpr == NULL || *callExpr == NULL)
         return;
 
-    Expr* expr = (*callExpr)->calle;
-    if (expr != NULL && expr->to_string != NULL)
-        expr->to_string(&expr->expr);
+    expr_to_string(&(*callExpr)->calle);
 
     printf("(");
 
     List* args = (*callExpr)->arguments;
     for (ListNode* arg = args->head; arg != NULL; arg = arg->next) {
-        Expr* expr = arg->value;
-        if (expr != NULL && expr->to_string != NULL) {
-            expr->to_string((void**) &expr->expr);
-        }
+        expr_to_string((Expr**) &arg->value);
 
         if (arg->next != NULL) {
             printf(", ");
@@ -191,6 +185,9 @@ LogicalExpr* logical_expr_new(Expr* left, Token* operator, Expr* right) {
     LogicalExpr* expr = NULL;
     expr = malloc(sizeof(BinaryExpr));
     if (expr == NULL) {
+        expr_free(&left);
+        token_free(&operator);
+        expr_free(&right);
         return NULL;
     }
 
@@ -207,18 +204,15 @@ void logical_expr_to_string(LogicalExpr** logicalExpr) {
     if (logicalExpr == NULL || *logicalExpr == NULL)
         return;
 
-    Expr* left = (*logicalExpr)->left;
-    if (left != NULL && left->to_string != NULL)
-        left->to_string(&left->expr);
+    expr_to_string(&(*logicalExpr)->left);
 
-    Token* operator = (*logicalExpr)->op;
-    if (operator != NULL && operator->literal != NULL)
-        printf(" %s ", operator->literal);
+    printf(" ");
 
-    Expr* right = (*logicalExpr)->right;
-    if (right != NULL && right->to_string != NULL) {
-        right->to_string(&right->expr);
-    }
+    token_to_string(&(*logicalExpr)->op);
+
+    printf(" ");
+
+    expr_to_string(&(*logicalExpr)->right);
 }
 
 void logical_expr_free(LogicalExpr** logicalExpr) {
@@ -233,10 +227,49 @@ void logical_expr_free(LogicalExpr** logicalExpr) {
     *logicalExpr = NULL;
 }
 
+UnaryExpr* unary_expr_new(Token* operator, Expr* expression) {
+    UnaryExpr* expr = NULL;
+    expr = malloc(sizeof(UnaryExpr));
+    if (expr == NULL) {
+        token_free(&operator);
+        expr_free(&expression);
+        return NULL;
+    }
+
+    *expr = (UnaryExpr) {
+        .op = operator,
+        .expression = expression
+    };
+
+    return expr;
+}
+
+void unary_expr_to_string(UnaryExpr** unaryExpr) {
+    if (unaryExpr == NULL || *unaryExpr == NULL)
+        return;
+
+    token_to_string(&(*unaryExpr)->op);
+    expr_to_string(&(*unaryExpr)->expression);
+}
+
+void unary_expr_free(UnaryExpr** unaryExpr) {
+    if (unaryExpr == NULL || *unaryExpr == NULL)
+        return;
+
+    token_free(&(*unaryExpr)->op);
+    expr_free(&(*unaryExpr)->expression);
+
+    free(*unaryExpr);
+    *unaryExpr = NULL;
+}
+
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {
     LiteralExpr* expr = NULL;
     expr = malloc(sizeof(LiteralExpr));
     if (expr == NULL) {
+        if (destroy != NULL) {
+            destroy(&value);
+        }
         return NULL;
     }
 
@@ -271,6 +304,9 @@ Expr* expr_new(ExprType type, void* expr, void (*to_string)(void**), void (*dest
     Expr* new_expr = NULL;
     new_expr = malloc(sizeof(Expr));
     if (new_expr == NULL) {
+        if (destroy != NULL) {
+            destroy(&expr);
+        }
         return NULL;
     }
 
@@ -288,9 +324,8 @@ void expr_to_string(Expr** expr) {
     if (expr == NULL || *expr == NULL)
         return;
 
-    (*expr)->to_string(&(*expr)->expr);
-
-    puts("");
+    if ((*expr)->to_string != NULL)
+        (*expr)->to_string(&(*expr)->expr);
 }
 
 void expr_free(Expr** expr) {

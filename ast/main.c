@@ -63,5 +63,11 @@ int main(void) {
     );
     PRINT_AND_FREE(testLogicalAnd);
 
+    Expr* testUnary = NEW_UNARY_EXPR(
+        NEW_TOKEN(TOKEN_NOT, "!", 1),
+        NEW_LITERAL_EXPR(NEW_BOOL(true))
+    );
+    PRINT_AND_FREE(testUnary);
+
     return EXIT_SUCCESS;
 }

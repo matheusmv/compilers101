@@ -11,6 +11,7 @@ typedef enum ExprType {
     ASSIGN_EXPR,
     CALL_EXPR,
     LOGICAL_EXPR,
+    UNARY_EXPR,
     LITERAL_EXPR
 } ExprType;
 
@@ -80,6 +81,16 @@ void logical_expr_to_string(LogicalExpr**);
 void logical_expr_free(LogicalExpr**);
 
 
+typedef struct UnaryExpr {
+    Token* op;
+    Expr* expression;
+} UnaryExpr;
+
+UnaryExpr* unary_expr_new(Token*, Expr*);
+void unary_expr_to_string(UnaryExpr**);
+void unary_expr_free(UnaryExpr**);
+
+
 typedef struct LiteralExpr {
     LiteralType type;
     void* value; /* IdentType | IntType | FloatType | CharType | StringType | BoolType */
@@ -122,14 +133,20 @@ void literal_expr_free(LiteralExpr**);
         (void (*)(void **))logical_expr_to_string,                             \
         (void (*)(void **))logical_expr_free)
 
+#define NEW_UNARY_EXPR(op, expr)                                               \
+    expr_new(UNARY_EXPR, unary_expr_new((op), (expr)),                         \
+        (void (*)(void **))unary_expr_to_string,                               \
+        (void (*)(void **))unary_expr_free)
+
 #define NEW_LITERAL_EXPR(value)                                                \
     expr_new(LITERAL_EXPR, (value),                                            \
         (void (*)(void **))literal_expr_to_string,                             \
         (void (*)(void **))literal_expr_free)
 
 #define PRINT_AND_FREE(expr)                                                   \
-  expr_to_string((&(expr)));                                                   \
-  expr_free((&(expr)))
+    expr_to_string((&(expr)));                                                 \
+    printf("\n");                                                              \
+    expr_free((&(expr)))
 
 #define NEW_IDENT(value)                                                       \
     literal_expr_new(TYPE_IDENT, ident_type_new((value)),                      \
