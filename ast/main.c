@@ -3,19 +3,18 @@
 
 
 int main(void) {
-    Expr* lExpr = NEW_LITERAL_EXPR(NEW_FLOAT(1.1));
-    Expr* rExpr = NEW_LITERAL_EXPR(NEW_FLOAT(2.3));
-    Token* addToken = NEW_TOKEN(TOKEN_ADD, "+", 1);
-
-    Expr* sum = NEW_BINARY_EXPR(lExpr, addToken, rExpr);
-
-    Expr* lExprGroupSum = NEW_GROUP_EXPR(sum);
-    Expr* rExprLiteral = NEW_LITERAL_EXPR(NEW_FLOAT(14.75));
-    Token* mulToken = NEW_TOKEN(TOKEN_MUL, "*", 1);
-
-    Expr* mul = NEW_BINARY_EXPR(lExprGroupSum, mulToken, rExprLiteral);
-
-    PRINT_AND_FREE(mul);
+    Expr* testMath = NEW_BINARY_EXPR(
+        NEW_GROUP_EXPR(
+            NEW_BINARY_EXPR(
+                NEW_LITERAL_EXPR(NEW_FLOAT(1.1)),
+                NEW_TOKEN(TOKEN_ADD, "+", 1),
+                NEW_LITERAL_EXPR(NEW_FLOAT(2.3))
+            )
+        ),
+        NEW_TOKEN(TOKEN_MUL, "*", 1),
+        NEW_LITERAL_EXPR(NEW_FLOAT(14.75))
+    );
+    PRINT_AND_FREE(testMath);
 
     Expr* testChar = NEW_LITERAL_EXPR(NEW_CHAR('F'));
     PRINT_AND_FREE(testChar);
@@ -50,6 +49,12 @@ int main(void) {
         )
     );
     PRINT_AND_FREE(testAssign);
+
+    Expr* testCall = NEW_CALL_EXPR(NEW_LITERAL_EXPR(NEW_IDENT("lerp")));
+    CALL_EXPR_ADD_ARG(testCall, NEW_LITERAL_EXPR(NEW_FLOAT(0.15)));
+    CALL_EXPR_ADD_ARG(testCall, NEW_LITERAL_EXPR(NEW_FLOAT(3.14)));
+    CALL_EXPR_ADD_ARG(testCall, NEW_LITERAL_EXPR(NEW_FLOAT(0.3)));
+    PRINT_AND_FREE(testCall);
 
     return EXIT_SUCCESS;
 }

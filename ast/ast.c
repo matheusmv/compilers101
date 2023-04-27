@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "list.h"
 #include "token.h"
 
 #include <stdio.h>
@@ -126,6 +127,64 @@ void assign_expr_free(AssignExpr** assignExpr) {
 
     free(*assignExpr);
     *assignExpr = NULL;
+}
+
+CallExpr* call_expr_new(Expr* calle, List* arguments) {
+    CallExpr* expr = NULL;
+    expr = malloc(sizeof(CallExpr));
+    if (expr == NULL) {
+        return NULL;
+    }
+
+    *expr = (CallExpr) {
+        .calle = calle,
+        .arguments = arguments
+    };
+
+    return expr;
+}
+
+void call_expr_add_argument(CallExpr** callExpr, Expr* argument) {
+    if (callExpr == NULL || *callExpr == NULL || argument == NULL)
+        return;
+
+    list_insert_last(&(*callExpr)->arguments, argument);
+}
+
+void call_expr_to_string(CallExpr** callExpr) {
+    if (callExpr == NULL || *callExpr == NULL)
+        return;
+
+    Expr* expr = (*callExpr)->calle;
+    if (expr != NULL && expr->to_string != NULL)
+        expr->to_string(&expr->expr);
+
+    printf("(");
+
+    List* args = (*callExpr)->arguments;
+    for (ListNode* arg = args->head; arg != NULL; arg = arg->next) {
+        Expr* expr = arg->value;
+        if (expr != NULL && expr->to_string != NULL) {
+            expr->to_string((void**) &expr->expr);
+        }
+
+        if (arg->next != NULL) {
+            printf(", ");
+        }
+    }
+
+    printf(")");
+}
+
+void call_expr_free(CallExpr** callExpr) {
+    if (callExpr == NULL || *callExpr == NULL)
+        return;
+
+    expr_free(&(*callExpr)->calle);
+    list_free(&(*callExpr)->arguments);
+
+    free(*callExpr);
+    *callExpr = NULL;
 }
 
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {

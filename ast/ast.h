@@ -1,5 +1,6 @@
 #pragma once
 
+#include "list.h"
 #include "token.h"
 #include "types.h"
 
@@ -8,6 +9,7 @@ typedef enum ExprType {
     BINARY_EXPR,
     GROUP_EXPR,
     ASSIGN_EXPR,
+    CALL_EXPR,
     LITERAL_EXPR
 } ExprType;
 
@@ -55,6 +57,17 @@ void assign_expr_to_string(AssignExpr**);
 void assign_expr_free(AssignExpr**);
 
 
+typedef struct CallExpr {
+    Expr* calle;
+    List* arguments; /* List of (Expr*) */
+} CallExpr;
+
+CallExpr* call_expr_new(Expr*, List*);
+void call_expr_add_argument(CallExpr**, Expr*);
+void call_expr_to_string(CallExpr**);
+void call_expr_free(CallExpr**);
+
+
 typedef struct LiteralExpr {
     LiteralType type;
     void* value; /* IdentType | IntType | FloatType | CharType | StringType | BoolType */
@@ -82,6 +95,15 @@ void literal_expr_free(LiteralExpr**);
     expr_new(ASSIGN_EXPR, assign_expr_new((name), (expr)),                     \
         (void (*)(void **))assign_expr_to_string,                              \
         (void (*)(void **))assign_expr_free)
+
+#define NEW_CALL_EXPR(calle)                                                   \
+    expr_new(CALL_EXPR,                                                        \
+        call_expr_new((calle), (list_new((void (*)(void **)) expr_free))),     \
+        (void (*)(void **))call_expr_to_string,                                \
+        (void (*)(void **))call_expr_free)
+
+#define CALL_EXPR_ADD_ARG(call_expr, arg_expr)                                 \
+    call_expr_add_argument((CallExpr**) (&(call_expr)->expr), (arg_expr))
 
 #define NEW_LITERAL_EXPR(value)                                                \
     expr_new(LITERAL_EXPR, (value),                                            \
