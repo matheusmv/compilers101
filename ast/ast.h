@@ -10,6 +10,7 @@ typedef enum ExprType {
     GROUP_EXPR,
     ASSIGN_EXPR,
     CALL_EXPR,
+    LOGICAL_EXPR,
     LITERAL_EXPR
 } ExprType;
 
@@ -68,6 +69,17 @@ void call_expr_to_string(CallExpr**);
 void call_expr_free(CallExpr**);
 
 
+typedef struct LogicalExpr {
+    Expr* left;
+    Token* op;
+    Expr* right;
+} LogicalExpr;
+
+LogicalExpr* logical_expr_new(Expr*, Token*, Expr*);
+void logical_expr_to_string(LogicalExpr**);
+void logical_expr_free(LogicalExpr**);
+
+
 typedef struct LiteralExpr {
     LiteralType type;
     void* value; /* IdentType | IntType | FloatType | CharType | StringType | BoolType */
@@ -104,6 +116,11 @@ void literal_expr_free(LiteralExpr**);
 
 #define CALL_EXPR_ADD_ARG(call_expr, arg_expr)                                 \
     call_expr_add_argument((CallExpr**) (&(call_expr)->expr), (arg_expr))
+
+#define NEW_LOGICAL_EXPR(left, op, right)                                      \
+    expr_new(LOGICAL_EXPR, logical_expr_new((left), (op), (right)),            \
+        (void (*)(void **))logical_expr_to_string,                             \
+        (void (*)(void **))logical_expr_free)
 
 #define NEW_LITERAL_EXPR(value)                                                \
     expr_new(LITERAL_EXPR, (value),                                            \

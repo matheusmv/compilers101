@@ -21,6 +21,9 @@ typedef enum TokenType {
     TOKEN_MUL, // *
     TOKEN_QUO, // /
     TOKEN_REM, // %
+
+    TOKEN_LOR,  // ||
+    TOKEN_LAND, // &&
 } TokenType;
 
 

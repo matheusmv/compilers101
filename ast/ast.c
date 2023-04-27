@@ -187,6 +187,52 @@ void call_expr_free(CallExpr** callExpr) {
     *callExpr = NULL;
 }
 
+LogicalExpr* logical_expr_new(Expr* left, Token* operator, Expr* right) {
+    LogicalExpr* expr = NULL;
+    expr = malloc(sizeof(BinaryExpr));
+    if (expr == NULL) {
+        return NULL;
+    }
+
+    *expr = (LogicalExpr) {
+        .left = left,
+        .op = operator,
+        .right = right
+    };
+
+    return expr;
+}
+
+void logical_expr_to_string(LogicalExpr** logicalExpr) {
+    if (logicalExpr == NULL || *logicalExpr == NULL)
+        return;
+
+    Expr* left = (*logicalExpr)->left;
+    if (left != NULL && left->to_string != NULL)
+        left->to_string(&left->expr);
+
+    Token* operator = (*logicalExpr)->op;
+    if (operator != NULL && operator->literal != NULL)
+        printf(" %s ", operator->literal);
+
+    Expr* right = (*logicalExpr)->right;
+    if (right != NULL && right->to_string != NULL) {
+        right->to_string(&right->expr);
+    }
+}
+
+void logical_expr_free(LogicalExpr** logicalExpr) {
+    if (logicalExpr == NULL || *logicalExpr == NULL)
+        return;
+
+    expr_free(&(*logicalExpr)->left);
+    token_free(&(*logicalExpr)->op);
+    expr_free(&(*logicalExpr)->right);
+
+    free(*logicalExpr);
+    *logicalExpr = NULL;
+}
+
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {
     LiteralExpr* expr = NULL;
     expr = malloc(sizeof(LiteralExpr));

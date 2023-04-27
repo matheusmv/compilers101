@@ -69,7 +69,7 @@ bool list_is_empty(List** list) {
 }
 
 static inline bool list_is_initialized(List** list) {
-    return list != NULL || *list != NULL;
+    return list != NULL && *list != NULL;
 }
 
 static inline void increase_list_size(List** list) {

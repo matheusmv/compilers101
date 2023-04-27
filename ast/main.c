@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "token.h"
 
 
 int main(void) {
@@ -54,6 +55,13 @@ int main(void) {
     CALL_EXPR_ADD_ARG(testCall, NEW_LITERAL_EXPR(NEW_FLOAT(3.14)));
     CALL_EXPR_ADD_ARG(testCall, NEW_LITERAL_EXPR(NEW_FLOAT(0.3)));
     PRINT_AND_FREE(testCall);
+
+    Expr* testLogicalAnd = NEW_LOGICAL_EXPR(
+        NEW_CALL_EXPR(NEW_LITERAL_EXPR(NEW_IDENT("initialized"))),
+        NEW_TOKEN(TOKEN_LAND, "&&", 1),
+        NEW_CALL_EXPR(NEW_LITERAL_EXPR(NEW_IDENT("empty")))
+    );
+    PRINT_AND_FREE(testLogicalAnd);
 
     return EXIT_SUCCESS;
 }
