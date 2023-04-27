@@ -332,7 +332,8 @@ void expr_free(Expr** expr) {
     if (expr == NULL || *expr == NULL)
         return;
 
-    (*expr)->destroy(&(*expr)->expr);
+    if ((*expr)->destroy != NULL)
+        (*expr)->destroy(&(*expr)->expr);
 
     free(*expr);
     *expr = NULL;
