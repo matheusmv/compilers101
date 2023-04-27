@@ -23,6 +23,7 @@ typedef enum TokenType {
     TOKEN_REM, // %
 } TokenType;
 
+
 typedef struct Token {
     TokenType type;
     char* literal;
@@ -32,5 +33,6 @@ typedef struct Token {
 Token* token_new(TokenType, const char*, size_t);
 void token_to_string(Token**);
 void token_free(Token**);
+
 
 #define NEW_TOKEN(type, literal, line) token_new((type), (literal), (line))

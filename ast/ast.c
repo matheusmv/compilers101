@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "token.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +13,7 @@ BinaryExpr* binary_expr_new(Expr* left, Token* operator, Expr* right) {
 
     *expr = (BinaryExpr) {
         .left = left,
-        .operator= operator,
+        .op = operator,
         .right = right
     };
 
@@ -27,7 +28,7 @@ void binary_expr_to_string(BinaryExpr** binaryExpr) {
     if (left != NULL && left->to_string != NULL)
         left->to_string(&left->expr);
 
-    Token* operator = (*binaryExpr)->operator;
+    Token* operator = (*binaryExpr)->op;
     if (operator != NULL && operator->literal != NULL)
         printf(" %s ", operator->literal);
 
@@ -42,7 +43,7 @@ void binary_expr_free(BinaryExpr** binaryExpr) {
         return;
 
     expr_free(&(*binaryExpr)->left);
-    token_free(&(*binaryExpr)->operator);
+    token_free(&(*binaryExpr)->op);
     expr_free(&(*binaryExpr)->right);
 
     free(*binaryExpr);
@@ -84,6 +85,47 @@ void group_expr_free(GroupExpr** groupExpr) {
 
     free(*groupExpr);
     *groupExpr = NULL;
+}
+
+AssignExpr* assign_expr_new(Token* name, Expr* expression) {
+    AssignExpr* expr = NULL;
+    expr = malloc(sizeof(AssignExpr));
+    if (expr == NULL) {
+        return NULL;
+    }
+
+    *expr = (AssignExpr) {
+        .name = name,
+        .expression = expression
+    };
+
+    return expr;
+}
+
+void assign_expr_to_string(AssignExpr** assignExpr) {
+    if (assignExpr == NULL || *assignExpr == NULL)
+        return;
+
+    printf("let ");
+
+    token_to_string(&(*assignExpr)->name);
+
+    printf(" = ");
+
+    Expr* expr = (*assignExpr)->expression;
+    if (expr != NULL && expr->to_string != NULL)
+        expr->to_string(&expr->expr);
+}
+
+void assign_expr_free(AssignExpr** assignExpr) {
+    if (assignExpr == NULL || *assignExpr == NULL)
+        return;
+
+    token_free(&(*assignExpr)->name);
+    expr_free(&(*assignExpr)->expression);
+
+    free(*assignExpr);
+    *assignExpr = NULL;
 }
 
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {

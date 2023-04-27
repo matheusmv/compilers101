@@ -7,14 +7,16 @@
 typedef enum ExprType {
     BINARY_EXPR,
     GROUP_EXPR,
+    ASSIGN_EXPR,
     LITERAL_EXPR
 } ExprType;
+
 
 typedef struct Expr {
     ExprType type;
     void* expr;
-    void (* to_string)(void**);
-    void (* destroy)(void**);
+    void (*to_string)(void**);
+    void (*destroy)(void**);
 } Expr;
 
 Expr* expr_new(ExprType type, void* expr,
@@ -22,15 +24,17 @@ Expr* expr_new(ExprType type, void* expr,
 void expr_to_string(Expr**);
 void expr_free(Expr**);
 
+
 typedef struct BinaryExpr {
     Expr* left;
-    Token* operator;
+    Token* op;
     Expr* right;
 } BinaryExpr;
 
 BinaryExpr* binary_expr_new(Expr*, Token*, Expr*);
 void binary_expr_to_string(BinaryExpr**);
 void binary_expr_free(BinaryExpr**);
+
 
 typedef struct GroupExpr {
     Expr* expression;
@@ -39,6 +43,17 @@ typedef struct GroupExpr {
 GroupExpr* group_expr_new(Expr*);
 void group_expr_to_string(GroupExpr**);
 void group_expr_free(GroupExpr**);
+
+
+typedef struct AssignExpr {
+    Token* name;
+    Expr* expression;
+} AssignExpr;
+
+AssignExpr* assign_expr_new(Token*, Expr*);
+void assign_expr_to_string(AssignExpr**);
+void assign_expr_free(AssignExpr**);
+
 
 typedef struct LiteralExpr {
     LiteralType type;
@@ -62,6 +77,11 @@ void literal_expr_free(LiteralExpr**);
     expr_new(GROUP_EXPR, group_expr_new((expr)),                               \
         (void (*)(void **))group_expr_to_string,                               \
         (void (*)(void **))group_expr_free)
+
+#define NEW_ASSIGN_EXPR(name, expr)                                            \
+    expr_new(ASSIGN_EXPR, assign_expr_new((name), (expr)),                     \
+        (void (*)(void **))assign_expr_to_string,                              \
+        (void (*)(void **))assign_expr_free)
 
 #define NEW_LITERAL_EXPR(value)                                                \
     expr_new(LITERAL_EXPR, (value),                                            \

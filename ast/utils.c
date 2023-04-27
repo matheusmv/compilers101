@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <memory.h>
 
+
 char* str_dup(const char* other) {
     char* copy = NULL;
     size_t len = strlen(other);

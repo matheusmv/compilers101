@@ -24,7 +24,7 @@ void token_to_string(Token** token) {
     if (token == NULL || *token == NULL)
         return;
 
-    printf(" %s ", (*token)->literal);
+    printf("%s", (*token)->literal);
 }
 
 void token_free(Token** token) {

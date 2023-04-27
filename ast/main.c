@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "token.h"
 
 
 int main(void) {
@@ -27,6 +28,28 @@ int main(void) {
 
     Expr* testBool = NEW_LITERAL_EXPR(NEW_BOOL((2 + 2) == 4));
     PRINT_AND_FREE(testBool);
+
+    Expr* testAssign = NEW_ASSIGN_EXPR(
+        NEW_TOKEN(TOKEN_IDENT, "result", 1),
+        NEW_BINARY_EXPR(
+            NEW_GROUP_EXPR(
+                NEW_BINARY_EXPR(
+                    NEW_LITERAL_EXPR(NEW_IDENT("n")),
+                    NEW_TOKEN(TOKEN_MUL, "*", 1),
+                    NEW_GROUP_EXPR(
+                        NEW_BINARY_EXPR(
+                            NEW_LITERAL_EXPR(NEW_IDENT("n")),
+                            NEW_TOKEN(TOKEN_SUB, "+", 1),
+                            NEW_LITERAL_EXPR(NEW_INT(1))
+                        )
+                    )
+                )
+            ),
+            NEW_TOKEN(TOKEN_QUO, "/", 1),
+            NEW_LITERAL_EXPR(NEW_INT(2))
+        )
+    );
+    PRINT_AND_FREE(testAssign);
 
     return EXIT_SUCCESS;
 }
