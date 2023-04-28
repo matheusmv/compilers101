@@ -306,6 +306,56 @@ void let_stmt_free(LetStmt** letStmt) {
     *letStmt = NULL;
 }
 
+IfStmt* if_stmt_new(Expr* condition, Stmt* thenBranch, Stmt* elseBranch) {
+    IfStmt* stmt = NULL;
+    stmt = malloc(sizeof(IfStmt));
+    if (stmt == NULL) {
+        expr_free(&condition);
+        stmt_free(&thenBranch);
+        stmt_free(&elseBranch);
+        return NULL;
+    }
+
+    *stmt = (IfStmt) {
+        .condition = condition,
+        .thenBranch = thenBranch,
+        .elseBranch = elseBranch
+    };
+
+    return stmt;
+}
+
+void if_stmt_to_string(IfStmt** ifStmt) {
+    if (ifStmt == NULL || *ifStmt == NULL)
+        return;
+
+    printf("if (");
+
+    expr_to_string(&(*ifStmt)->condition);
+
+    printf(") ");
+
+    stmt_to_string(&(*ifStmt)->thenBranch);
+
+    if ((*ifStmt)->elseBranch != NULL) {
+        printf(" else ");
+
+        stmt_to_string(&(*ifStmt)->elseBranch);
+    }
+}
+
+void if_stmt_free(IfStmt** ifStmt) {
+    if (ifStmt == NULL || *ifStmt == NULL)
+        return;
+
+    expr_free(&(*ifStmt)->condition);
+    stmt_free(&(*ifStmt)->thenBranch);
+    stmt_free(&(*ifStmt)->elseBranch);
+
+    free(*ifStmt);
+    *ifStmt = NULL;
+}
+
 BinaryExpr* binary_expr_new(Expr* left, Token* op, Expr* right) {
     BinaryExpr* expr = NULL;
     expr = malloc(sizeof(BinaryExpr));

@@ -118,5 +118,28 @@ int main(void) {
     );
     STMT_PRINT_AND_FREE(testLetStmt);
 
+    Expr* printMessage = NEW_CALL_EXPR(NEW_LITERAL_EXPR(NEW_IDENT("print")));
+    CALL_EXPR_ADD_ARG(printMessage, NEW_LITERAL_EXPR(NEW_STRING("the number is even")));
+
+    Stmt* thenBlock = NEW_BLOCK_STMT();
+    BLOCK_STMT_ADD_STMT(thenBlock, NEW_EXPR_STMT(printMessage));
+
+    Stmt* elseBlock = NULL;
+
+    Stmt* testIfStmt = NEW_IF_STMT(
+        NEW_BINARY_EXPR(
+            NEW_BINARY_EXPR(
+                NEW_LITERAL_EXPR(NEW_IDENT("i")),
+                NEW_TOKEN(TOKEN_REM, "%", 1),
+                NEW_LITERAL_EXPR(NEW_INT(2))
+            ),
+            NEW_TOKEN(TOKEN_EQL, "==", 0),
+            NEW_LITERAL_EXPR(NEW_INT(0))
+        ),
+        thenBlock,
+        elseBlock
+    );
+    STMT_PRINT_AND_FREE(testIfStmt);
+
     return EXIT_SUCCESS;
 }

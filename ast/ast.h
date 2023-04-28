@@ -10,7 +10,8 @@ typedef enum StmtType {
     EXPRESSION_STMT,
     FUNCTION_STMT,
     RETURN_STMT,
-    LET_STMT
+    LET_STMT,
+    IF_STMT
 } StmtType;
 
 typedef enum ExprType {
@@ -98,6 +99,17 @@ typedef struct LetStmt {
 LetStmt* let_stmt_new(Token* name, Expr* expression);
 void let_stmt_to_string(LetStmt** letStmt);
 void let_stmt_free(LetStmt** letStmt);
+
+
+typedef struct IfStmt {
+    Expr* condition;
+    Stmt* thenBranch;
+    Stmt* elseBranch;
+} IfStmt;
+
+IfStmt* if_stmt_new(Expr* condition, Stmt* thenBranch, Stmt* elseBranch);
+void if_stmt_to_string(IfStmt** ifStmt);
+void if_stmt_free(IfStmt** ifStmt);
 
 
 typedef struct BinaryExpr {
@@ -209,6 +221,11 @@ void literal_expr_free(LiteralExpr** literalExpr);
     stmt_new(LET_STMT, let_stmt_new((name), (expr)),                           \
         (void (*)(void **))let_stmt_to_string,                                 \
         (void (*)(void **))let_stmt_free)
+
+#define NEW_IF_STMT(cond_expr, then_block, else_block)                         \
+    stmt_new(IF_STMT, if_stmt_new((cond_expr), (then_block), (else_block)),    \
+        (void (*)(void **))if_stmt_to_string,                                  \
+        (void (*)(void **))if_stmt_free)
 
 #define STMT_PRINT_AND_FREE(stmt)                                              \
     stmt_to_string((&(stmt)));                                                 \
