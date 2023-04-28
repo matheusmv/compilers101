@@ -2,7 +2,7 @@
 
 #include "list.h"
 #include "token.h"
-#include "types.h"
+#include "literal-type.h"
 
 
 typedef enum StmtType {
@@ -212,7 +212,7 @@ void update_expr_free(UpdateExpr** updateExpr);
 
 typedef struct LiteralExpr {
     LiteralType type;
-    void* value; /* IdentType | IntType | FloatType | CharType | StringType | BoolType */
+    void* value; /* Ident | Int | Float | Char | String | Bool | Void | Nil */
     void (*to_string)(void**);
     void (*destroy)(void**);
 } LiteralExpr;
@@ -328,31 +328,57 @@ void literal_expr_free(LiteralExpr** literalExpr);
     expr_free((&(expr)))
 
 #define NEW_IDENT(value)                                                       \
-    literal_expr_new(TYPE_IDENT, ident_type_new((value)),                      \
-                (void (*)(void **))ident_type_to_string,                       \
-                (void (*)(void **))ident_type_free)
+    literal_expr_new(IDENT_LITERAL, ident_literal_new((value)),                \
+                (void (*)(void **))ident_literal_to_string,                    \
+                (void (*)(void **))ident_literal_free)
+
+#define NEW_IDENT_LITERAL(value) NEW_LITERAL_EXPR(NEW_IDENT((value)))
 
 #define NEW_INT(value)                                                         \
-    literal_expr_new(TYPE_INT, int_type_new((value)),                          \
-                (void (*)(void **))int_type_to_string,                         \
-                (void (*)(void **))int_type_free)
+    literal_expr_new(INT_LITERAL, int_literal_new((value)),                    \
+                (void (*)(void **))int_literal_to_string,                      \
+                (void (*)(void **))int_literal_free)
+
+#define NEW_INT_LITERAL(value) NEW_LITERAL_EXPR(NEW_INT((value)))
 
 #define NEW_FLOAT(value)                                                       \
-    literal_expr_new(TYPE_FLOAT, float_type_new((value)),                      \
-                (void (*)(void **))float_type_to_string,                       \
-                (void (*)(void **))float_type_free)
+    literal_expr_new(FLOAT_LITERAL, float_literal_new((value)),                \
+                (void (*)(void **))float_literal_to_string,                    \
+                (void (*)(void **))float_literal_free)
+
+#define NEW_FLOAT_LITERAL(value) NEW_LITERAL_EXPR(NEW_FLOAT((value)))
 
 #define NEW_CHAR(value)                                                        \
-    literal_expr_new(TYPE_CHAR, char_type_new((value)),                        \
-                (void (*)(void **))char_type_to_string,                        \
-                (void (*)(void **))char_type_free)
+    literal_expr_new(CHAR_LITERAL, char_literal_new((value)),                  \
+                (void (*)(void **))char_literal_to_string,                     \
+                (void (*)(void **))char_literal_free)
+
+#define NEW_CHAR_LITERAL(value) NEW_LITERAL_EXPR(NEW_CHAR((value)))
 
 #define NEW_STRING(value)                                                      \
-    literal_expr_new(TYPE_STRING, string_type_new((value)),                    \
-                (void (*)(void **))string_type_to_string,                      \
-                (void (*)(void **))string_type_free)
+    literal_expr_new(STRING_LITERAL, string_literal_new((value)),              \
+                (void (*)(void **))string_literal_to_string,                   \
+                (void (*)(void **))string_literal_free)
+
+#define NEW_STRING_LITERAL(value) NEW_LITERAL_EXPR(NEW_STRING((value)))
 
 #define NEW_BOOL(value)                                                        \
-    literal_expr_new(TYPE_BOOL, bool_type_new((value)),                        \
-                (void (*)(void **))bool_type_to_string,                        \
-                (void (*)(void **))bool_type_free)
+    literal_expr_new(BOOL_LITERAL, bool_literal_new((value)),                  \
+                (void (*)(void **))bool_literal_to_string,                     \
+                (void (*)(void **))bool_literal_free)
+
+#define NEW_BOOL_LITERAL(value) NEW_LITERAL_EXPR(NEW_BOOL((value)))
+
+#define NEW_VOID()                                                             \
+    literal_expr_new(VOID_LITERAL, void_literal_new(),                         \
+                (void (*)(void **))void_literal_to_string,                     \
+                (void (*)(void **))void_literal_free)
+
+#define NEW_VOID_LITERAL() NEW_LITERAL_EXPR(NEW_VOID())
+
+#define NEW_NIL()                                                              \
+    literal_expr_new(NIL_LITERAL, nil_literal_new(),                           \
+                (void (*)(void **))nil_literal_to_string,                      \
+                (void (*)(void **))nil_literal_free)
+
+#define NEW_NIL_LITERAL() NEW_LITERAL_EXPR(NEW_NIL())

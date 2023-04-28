@@ -1,67 +1,66 @@
 #include "ast.h"
-#include "token.h"
 
 
 int main(void) {
     Expr* testMath = NEW_BINARY_EXPR(
         NEW_GROUP_EXPR(
             NEW_BINARY_EXPR(
-                NEW_LITERAL_EXPR(NEW_FLOAT(1.1)),
+                NEW_FLOAT_LITERAL(1.1),
                 NEW_TOKEN(TOKEN_ADD, "+", 1),
-                NEW_LITERAL_EXPR(NEW_FLOAT(2.3))
+                NEW_FLOAT_LITERAL(2.3)
             )
         ),
         NEW_TOKEN(TOKEN_MUL, "*", 1),
-        NEW_LITERAL_EXPR(NEW_FLOAT(14.75))
+        NEW_FLOAT_LITERAL(14.75)
     );
 
-    Expr* testChar = NEW_LITERAL_EXPR(NEW_CHAR('F'));
+    Expr* testChar = NEW_CHAR_LITERAL('F');
 
-    Expr* testIdent = NEW_LITERAL_EXPR(NEW_IDENT("$HOME"));
+    Expr* testIdent = NEW_IDENT_LITERAL("$HOME");
 
-    Expr* testString = NEW_LITERAL_EXPR(NEW_STRING("Alone after all."));
+    Expr* testString = NEW_STRING_LITERAL("Alone after all.");
 
-    Expr* testBool = NEW_LITERAL_EXPR(NEW_BOOL((2 + 2) == 4));
+    Expr* testBool = NEW_BOOL_LITERAL((2 + 2) == 4);
 
     Expr* testAssign = NEW_ASSIGN_EXPR(
-        NEW_LITERAL_EXPR(NEW_IDENT("result")),
+        NEW_IDENT_LITERAL("result"),
         NEW_TOKEN(TOKEN_ASSIGN, "=", 1),
         NEW_BINARY_EXPR(
             NEW_GROUP_EXPR(
                 NEW_BINARY_EXPR(
-                    NEW_LITERAL_EXPR(NEW_IDENT("n")),
+                    NEW_IDENT_LITERAL("n"),
                     NEW_TOKEN(TOKEN_MUL, "*", 1),
                     NEW_GROUP_EXPR(
                         NEW_BINARY_EXPR(
-                            NEW_LITERAL_EXPR(NEW_IDENT("n")),
+                            NEW_IDENT_LITERAL("n"),
                             NEW_TOKEN(TOKEN_SUB, "+", 1),
-                            NEW_LITERAL_EXPR(NEW_INT(1))
+                            NEW_INT_LITERAL(1)
                         )
                     )
                 )
             ),
             NEW_TOKEN(TOKEN_QUO, "/", 1),
-            NEW_LITERAL_EXPR(NEW_INT(2))
+            NEW_INT_LITERAL(2)
         )
     );
 
-    Expr* testCall = NEW_CALL_EXPR(NEW_LITERAL_EXPR(NEW_IDENT("lerp")));
-    CALL_EXPR_ADD_ARG(testCall, NEW_LITERAL_EXPR(NEW_FLOAT(0.15)));
-    CALL_EXPR_ADD_ARG(testCall, NEW_LITERAL_EXPR(NEW_FLOAT(3.14)));
-    CALL_EXPR_ADD_ARG(testCall, NEW_LITERAL_EXPR(NEW_FLOAT(0.3)));
+    Expr* testCall = NEW_CALL_EXPR(NEW_IDENT_LITERAL("lerp"));
+    CALL_EXPR_ADD_ARG(testCall, NEW_FLOAT_LITERAL(0.15));
+    CALL_EXPR_ADD_ARG(testCall, NEW_FLOAT_LITERAL(3.14));
+    CALL_EXPR_ADD_ARG(testCall, NEW_FLOAT_LITERAL(0.3));
 
     Expr* testLogicalAnd = NEW_LOGICAL_EXPR(
-        NEW_CALL_EXPR(NEW_LITERAL_EXPR(NEW_IDENT("initialized"))),
+        NEW_CALL_EXPR(NEW_IDENT_LITERAL("initialized")),
         NEW_TOKEN(TOKEN_LAND, "&&", 1),
-        NEW_CALL_EXPR(NEW_LITERAL_EXPR(NEW_IDENT("empty")))
+        NEW_CALL_EXPR(NEW_IDENT_LITERAL("empty"))
     );
 
     Expr* testUnary = NEW_UNARY_EXPR(
         NEW_TOKEN(TOKEN_NOT, "!", 1),
-        NEW_LITERAL_EXPR(NEW_BOOL(true))
+        NEW_BOOL_LITERAL(true)
     );
 
-    Stmt* testExprStmt = NEW_EXPR_STMT(NEW_LITERAL_EXPR(NEW_STRING("OK")));
+    Stmt* testExprStmt = NEW_EXPR_STMT(NEW_STRING_LITERAL("OK"));
 
     Stmt* testInnerBlockStmt = NEW_BLOCK_STMT();
 
@@ -84,21 +83,21 @@ int main(void) {
     BLOCK_STMT_ADD_STMT(testFunctionBody, 
         NEW_RETURN_STMT(
             NEW_BINARY_EXPR(
-                NEW_LITERAL_EXPR(NEW_IDENT("a")),
+                NEW_IDENT_LITERAL("a"),
                 NEW_TOKEN(TOKEN_MUL, "*", 1),
                 NEW_BINARY_EXPR(
                     NEW_GROUP_EXPR(
                         NEW_BINARY_EXPR(
-                            NEW_LITERAL_EXPR(NEW_FLOAT(1.0)),
+                            NEW_FLOAT_LITERAL(1.0),
                             NEW_TOKEN(TOKEN_SUB, "-", 1),
-                            NEW_LITERAL_EXPR(NEW_IDENT("t"))
+                            NEW_IDENT_LITERAL("t")
                         )
                     ),
                     NEW_TOKEN(TOKEN_ADD, "+", 1),
                     NEW_BINARY_EXPR(
-                        NEW_LITERAL_EXPR(NEW_IDENT("b")),
+                        NEW_IDENT_LITERAL("b"),
                         NEW_TOKEN(TOKEN_MUL, "*", 1),
-                        NEW_LITERAL_EXPR(NEW_IDENT("t"))
+                        NEW_IDENT_LITERAL("t")
                     )
                 )
             )
@@ -108,19 +107,19 @@ int main(void) {
         NEW_TOKEN(TOKEN_IDENT, "lerp", 1),
         testFunctionBody
     );
-    FUNCTION_ADD_PARAM(testFunctionSmt, NEW_LITERAL_EXPR(NEW_IDENT("a")));
-    FUNCTION_ADD_PARAM(testFunctionSmt, NEW_LITERAL_EXPR(NEW_IDENT("b")));
-    FUNCTION_ADD_PARAM(testFunctionSmt, NEW_LITERAL_EXPR(NEW_IDENT("t")));
+    FUNCTION_ADD_PARAM(testFunctionSmt, NEW_IDENT_LITERAL("a"));
+    FUNCTION_ADD_PARAM(testFunctionSmt, NEW_IDENT_LITERAL("b"));
+    FUNCTION_ADD_PARAM(testFunctionSmt, NEW_IDENT_LITERAL("t"));
     STMT_PRINT_AND_FREE(testFunctionSmt);
 
     Stmt* testLetStmt = NEW_LET_STMT(
         NEW_TOKEN(TOKEN_IDENT, "name", 1),
-        NEW_LITERAL_EXPR(NEW_STRING("john nash"))
+        NEW_STRING_LITERAL("john nash")
     );
     STMT_PRINT_AND_FREE(testLetStmt);
 
-    Expr* printMessage = NEW_CALL_EXPR(NEW_LITERAL_EXPR(NEW_IDENT("print")));
-    CALL_EXPR_ADD_ARG(printMessage, NEW_LITERAL_EXPR(NEW_STRING("the number is even")));
+    Expr* printMessage = NEW_CALL_EXPR(NEW_IDENT_LITERAL("print"));
+    CALL_EXPR_ADD_ARG(printMessage, NEW_STRING_LITERAL("the number is even"));
 
     Stmt* thenBlock = NEW_BLOCK_STMT();
     BLOCK_STMT_ADD_STMT(thenBlock, NEW_EXPR_STMT(printMessage));
@@ -130,12 +129,12 @@ int main(void) {
     Stmt* testIfStmt = NEW_IF_STMT(
         NEW_BINARY_EXPR(
             NEW_BINARY_EXPR(
-                NEW_LITERAL_EXPR(NEW_IDENT("i")),
+                NEW_IDENT_LITERAL("i"),
                 NEW_TOKEN(TOKEN_REM, "%", 1),
-                NEW_LITERAL_EXPR(NEW_INT(2))
+                NEW_INT_LITERAL(2)
             ),
             NEW_TOKEN(TOKEN_EQL, "==", 0),
-            NEW_LITERAL_EXPR(NEW_INT(0))
+            NEW_INT_LITERAL(0)
         ),
         thenBlock,
         elseBlock
@@ -146,33 +145,39 @@ int main(void) {
     BLOCK_STMT_ADD_STMT(whileStmtBody,
         NEW_EXPR_STMT(
             NEW_ASSIGN_EXPR(
-                NEW_LITERAL_EXPR(NEW_IDENT("i")),
+                NEW_IDENT_LITERAL("i"),
                 NEW_TOKEN(TOKEN_ADD_ASSIGN, "+=", 1),
-                NEW_LITERAL_EXPR(NEW_INT(1))
+                NEW_INT_LITERAL(1)
             )
         )
     );
     Stmt* testWhileStmt = NEW_WHILE_STMT(
         NEW_BINARY_EXPR(
-            NEW_LITERAL_EXPR(NEW_IDENT("i")),
+            NEW_IDENT_LITERAL("i"),
             NEW_TOKEN(TOKEN_LSS, "<", 1),
-            NEW_LITERAL_EXPR(NEW_INT(10))
+            NEW_INT_LITERAL(10)
         ),
         whileStmtBody
     );
     STMT_PRINT_AND_FREE(testWhileStmt);
 
     Stmt* testForStmt = NEW_FOR_STMT(
-        NEW_LET_STMT(NEW_TOKEN(TOKEN_IDENT, "i", 1), NEW_LITERAL_EXPR(NEW_INT(0))),
+        NEW_LET_STMT(NEW_TOKEN(TOKEN_IDENT, "i", 1), NEW_INT_LITERAL(0)),
         NEW_BINARY_EXPR(
-            NEW_LITERAL_EXPR(NEW_IDENT("i")),
+            NEW_IDENT_LITERAL("i"),
             NEW_TOKEN(TOKEN_LSS, "<", 1),
-            NEW_LITERAL_EXPR(NEW_INT(10))
+            NEW_INT_LITERAL(10)
         ),
-        NEW_UPDATE_EXPR(NEW_LITERAL_EXPR(NEW_IDENT("i")), NEW_TOKEN(TOKEN_INC, "++", 1)),
+        NEW_UPDATE_EXPR(NEW_IDENT_LITERAL("i"), NEW_TOKEN(TOKEN_INC, "++", 1)),
         NEW_BLOCK_STMT()
     );
     STMT_PRINT_AND_FREE(testForStmt);
+
+    Stmt *testLetStmtWithNilValue = NEW_LET_STMT(
+        NEW_TOKEN(TOKEN_IDENT, "object", 1),
+        NEW_NIL_LITERAL()
+    );
+    STMT_PRINT_AND_FREE(testLetStmtWithNilValue);
 
     return EXIT_SUCCESS;
 }
