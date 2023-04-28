@@ -356,6 +356,47 @@ void if_stmt_free(IfStmt** ifStmt) {
     *ifStmt = NULL;
 }
 
+WhileStmt* while_stmt_new(Expr* condition, Stmt* body) {
+    WhileStmt* stmt = NULL;
+    stmt = malloc(sizeof(WhileStmt));
+    if (stmt == NULL) {
+        expr_free(&condition);
+        stmt_free(&body);
+        return NULL;
+    }
+
+    *stmt = (WhileStmt) {
+        .condition = condition,
+        .body = body
+    };
+
+    return stmt;
+}
+
+void while_stmt_to_string(WhileStmt** whileStmt) {
+    if (whileStmt == NULL || *whileStmt == NULL)
+        return;
+
+    printf("while (");
+
+    expr_to_string(&(*whileStmt)->condition);
+
+    printf(") ");
+
+    stmt_to_string(&(*whileStmt)->body);
+}
+
+void while_stmt_free(WhileStmt** whileStmt) {
+    if (whileStmt == NULL || *whileStmt == NULL)
+        return;
+
+    expr_free(&(*whileStmt)->condition);
+    stmt_free(&(*whileStmt)->body);
+
+    free(*whileStmt);
+    *whileStmt = NULL;
+}
+
 BinaryExpr* binary_expr_new(Expr* left, Token* op, Expr* right) {
     BinaryExpr* expr = NULL;
     expr = malloc(sizeof(BinaryExpr));

@@ -11,7 +11,8 @@ typedef enum StmtType {
     FUNCTION_STMT,
     RETURN_STMT,
     LET_STMT,
-    IF_STMT
+    IF_STMT,
+    WHILE_STMT
 } StmtType;
 
 typedef enum ExprType {
@@ -110,6 +111,16 @@ typedef struct IfStmt {
 IfStmt* if_stmt_new(Expr* condition, Stmt* thenBranch, Stmt* elseBranch);
 void if_stmt_to_string(IfStmt** ifStmt);
 void if_stmt_free(IfStmt** ifStmt);
+
+
+typedef struct WhileStmt {
+    Expr* condition;
+    Stmt* body;
+} WhileStmt;
+
+WhileStmt* while_stmt_new(Expr* condition, Stmt* body);
+void while_stmt_to_string(WhileStmt** whileStmt);
+void while_stmt_free(WhileStmt** whileStmt);
 
 
 typedef struct BinaryExpr {
@@ -226,6 +237,11 @@ void literal_expr_free(LiteralExpr** literalExpr);
     stmt_new(IF_STMT, if_stmt_new((cond_expr), (then_block), (else_block)),    \
         (void (*)(void **))if_stmt_to_string,                                  \
         (void (*)(void **))if_stmt_free)
+
+#define NEW_WHILE_STMT(cond_expr, body)                                        \
+    stmt_new(WHILE_STMT, while_stmt_new((cond_expr), (body)),                  \
+        (void (*)(void **))while_stmt_to_string,                               \
+        (void (*)(void **))while_stmt_free)
 
 #define STMT_PRINT_AND_FREE(stmt)                                              \
     stmt_to_string((&(stmt)));                                                 \

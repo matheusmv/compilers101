@@ -141,5 +141,28 @@ int main(void) {
     );
     STMT_PRINT_AND_FREE(testIfStmt);
 
+    Stmt* whileStmtBody = NEW_BLOCK_STMT();
+    BLOCK_STMT_ADD_STMT(whileStmtBody,
+        NEW_EXPR_STMT(
+            NEW_ASSIGN_EXPR(
+                NEW_LITERAL_EXPR(NEW_IDENT("i")),
+                NEW_BINARY_EXPR(
+                    NEW_LITERAL_EXPR(NEW_IDENT("i")),
+                    NEW_TOKEN(TOKEN_ADD, "+", 1),
+                    NEW_LITERAL_EXPR(NEW_INT(1))
+                )
+            )
+        )
+    );
+    Stmt* testWhileStmt = NEW_WHILE_STMT(
+        NEW_BINARY_EXPR(
+            NEW_LITERAL_EXPR(NEW_IDENT("i")),
+            NEW_TOKEN(TOKEN_LSS, "<", 1),
+            NEW_LITERAL_EXPR(NEW_INT(10))
+        ),
+        whileStmtBody
+    );
+    STMT_PRINT_AND_FREE(testWhileStmt);
+
     return EXIT_SUCCESS;
 }
