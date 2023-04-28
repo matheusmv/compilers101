@@ -167,11 +167,11 @@ void expression_stmt_free(ExpressionStmt** expressionStmt) {
     *expressionStmt = NULL;
 }
 
-FunctionStmt* function_stmt_new(Expr* name, List* parameters, Stmt* body) {
+FunctionStmt* function_stmt_new(Token* name, List* parameters, Stmt* body) {
     FunctionStmt* stmt = NULL;
     stmt = malloc(sizeof(FunctionStmt));
     if (stmt == NULL) {
-        expr_free(&name);
+        token_free(&name);
         list_free(&parameters);
         stmt_free(&body);
         return NULL;
@@ -199,7 +199,7 @@ void function_stmt_to_string(FunctionStmt** functionStmt) {
 
     printf("func ");
 
-    expr_to_string(&(*functionStmt)->name);
+    token_to_string(&(*functionStmt)->name);
 
     printf("(");
     
@@ -214,7 +214,7 @@ void function_stmt_to_string(FunctionStmt** functionStmt) {
         }
     }
 
-    printf(")");
+    printf(") ");
 
     stmt_to_string(&(*functionStmt)->body);
 }
@@ -223,7 +223,7 @@ void function_stmt_free(FunctionStmt** functionStmt) {
     if (functionStmt == NULL || *functionStmt == NULL)
         return;
 
-    expr_free(&(*functionStmt)->name);
+    token_free(&(*functionStmt)->name);
     list_free(&(*functionStmt)->parameters);
     stmt_free(&(*functionStmt)->body);
 
@@ -263,6 +263,47 @@ void return_stmt_free(ReturnStmt** returnStmt) {
 
     free(*returnStmt);
     *returnStmt = NULL;
+}
+
+LetStmt* let_stmt_new(Token* name, Expr* expression) {
+    LetStmt* stmt = NULL;
+    stmt = malloc(sizeof(LetStmt));
+    if (stmt == NULL) {
+        token_free(&name);
+        expr_free(&expression);
+        return NULL;
+    }
+
+    *stmt = (LetStmt) {
+        .name = name,
+        .expression = expression
+    };
+
+    return stmt;
+}
+
+void let_stmt_to_string(LetStmt** letStmt) {
+    if (letStmt == NULL || *letStmt == NULL)
+        return;
+
+    printf("let ");
+
+    token_to_string(&(*letStmt)->name);
+
+    printf(" = ");
+
+    expr_to_string(&(*letStmt)->expression);
+}
+
+void let_stmt_free(LetStmt** letStmt) {
+    if (letStmt == NULL || *letStmt == NULL)
+        return;
+
+    token_free(&(*letStmt)->name);
+    expr_free(&(*letStmt)->expression);
+
+    free(*letStmt);
+    *letStmt = NULL;
 }
 
 BinaryExpr* binary_expr_new(Expr* left, Token* op, Expr* right) {
@@ -367,8 +408,6 @@ AssignExpr* assign_expr_new(Expr* name, Expr* expression) {
 void assign_expr_to_string(AssignExpr** assignExpr) {
     if (assignExpr == NULL || *assignExpr == NULL)
         return;
-
-    printf("let ");
 
     expr_to_string(&(*assignExpr)->name);
 

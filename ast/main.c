@@ -103,11 +103,20 @@ int main(void) {
             )
         )
     );
-    Stmt* testFunctionSmt = NEW_FUNCTION_STMT("lerp", testFunctionBody);
+    Stmt* testFunctionSmt = NEW_FUNCTION_STMT(
+        NEW_TOKEN(TOKEN_IDENT, "lerp", 1),
+        testFunctionBody
+    );
     FUNCTION_ADD_PARAM(testFunctionSmt, NEW_LITERAL_EXPR(NEW_IDENT("a")));
     FUNCTION_ADD_PARAM(testFunctionSmt, NEW_LITERAL_EXPR(NEW_IDENT("b")));
     FUNCTION_ADD_PARAM(testFunctionSmt, NEW_LITERAL_EXPR(NEW_IDENT("t")));
     STMT_PRINT_AND_FREE(testFunctionSmt);
+
+    Stmt* testLetStmt = NEW_LET_STMT(
+        NEW_TOKEN(TOKEN_IDENT, "name", 1),
+        NEW_LITERAL_EXPR(NEW_STRING("john nash"))
+    );
+    STMT_PRINT_AND_FREE(testLetStmt);
 
     return EXIT_SUCCESS;
 }
