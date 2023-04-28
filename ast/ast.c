@@ -715,6 +715,42 @@ void unary_expr_free(UnaryExpr** unaryExpr) {
     *unaryExpr = NULL;
 }
 
+UpdateExpr* update_expr_new(Expr* expression, Token* op) {
+    UpdateExpr* expr = NULL;
+    expr = malloc(sizeof(UpdateExpr));
+    if (expr == NULL) {
+        expr_free(&expression);
+        token_free(&op);
+        return NULL;
+    }
+
+    *expr = (UpdateExpr) {
+        .expression = expression,
+        .op = op
+    };
+
+    return expr;
+}
+
+void update_expr_to_string(UpdateExpr** updateExpr) {
+    if (updateExpr == NULL || *updateExpr == NULL)
+        return;
+
+    expr_to_string(&(*updateExpr)->expression);
+    token_to_string(&(*updateExpr)->op);
+}
+
+void update_expr_free(UpdateExpr** updateExpr) {
+    if (updateExpr == NULL || *updateExpr == NULL)
+        return;
+
+    expr_free(&(*updateExpr)->expression);
+    token_free(&(*updateExpr)->op);
+
+    free(*updateExpr);
+    *updateExpr = NULL;
+}
+
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {
     LiteralExpr* expr = NULL;
     expr = malloc(sizeof(LiteralExpr));

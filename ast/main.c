@@ -169,11 +169,7 @@ int main(void) {
             NEW_TOKEN(TOKEN_LSS, "<", 1),
             NEW_LITERAL_EXPR(NEW_INT(10))
         ),
-        NEW_ASSIGN_EXPR(
-            NEW_LITERAL_EXPR(NEW_IDENT("i")),
-            NEW_TOKEN(TOKEN_ADD_ASSIGN, "+=", 1),
-            NEW_LITERAL_EXPR(NEW_INT(1))
-        ),
+        NEW_UPDATE_EXPR(NEW_LITERAL_EXPR(NEW_IDENT("i")), NEW_TOKEN(TOKEN_INC, "++", 1)),
         NEW_BLOCK_STMT()
     );
     STMT_PRINT_AND_FREE(testForStmt);

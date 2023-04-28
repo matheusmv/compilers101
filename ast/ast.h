@@ -23,6 +23,7 @@ typedef enum ExprType {
     CALL_EXPR,
     LOGICAL_EXPR,
     UNARY_EXPR,
+    UPDATE_EXPR,
     LITERAL_EXPR
 } ExprType;
 
@@ -199,6 +200,16 @@ void unary_expr_to_string(UnaryExpr** unaryExpr);
 void unary_expr_free(UnaryExpr** unaryExpr);
 
 
+typedef struct UpdateExpr {
+    Expr* expression;
+    Token* op; /* Expr++ | Expr-- */
+} UpdateExpr;
+
+UpdateExpr* update_expr_new(Expr* expression, Token* op);
+void update_expr_to_string(UpdateExpr** updateExpr);
+void update_expr_free(UpdateExpr** updateExpr);
+
+
 typedef struct LiteralExpr {
     LiteralType type;
     void* value; /* IdentType | IntType | FloatType | CharType | StringType | BoolType */
@@ -300,6 +311,11 @@ void literal_expr_free(LiteralExpr** literalExpr);
     expr_new(UNARY_EXPR, unary_expr_new((op), (expr)),                         \
         (void (*)(void **))unary_expr_to_string,                               \
         (void (*)(void **))unary_expr_free)
+
+#define NEW_UPDATE_EXPR(expr, op)                                              \
+    expr_new(UPDATE_EXPR, update_expr_new((expr), (op)),                       \
+        (void (*)(void **))update_expr_to_string,                              \
+        (void (*)(void **))update_expr_free)
 
 #define NEW_LITERAL_EXPR(value)                                                \
     expr_new(LITERAL_EXPR, (value),                                            \
