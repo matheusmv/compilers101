@@ -3,6 +3,84 @@
 #include "token.h"
 
 
+Stmt* stmt_new(StmtType type, void* stmt, void (*to_string)(void**), void (*destroy)(void**)) {
+    Stmt* new_stmt = NULL;
+    new_stmt = malloc(sizeof(Expr));
+    if (new_stmt == NULL) {
+        if (destroy != NULL) {
+            destroy(&stmt);
+        }
+        return NULL;
+    }
+
+    *new_stmt = (Stmt) {
+        .type = type,
+        .stmt = stmt,
+        .to_string = to_string,
+        .destroy = destroy
+    };
+
+    return new_stmt;
+}
+
+void stmt_to_string(Stmt** stmt) {
+    if (stmt == NULL || *stmt == NULL)
+        return;
+
+    if ((*stmt)->to_string != NULL)
+        (*stmt)->to_string(&(*stmt)->stmt);
+}
+
+void stmt_free(Stmt** stmt) {
+    if (stmt == NULL || *stmt == NULL)
+        return;
+
+    if ((*stmt)->destroy != NULL)
+        (*stmt)->destroy(&(*stmt)->stmt);
+
+    free(*stmt);
+    *stmt = NULL;
+}
+
+Expr* expr_new(ExprType type, void* expr, void (*to_string)(void**), void (*destroy)(void**)) {
+    Expr* new_expr = NULL;
+    new_expr = malloc(sizeof(Expr));
+    if (new_expr == NULL) {
+        if (destroy != NULL) {
+            destroy(&expr);
+        }
+        return NULL;
+    }
+
+    *new_expr = (Expr) {
+        .type = type,
+        .expr = expr,
+        .to_string = to_string,
+        .destroy = destroy
+    };
+
+    return new_expr;
+}
+
+void expr_to_string(Expr** expr) {
+    if (expr == NULL || *expr == NULL)
+        return;
+
+    if ((*expr)->to_string != NULL)
+        (*expr)->to_string(&(*expr)->expr);
+}
+
+void expr_free(Expr** expr) {
+    if (expr == NULL || *expr == NULL)
+        return;
+
+    if ((*expr)->destroy != NULL)
+        (*expr)->destroy(&(*expr)->expr);
+
+    free(*expr);
+    *expr = NULL;
+}
+
 BinaryExpr* binary_expr_new(Expr* left, Token* op, Expr* right) {
     BinaryExpr* expr = NULL;
     expr = malloc(sizeof(BinaryExpr));
@@ -298,43 +376,4 @@ void literal_expr_free(LiteralExpr** literalExpr) {
 
     free(*literalExpr);
     *literalExpr = NULL;
-}
-
-Expr* expr_new(ExprType type, void* expr, void (*to_string)(void**), void (*destroy)(void**)) {
-    Expr* new_expr = NULL;
-    new_expr = malloc(sizeof(Expr));
-    if (new_expr == NULL) {
-        if (destroy != NULL) {
-            destroy(&expr);
-        }
-        return NULL;
-    }
-
-    *new_expr = (Expr) {
-        .type = type,
-        .expr = expr,
-        .to_string = to_string,
-        .destroy = destroy
-    };
-
-    return new_expr;
-}
-
-void expr_to_string(Expr** expr) {
-    if (expr == NULL || *expr == NULL)
-        return;
-
-    if ((*expr)->to_string != NULL)
-        (*expr)->to_string(&(*expr)->expr);
-}
-
-void expr_free(Expr** expr) {
-    if (expr == NULL || *expr == NULL)
-        return;
-
-    if ((*expr)->destroy != NULL)
-        (*expr)->destroy(&(*expr)->expr);
-
-    free(*expr);
-    *expr = NULL;
 }

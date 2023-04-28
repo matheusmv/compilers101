@@ -5,6 +5,10 @@
 #include "types.h"
 
 
+typedef enum StmtType {
+    EXPRESSION_STMT
+} StmtType;
+
 typedef enum ExprType {
     BINARY_EXPR,
     GROUP_EXPR,
@@ -14,6 +18,18 @@ typedef enum ExprType {
     UNARY_EXPR,
     LITERAL_EXPR
 } ExprType;
+
+typedef struct Stmt {
+    StmtType type;
+    void* stmt;
+    void (*to_string)(void**);
+    void (*destroy)(void**);
+} Stmt;
+
+Stmt* stmt_new(StmtType type, void* stmt,
+    void (*to_string)(void**), void (*destroy)(void**));
+void stmt_to_string(Stmt** stmt);
+void stmt_free(Stmt** stmt);
 
 
 typedef struct Expr {
@@ -25,8 +41,8 @@ typedef struct Expr {
 
 Expr* expr_new(ExprType type, void* expr,
     void (*to_string)(void**), void (*destroy)(void**));
-void expr_to_string(Expr**);
-void expr_free(Expr**);
+void expr_to_string(Expr** expr);
+void expr_free(Expr** expr);
 
 
 typedef struct BinaryExpr {
@@ -104,6 +120,16 @@ void literal_expr_to_string(LiteralExpr** literalExpr);
 void literal_expr_free(LiteralExpr** literalExpr);
 
 
+#define NEW_EXPR_STMT(expr)                                                    \
+    stmt_new(EXPRESSION_STMT, (expr),                                          \
+        (void (*)(void **))expr_to_string,                                     \
+        (void (*)(void **))expr_free)
+
+#define STMT_PRINT_AND_FREE(stmt)                                              \
+    stmt_to_string((&(stmt)));                                                 \
+    printf("\n");                                                              \
+    stmt_free((&(stmt)))
+
 #define NEW_BINARY_EXPR(left, op, right)                                       \
     expr_new(BINARY_EXPR, binary_expr_new((left), (op), (right)),              \
         (void (*)(void **))binary_expr_to_string,                              \
@@ -143,7 +169,7 @@ void literal_expr_free(LiteralExpr** literalExpr);
         (void (*)(void **))literal_expr_to_string,                             \
         (void (*)(void **))literal_expr_free)
 
-#define PRINT_AND_FREE(expr)                                                   \
+#define EXPR_PRINT_AND_FREE(expr)                                              \
     expr_to_string((&(expr)));                                                 \
     printf("\n");                                                              \
     expr_free((&(expr)))
