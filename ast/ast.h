@@ -6,6 +6,7 @@
 
 
 typedef enum StmtType {
+    BLOCK_STMT,
     EXPRESSION_STMT
 } StmtType;
 
@@ -43,6 +44,25 @@ Expr* expr_new(ExprType type, void* expr,
     void (*to_string)(void**), void (*destroy)(void**));
 void expr_to_string(Expr** expr);
 void expr_free(Expr** expr);
+
+
+typedef struct BlockStmt {
+    List* statements; /* List of (Stmt*) */
+} BlockStmt;
+
+BlockStmt* block_stmt_new(List* statements);
+void block_stmt_add_statement(BlockStmt** blockStmt, Stmt* statement);
+void block_stmt_to_string(BlockStmt** blockStmt);
+void block_stmt_free(BlockStmt** blockStmt);
+
+
+typedef struct ExpressionStmt {
+    Expr* expression;
+} ExpressionStmt;
+
+ExpressionStmt* expression_stmt_new(Expr* expression);
+void expression_stmt_to_string(ExpressionStmt** expressionStmt);
+void expression_stmt_free(ExpressionStmt** expressionStmt);
 
 
 typedef struct BinaryExpr {
@@ -120,10 +140,19 @@ void literal_expr_to_string(LiteralExpr** literalExpr);
 void literal_expr_free(LiteralExpr** literalExpr);
 
 
+#define NEW_BLOCK_STMT()                                                       \
+    stmt_new(BLOCK_STMT,                                                       \
+        block_stmt_new((list_new((void (*)(void **)) stmt_free))),             \
+        (void (*)(void **))block_stmt_to_string,                               \
+        (void (*)(void **))block_stmt_free)
+
+#define BLOCK_STMT_ADD_STMT(block_stmt, arg_stmt)                              \
+    block_stmt_add_statement((BlockStmt**) (&(block_stmt)->stmt), (arg_stmt))
+
 #define NEW_EXPR_STMT(expr)                                                    \
-    stmt_new(EXPRESSION_STMT, (expr),                                          \
-        (void (*)(void **))expr_to_string,                                     \
-        (void (*)(void **))expr_free)
+    stmt_new(EXPRESSION_STMT, expression_stmt_new((expr)),                     \
+        (void (*)(void **))expression_stmt_to_string,                          \
+        (void (*)(void **))expression_stmt_free)
 
 #define STMT_PRINT_AND_FREE(stmt)                                              \
     stmt_to_string((&(stmt)));                                                 \

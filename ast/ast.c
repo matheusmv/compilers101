@@ -1,6 +1,7 @@
 #include "ast.h"
 #include "list.h"
 #include "token.h"
+#include <stdio.h>
 
 
 Stmt* stmt_new(StmtType type, void* stmt, void (*to_string)(void**), void (*destroy)(void**)) {
@@ -79,6 +80,90 @@ void expr_free(Expr** expr) {
 
     free(*expr);
     *expr = NULL;
+}
+
+BlockStmt* block_stmt_new(List* statements) {
+    BlockStmt* stmt = NULL;
+    stmt = malloc(sizeof(BlockStmt));
+    if (stmt == NULL) {
+        list_free(&statements);
+        return NULL;
+    }
+
+    *stmt = (BlockStmt) {
+        .statements = statements
+    };
+
+    return stmt;
+}
+
+void block_stmt_add_statement(BlockStmt** blockStmt, Stmt* statement) {
+    if (blockStmt == NULL || *blockStmt == NULL || statement == NULL)
+        return;
+
+    list_insert_last(&(*blockStmt)->statements, statement);
+}
+
+void block_stmt_to_string(BlockStmt** blockStmt) {
+    if (blockStmt == NULL || *blockStmt == NULL)
+        return;
+
+    printf("{");
+
+    List* args = (*blockStmt)->statements;
+    if (!list_is_empty(&args)) {
+
+        for (ListNode* arg = args->head; arg != NULL; arg = arg->next) {
+            printf("\n");
+            stmt_to_string((Stmt**) &arg->value);
+        }
+
+        printf("\n");
+    }
+
+    printf("}");
+}
+
+void block_stmt_free(BlockStmt** blockStmt) {
+    if (blockStmt == NULL || *blockStmt == NULL)
+        return;
+
+    list_free(&(*blockStmt)->statements);
+
+    free(*blockStmt);
+    *blockStmt = NULL;
+}
+
+ExpressionStmt* expression_stmt_new(Expr* expression) {
+    ExpressionStmt* stmt = NULL;
+    stmt = malloc(sizeof(ExpressionStmt));
+    if (stmt == NULL) {
+        expr_free(&expression);
+        return NULL;
+    }
+
+    *stmt = (ExpressionStmt) {
+        .expression = expression
+    };
+
+    return stmt;
+}
+
+void expression_stmt_to_string(ExpressionStmt** expressionStmt) {
+    if (expressionStmt == NULL || *expressionStmt == NULL)
+        return;
+
+    expr_to_string(&(*expressionStmt)->expression);
+}
+
+void expression_stmt_free(ExpressionStmt** expressionStmt) {
+    if (expressionStmt == NULL || *expressionStmt == NULL)
+        return;
+
+    expr_free(&(*expressionStmt)->expression);
+
+    free(*expressionStmt);
+    *expressionStmt = NULL;
 }
 
 BinaryExpr* binary_expr_new(Expr* left, Token* op, Expr* right) {
