@@ -35,18 +35,18 @@ typedef struct BinaryExpr {
     Expr* right;
 } BinaryExpr;
 
-BinaryExpr* binary_expr_new(Expr*, Token*, Expr*);
-void binary_expr_to_string(BinaryExpr**);
-void binary_expr_free(BinaryExpr**);
+BinaryExpr* binary_expr_new(Expr* left, Token* op, Expr* right);
+void binary_expr_to_string(BinaryExpr** binaryExpr);
+void binary_expr_free(BinaryExpr** binaryExpr);
 
 
 typedef struct GroupExpr {
     Expr* expression;
 } GroupExpr;
 
-GroupExpr* group_expr_new(Expr*);
-void group_expr_to_string(GroupExpr**);
-void group_expr_free(GroupExpr**);
+GroupExpr* group_expr_new(Expr* expression);
+void group_expr_to_string(GroupExpr** groupExpr);
+void group_expr_free(GroupExpr** groupExpr);
 
 
 typedef struct AssignExpr {
@@ -54,9 +54,9 @@ typedef struct AssignExpr {
     Expr* expression;
 } AssignExpr;
 
-AssignExpr* assign_expr_new(Token*, Expr*);
-void assign_expr_to_string(AssignExpr**);
-void assign_expr_free(AssignExpr**);
+AssignExpr* assign_expr_new(Token* name, Expr* expression);
+void assign_expr_to_string(AssignExpr** assignExpr);
+void assign_expr_free(AssignExpr** assignExpr);
 
 
 typedef struct CallExpr {
@@ -64,10 +64,10 @@ typedef struct CallExpr {
     List* arguments; /* List of (Expr*) */
 } CallExpr;
 
-CallExpr* call_expr_new(Expr*, List*);
-void call_expr_add_argument(CallExpr**, Expr*);
-void call_expr_to_string(CallExpr**);
-void call_expr_free(CallExpr**);
+CallExpr* call_expr_new(Expr* calle, List* arguments);
+void call_expr_add_argument(CallExpr** callExpr, Expr* argument);
+void call_expr_to_string(CallExpr** callExpr);
+void call_expr_free(CallExpr** callExpr);
 
 
 typedef struct LogicalExpr {
@@ -76,9 +76,9 @@ typedef struct LogicalExpr {
     Expr* right;
 } LogicalExpr;
 
-LogicalExpr* logical_expr_new(Expr*, Token*, Expr*);
-void logical_expr_to_string(LogicalExpr**);
-void logical_expr_free(LogicalExpr**);
+LogicalExpr* logical_expr_new(Expr* left, Token* op, Expr* right);
+void logical_expr_to_string(LogicalExpr** logicalExpr);
+void logical_expr_free(LogicalExpr** logicalExpr);
 
 
 typedef struct UnaryExpr {
@@ -86,9 +86,9 @@ typedef struct UnaryExpr {
     Expr* expression;
 } UnaryExpr;
 
-UnaryExpr* unary_expr_new(Token*, Expr*);
-void unary_expr_to_string(UnaryExpr**);
-void unary_expr_free(UnaryExpr**);
+UnaryExpr* unary_expr_new(Token* op, Expr* expression);
+void unary_expr_to_string(UnaryExpr** unaryExpr);
+void unary_expr_free(UnaryExpr** unaryExpr);
 
 
 typedef struct LiteralExpr {
@@ -98,10 +98,10 @@ typedef struct LiteralExpr {
     void (*destroy)(void**);
 } LiteralExpr;
 
-LiteralExpr* literal_expr_new(LiteralType, void*,
+LiteralExpr* literal_expr_new(LiteralType type, void* value,
     void (*to_string)(void**), void (*destroy)(void**));
-void literal_expr_to_string(LiteralExpr**);
-void literal_expr_free(LiteralExpr**);
+void literal_expr_to_string(LiteralExpr** literalExpr);
+void literal_expr_free(LiteralExpr** literalExpr);
 
 
 #define NEW_BINARY_EXPR(left, op, right)                                       \

@@ -3,19 +3,19 @@
 #include "token.h"
 
 
-BinaryExpr* binary_expr_new(Expr* left, Token* operator, Expr* right) {
+BinaryExpr* binary_expr_new(Expr* left, Token* op, Expr* right) {
     BinaryExpr* expr = NULL;
     expr = malloc(sizeof(BinaryExpr));
     if (expr == NULL) {
         expr_free(&left);
-        token_free(&operator);
+        token_free(&op);
         expr_free(&right);
         return NULL;
     }
 
     *expr = (BinaryExpr) {
         .left = left,
-        .op = operator,
+        .op = op,
         .right = right
     };
 
@@ -181,19 +181,19 @@ void call_expr_free(CallExpr** callExpr) {
     *callExpr = NULL;
 }
 
-LogicalExpr* logical_expr_new(Expr* left, Token* operator, Expr* right) {
+LogicalExpr* logical_expr_new(Expr* left, Token* op, Expr* right) {
     LogicalExpr* expr = NULL;
     expr = malloc(sizeof(BinaryExpr));
     if (expr == NULL) {
         expr_free(&left);
-        token_free(&operator);
+        token_free(&op);
         expr_free(&right);
         return NULL;
     }
 
     *expr = (LogicalExpr) {
         .left = left,
-        .op = operator,
+        .op = op,
         .right = right
     };
 
@@ -227,17 +227,17 @@ void logical_expr_free(LogicalExpr** logicalExpr) {
     *logicalExpr = NULL;
 }
 
-UnaryExpr* unary_expr_new(Token* operator, Expr* expression) {
+UnaryExpr* unary_expr_new(Token* op, Expr* expression) {
     UnaryExpr* expr = NULL;
     expr = malloc(sizeof(UnaryExpr));
     if (expr == NULL) {
-        token_free(&operator);
+        token_free(&op);
         expr_free(&expression);
         return NULL;
     }
 
     *expr = (UnaryExpr) {
-        .op = operator,
+        .op = op,
         .expression = expression
     };
 

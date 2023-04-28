@@ -35,3 +35,24 @@ void token_free(Token** token) {
     free(*token);
     *token = NULL;
 }
+
+bool token_is_literal(Token** token) {
+    if (token == NULL || *token == NULL)
+        return false;
+
+    return literal_start < (*token)->type && (*token)->type < literal_end;
+}
+
+bool token_is_operator(Token** token) {
+    if (token == NULL || *token == NULL)
+        return false;
+
+    return operator_start < (*token)->type && (*token)->type < operator_end;
+}
+
+bool token_is_keyword(Token** token) {
+    if (token == NULL || *token == NULL)
+        return false;
+
+    return keyword_start < (*token)->type && (*token)->type < keyword_end;
+}
