@@ -7,7 +7,9 @@
 
 typedef enum StmtType {
     BLOCK_STMT,
-    EXPRESSION_STMT
+    EXPRESSION_STMT,
+    FUNCTION_STMT,
+    RETURN_STMT
 } StmtType;
 
 typedef enum ExprType {
@@ -19,6 +21,7 @@ typedef enum ExprType {
     UNARY_EXPR,
     LITERAL_EXPR
 } ExprType;
+
 
 typedef struct Stmt {
     StmtType type;
@@ -65,6 +68,27 @@ void expression_stmt_to_string(ExpressionStmt** expressionStmt);
 void expression_stmt_free(ExpressionStmt** expressionStmt);
 
 
+typedef struct FunctionStmt {
+    Expr* name;
+    List* parameters; /* List of (Expr*) */
+    Stmt* body;
+} FunctionStmt;
+
+FunctionStmt* function_stmt_new(Expr* name, List* parameters, Stmt* body);
+void function_stmt_add_parameter(FunctionStmt** functionStmt, Expr* parameter);
+void function_stmt_to_string(FunctionStmt** functionStmt);
+void function_stmt_free(FunctionStmt** functionStmt);
+
+
+typedef struct ReturnStmt {
+    Expr* expression;
+} ReturnStmt;
+
+ReturnStmt* return_stmt_new(Expr* expression);
+void return_stmt_to_string(ReturnStmt** returnStmt);
+void return_stmt_free(ReturnStmt** returnStmt);
+
+
 typedef struct BinaryExpr {
     Expr* left;
     Token* op;
@@ -86,11 +110,11 @@ void group_expr_free(GroupExpr** groupExpr);
 
 
 typedef struct AssignExpr {
-    Token* name;
+    Expr* name;
     Expr* expression;
 } AssignExpr;
 
-AssignExpr* assign_expr_new(Token* name, Expr* expression);
+AssignExpr* assign_expr_new(Expr* name, Expr* expression);
 void assign_expr_to_string(AssignExpr** assignExpr);
 void assign_expr_free(AssignExpr** assignExpr);
 
@@ -153,6 +177,22 @@ void literal_expr_free(LiteralExpr** literalExpr);
     stmt_new(EXPRESSION_STMT, expression_stmt_new((expr)),                     \
         (void (*)(void **))expression_stmt_to_string,                          \
         (void (*)(void **))expression_stmt_free)
+
+#define NEW_FUNCTION_STMT(name, body)                                          \
+    stmt_new(FUNCTION_STMT, function_stmt_new(                                 \
+            NEW_LITERAL_EXPR(NEW_IDENT((name))),                               \
+            (list_new((void (*)(void **)) expr_free)),                         \
+            (body)),                                                           \
+        (void (*)(void **))function_stmt_to_string,                            \
+        (void (*)(void **))function_stmt_free)
+
+#define FUNCTION_ADD_PARAM(func, param)                                        \
+    function_stmt_add_parameter((FunctionStmt**) (&(func)->stmt), (param))
+
+#define NEW_RETURN_STMT(expr)                                                  \
+    stmt_new(RETURN_STMT, return_stmt_new((expr)),                             \
+        (void (*)(void **))return_stmt_to_string,                              \
+        (void (*)(void **))return_stmt_free)
 
 #define STMT_PRINT_AND_FREE(stmt)                                              \
     stmt_to_string((&(stmt)));                                                 \

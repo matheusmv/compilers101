@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "token.h"
 
 
 int main(void) {
@@ -23,7 +24,7 @@ int main(void) {
     Expr* testBool = NEW_LITERAL_EXPR(NEW_BOOL((2 + 2) == 4));
 
     Expr* testAssign = NEW_ASSIGN_EXPR(
-        NEW_TOKEN(TOKEN_IDENT, "result", 1),
+        NEW_LITERAL_EXPR(NEW_IDENT("result")),
         NEW_BINARY_EXPR(
             NEW_GROUP_EXPR(
                 NEW_BINARY_EXPR(
@@ -77,6 +78,36 @@ int main(void) {
     BLOCK_STMT_ADD_STMT(testBlockStmt, NEW_EXPR_STMT(testUnary));
     BLOCK_STMT_ADD_STMT(testBlockStmt, testExprStmt);
     STMT_PRINT_AND_FREE(testBlockStmt);
+
+    Stmt* testFunctionBody = NEW_BLOCK_STMT();
+    BLOCK_STMT_ADD_STMT(testFunctionBody, 
+        NEW_RETURN_STMT(
+            NEW_BINARY_EXPR(
+                NEW_LITERAL_EXPR(NEW_IDENT("a")),
+                NEW_TOKEN(TOKEN_MUL, "*", 1),
+                NEW_BINARY_EXPR(
+                    NEW_GROUP_EXPR(
+                        NEW_BINARY_EXPR(
+                            NEW_LITERAL_EXPR(NEW_FLOAT(1.0)),
+                            NEW_TOKEN(TOKEN_SUB, "-", 1),
+                            NEW_LITERAL_EXPR(NEW_IDENT("t"))
+                        )
+                    ),
+                    NEW_TOKEN(TOKEN_ADD, "+", 1),
+                    NEW_BINARY_EXPR(
+                        NEW_LITERAL_EXPR(NEW_IDENT("b")),
+                        NEW_TOKEN(TOKEN_MUL, "*", 1),
+                        NEW_LITERAL_EXPR(NEW_IDENT("t"))
+                    )
+                )
+            )
+        )
+    );
+    Stmt* testFunctionSmt = NEW_FUNCTION_STMT("lerp", testFunctionBody);
+    FUNCTION_ADD_PARAM(testFunctionSmt, NEW_LITERAL_EXPR(NEW_IDENT("a")));
+    FUNCTION_ADD_PARAM(testFunctionSmt, NEW_LITERAL_EXPR(NEW_IDENT("b")));
+    FUNCTION_ADD_PARAM(testFunctionSmt, NEW_LITERAL_EXPR(NEW_IDENT("t")));
+    STMT_PRINT_AND_FREE(testFunctionSmt);
 
     return EXIT_SUCCESS;
 }

@@ -2,6 +2,7 @@
 #include "list.h"
 #include "token.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 
 Stmt* stmt_new(StmtType type, void* stmt, void (*to_string)(void**), void (*destroy)(void**)) {
@@ -166,6 +167,104 @@ void expression_stmt_free(ExpressionStmt** expressionStmt) {
     *expressionStmt = NULL;
 }
 
+FunctionStmt* function_stmt_new(Expr* name, List* parameters, Stmt* body) {
+    FunctionStmt* stmt = NULL;
+    stmt = malloc(sizeof(FunctionStmt));
+    if (stmt == NULL) {
+        expr_free(&name);
+        list_free(&parameters);
+        stmt_free(&body);
+        return NULL;
+    }
+
+    *stmt = (FunctionStmt) {
+        .name = name,
+        .parameters = parameters,
+        .body = body
+    };
+
+    return stmt;
+}
+
+void function_stmt_add_parameter(FunctionStmt** functionStmt, Expr* parameter) {
+    if (functionStmt == NULL || *functionStmt == NULL || parameter == NULL)
+        return;
+
+    list_insert_last(&(*functionStmt)->parameters, parameter);
+}
+
+void function_stmt_to_string(FunctionStmt** functionStmt) {
+    if (functionStmt == NULL || *functionStmt == NULL)
+        return;
+
+    printf("func ");
+
+    expr_to_string(&(*functionStmt)->name);
+
+    printf("(");
+    
+    List* params = (*functionStmt)->parameters;
+    if (!list_is_empty(&params)) {
+        for(ListNode* param = params->head; param != NULL; param = param->next) {
+            expr_to_string((Expr**) &param->value);
+
+            if (param->next != NULL) {
+                printf(", ");
+            }
+        }
+    }
+
+    printf(")");
+
+    stmt_to_string(&(*functionStmt)->body);
+}
+
+void function_stmt_free(FunctionStmt** functionStmt) {
+    if (functionStmt == NULL || *functionStmt == NULL)
+        return;
+
+    expr_free(&(*functionStmt)->name);
+    list_free(&(*functionStmt)->parameters);
+    stmt_free(&(*functionStmt)->body);
+
+    free(*functionStmt);
+    *functionStmt = NULL;
+}
+
+ReturnStmt* return_stmt_new(Expr* expression) {
+    ReturnStmt* stmt = NULL;
+    stmt = malloc(sizeof(ReturnStmt));
+    if (stmt == NULL) {
+        expr_free(&expression);
+        return NULL;
+    }
+
+    *stmt = (ReturnStmt) {
+        .expression = expression
+    };
+
+    return stmt;
+}
+
+void return_stmt_to_string(ReturnStmt** returnStmt) {
+    if (returnStmt == NULL || *returnStmt == NULL)
+        return;
+
+    printf("return ");
+
+    expr_to_string(&(*returnStmt)->expression);
+}
+
+void return_stmt_free(ReturnStmt** returnStmt) {
+    if (returnStmt == NULL || *returnStmt == NULL)
+        return;
+
+    expr_free(&(*returnStmt)->expression);
+
+    free(*returnStmt);
+    *returnStmt = NULL;
+}
+
 BinaryExpr* binary_expr_new(Expr* left, Token* op, Expr* right) {
     BinaryExpr* expr = NULL;
     expr = malloc(sizeof(BinaryExpr));
@@ -248,11 +347,11 @@ void group_expr_free(GroupExpr** groupExpr) {
     *groupExpr = NULL;
 }
 
-AssignExpr* assign_expr_new(Token* name, Expr* expression) {
+AssignExpr* assign_expr_new(Expr* name, Expr* expression) {
     AssignExpr* expr = NULL;
     expr = malloc(sizeof(AssignExpr));
     if (expr == NULL) {
-        token_free(&name);
+        expr_free(&name);
         expr_free(&expression);
         return NULL;
     }
@@ -271,7 +370,7 @@ void assign_expr_to_string(AssignExpr** assignExpr) {
 
     printf("let ");
 
-    token_to_string(&(*assignExpr)->name);
+    expr_to_string(&(*assignExpr)->name);
 
     printf(" = ");
 
@@ -282,7 +381,7 @@ void assign_expr_free(AssignExpr** assignExpr) {
     if (assignExpr == NULL || *assignExpr == NULL)
         return;
 
-    token_free(&(*assignExpr)->name);
+    expr_free(&(*assignExpr)->name);
     expr_free(&(*assignExpr)->expression);
 
     free(*assignExpr);
