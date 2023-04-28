@@ -158,10 +158,11 @@ void group_expr_free(GroupExpr** groupExpr);
 
 typedef struct AssignExpr {
     Expr* identifier;
+    Token* op;
     Expr* expression;
 } AssignExpr;
 
-AssignExpr* assign_expr_new(Expr* identifier, Expr* expression);
+AssignExpr* assign_expr_new(Expr* identifier, Token* op, Expr* expression);
 void assign_expr_to_string(AssignExpr** assignExpr);
 void assign_expr_free(AssignExpr** assignExpr);
 
@@ -276,8 +277,8 @@ void literal_expr_free(LiteralExpr** literalExpr);
         (void (*)(void **))group_expr_to_string,                               \
         (void (*)(void **))group_expr_free)
 
-#define NEW_ASSIGN_EXPR(ident, expr)                                           \
-    expr_new(ASSIGN_EXPR, assign_expr_new((ident), (expr)),                    \
+#define NEW_ASSIGN_EXPR(ident, op, expr)                                       \
+    expr_new(ASSIGN_EXPR, assign_expr_new((ident), (op), (expr)),              \
         (void (*)(void **))assign_expr_to_string,                              \
         (void (*)(void **))assign_expr_free)
 

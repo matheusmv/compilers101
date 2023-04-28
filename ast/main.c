@@ -25,6 +25,7 @@ int main(void) {
 
     Expr* testAssign = NEW_ASSIGN_EXPR(
         NEW_LITERAL_EXPR(NEW_IDENT("result")),
+        NEW_TOKEN(TOKEN_ASSIGN, "=", 1),
         NEW_BINARY_EXPR(
             NEW_GROUP_EXPR(
                 NEW_BINARY_EXPR(
@@ -146,11 +147,8 @@ int main(void) {
         NEW_EXPR_STMT(
             NEW_ASSIGN_EXPR(
                 NEW_LITERAL_EXPR(NEW_IDENT("i")),
-                NEW_BINARY_EXPR(
-                    NEW_LITERAL_EXPR(NEW_IDENT("i")),
-                    NEW_TOKEN(TOKEN_ADD, "+", 1),
-                    NEW_LITERAL_EXPR(NEW_INT(1))
-                )
+                NEW_TOKEN(TOKEN_ADD_ASSIGN, "+=", 1),
+                NEW_LITERAL_EXPR(NEW_INT(1))
             )
         )
     );
@@ -173,11 +171,8 @@ int main(void) {
         ),
         NEW_ASSIGN_EXPR(
             NEW_LITERAL_EXPR(NEW_IDENT("i")),
-            NEW_BINARY_EXPR(
-                NEW_LITERAL_EXPR(NEW_IDENT("i")),
-                NEW_TOKEN(TOKEN_ADD, "+", 1),
-                NEW_LITERAL_EXPR(NEW_INT(1))
-            )
+            NEW_TOKEN(TOKEN_ADD_ASSIGN, "+=", 1),
+            NEW_LITERAL_EXPR(NEW_INT(1))
         ),
         NEW_BLOCK_STMT()
     );

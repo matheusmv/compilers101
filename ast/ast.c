@@ -532,17 +532,19 @@ void group_expr_free(GroupExpr** groupExpr) {
     *groupExpr = NULL;
 }
 
-AssignExpr* assign_expr_new(Expr* identifier, Expr* expression) {
+AssignExpr* assign_expr_new(Expr* identifier, Token* op, Expr* expression) {
     AssignExpr* expr = NULL;
     expr = malloc(sizeof(AssignExpr));
     if (expr == NULL) {
         expr_free(&identifier);
+        token_free(&op);
         expr_free(&expression);
         return NULL;
     }
 
     *expr = (AssignExpr) {
         .identifier = identifier,
+        .op = op,
         .expression = expression
     };
 
@@ -555,7 +557,11 @@ void assign_expr_to_string(AssignExpr** assignExpr) {
 
     expr_to_string(&(*assignExpr)->identifier);
 
-    printf(" = ");
+    printf(" ");
+
+    token_to_string(&(*assignExpr)->op);
+
+    printf(" ");
 
     expr_to_string(&(*assignExpr)->expression);
 }
@@ -565,6 +571,7 @@ void assign_expr_free(AssignExpr** assignExpr) {
         return;
 
     expr_free(&(*assignExpr)->identifier);
+    token_free(&(*assignExpr)->op);
     expr_free(&(*assignExpr)->expression);
 
     free(*assignExpr);
