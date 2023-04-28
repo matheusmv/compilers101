@@ -1,8 +1,6 @@
 #include "ast.h"
 #include "list.h"
 #include "token.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 
 Stmt* stmt_new(StmtType type, void* stmt, void (*to_string)(void**), void (*destroy)(void**)) {
@@ -397,6 +395,61 @@ void while_stmt_free(WhileStmt** whileStmt) {
     *whileStmt = NULL;
 }
 
+ForStmt* for_stmt_new(Stmt* initialization, Expr* condition, Expr* action, Stmt* body) {
+    ForStmt* stmt = NULL;
+    stmt = malloc(sizeof(ForStmt));
+    if (stmt == NULL) {
+        stmt_free(&initialization);
+        expr_free(&condition);
+        expr_free(&action);
+        stmt_free(&body);
+        return NULL;
+    }
+
+    *stmt = (ForStmt) {
+        .initialization = initialization,
+        .condition = condition,
+        .action = action,
+        .body = body
+    };
+
+    return stmt;
+}
+
+void for_stmt_to_string(ForStmt** forStmt) {
+    if (forStmt == NULL || *forStmt == NULL)
+        return;
+
+    printf("for (");
+    
+    stmt_to_string(&(*forStmt)->initialization);
+    
+    printf("; ");
+
+    expr_to_string(&(*forStmt)->condition);
+
+    printf("; ");
+
+    expr_to_string(&(*forStmt)->action);
+
+    printf(") ");
+
+    stmt_to_string(&(*forStmt)->body);
+}
+
+void for_stmt_free(ForStmt** forStmt) {
+    if (forStmt == NULL || *forStmt == NULL)
+        return;
+
+    stmt_free(&(*forStmt)->initialization);
+    expr_free(&(*forStmt)->condition);
+    expr_free(&(*forStmt)->action);
+    stmt_free(&(*forStmt)->body);
+
+    free(*forStmt);
+    *forStmt = NULL;
+}
+
 BinaryExpr* binary_expr_new(Expr* left, Token* op, Expr* right) {
     BinaryExpr* expr = NULL;
     expr = malloc(sizeof(BinaryExpr));
@@ -479,17 +532,17 @@ void group_expr_free(GroupExpr** groupExpr) {
     *groupExpr = NULL;
 }
 
-AssignExpr* assign_expr_new(Expr* name, Expr* expression) {
+AssignExpr* assign_expr_new(Expr* identifier, Expr* expression) {
     AssignExpr* expr = NULL;
     expr = malloc(sizeof(AssignExpr));
     if (expr == NULL) {
-        expr_free(&name);
+        expr_free(&identifier);
         expr_free(&expression);
         return NULL;
     }
 
     *expr = (AssignExpr) {
-        .name = name,
+        .identifier = identifier,
         .expression = expression
     };
 
@@ -500,7 +553,7 @@ void assign_expr_to_string(AssignExpr** assignExpr) {
     if (assignExpr == NULL || *assignExpr == NULL)
         return;
 
-    expr_to_string(&(*assignExpr)->name);
+    expr_to_string(&(*assignExpr)->identifier);
 
     printf(" = ");
 
@@ -511,7 +564,7 @@ void assign_expr_free(AssignExpr** assignExpr) {
     if (assignExpr == NULL || *assignExpr == NULL)
         return;
 
-    expr_free(&(*assignExpr)->name);
+    expr_free(&(*assignExpr)->identifier);
     expr_free(&(*assignExpr)->expression);
 
     free(*assignExpr);

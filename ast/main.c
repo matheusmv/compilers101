@@ -164,5 +164,24 @@ int main(void) {
     );
     STMT_PRINT_AND_FREE(testWhileStmt);
 
+    Stmt* testForStmt = NEW_FOR_STMT(
+        NEW_LET_STMT(NEW_TOKEN(TOKEN_IDENT, "i", 1), NEW_LITERAL_EXPR(NEW_INT(0))),
+        NEW_BINARY_EXPR(
+            NEW_LITERAL_EXPR(NEW_IDENT("i")),
+            NEW_TOKEN(TOKEN_LSS, "<", 1),
+            NEW_LITERAL_EXPR(NEW_INT(10))
+        ),
+        NEW_ASSIGN_EXPR(
+            NEW_LITERAL_EXPR(NEW_IDENT("i")),
+            NEW_BINARY_EXPR(
+                NEW_LITERAL_EXPR(NEW_IDENT("i")),
+                NEW_TOKEN(TOKEN_ADD, "+", 1),
+                NEW_LITERAL_EXPR(NEW_INT(1))
+            )
+        ),
+        NEW_BLOCK_STMT()
+    );
+    STMT_PRINT_AND_FREE(testForStmt);
+
     return EXIT_SUCCESS;
 }

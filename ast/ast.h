@@ -12,7 +12,8 @@ typedef enum StmtType {
     RETURN_STMT,
     LET_STMT,
     IF_STMT,
-    WHILE_STMT
+    WHILE_STMT,
+    FOR_STMT
 } StmtType;
 
 typedef enum ExprType {
@@ -123,6 +124,18 @@ void while_stmt_to_string(WhileStmt** whileStmt);
 void while_stmt_free(WhileStmt** whileStmt);
 
 
+typedef struct ForStmt {
+    Stmt* initialization;
+    Expr* condition;
+    Expr* action;
+    Stmt* body;
+} ForStmt;
+
+ForStmt* for_stmt_new(Stmt* initialization, Expr* condition, Expr* action, Stmt* body);
+void for_stmt_to_string(ForStmt** forStmt);
+void for_stmt_free(ForStmt** forStmt);
+
+
 typedef struct BinaryExpr {
     Expr* left;
     Token* op;
@@ -144,11 +157,11 @@ void group_expr_free(GroupExpr** groupExpr);
 
 
 typedef struct AssignExpr {
-    Expr* name;
+    Expr* identifier;
     Expr* expression;
 } AssignExpr;
 
-AssignExpr* assign_expr_new(Expr* name, Expr* expression);
+AssignExpr* assign_expr_new(Expr* identifier, Expr* expression);
 void assign_expr_to_string(AssignExpr** assignExpr);
 void assign_expr_free(AssignExpr** assignExpr);
 
@@ -243,6 +256,11 @@ void literal_expr_free(LiteralExpr** literalExpr);
         (void (*)(void **))while_stmt_to_string,                               \
         (void (*)(void **))while_stmt_free)
 
+#define NEW_FOR_STMT(init, cond_expr, action, body)                            \
+    stmt_new(FOR_STMT, for_stmt_new((init), (cond_expr), (action), (body)),    \
+        (void (*)(void **))for_stmt_to_string,                                 \
+        (void (*)(void **))for_stmt_free)
+
 #define STMT_PRINT_AND_FREE(stmt)                                              \
     stmt_to_string((&(stmt)));                                                 \
     printf("\n");                                                              \
@@ -258,8 +276,8 @@ void literal_expr_free(LiteralExpr** literalExpr);
         (void (*)(void **))group_expr_to_string,                               \
         (void (*)(void **))group_expr_free)
 
-#define NEW_ASSIGN_EXPR(name, expr)                                            \
-    expr_new(ASSIGN_EXPR, assign_expr_new((name), (expr)),                     \
+#define NEW_ASSIGN_EXPR(ident, expr)                                           \
+    expr_new(ASSIGN_EXPR, assign_expr_new((ident), (expr)),                    \
         (void (*)(void **))assign_expr_to_string,                              \
         (void (*)(void **))assign_expr_free)
 
