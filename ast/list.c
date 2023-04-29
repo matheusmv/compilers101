@@ -253,17 +253,22 @@ void list_for_each(List** list, void (*cb)(const void**)) {
     }
 }
 
-void* list_find_first(List** list, bool (*cb)(const void**)) {
-    if (list == NULL || *list == NULL || cb == NULL)
-        return NULL;
+int list_find_first(List** list, bool (*cb)(const void**, void**), void** key, void** found_object) {
+    if (list == NULL || *list == NULL || cb == NULL || key == NULL)
+        return -1;
 
+    int index = 0;
     for (ListNode* node = (*list)->head; node != NULL; node = node->next) {
-        if (cb((const void**) &node->value)) {
-            return node->value;
+        if (cb((const void**) &node->value, key)) {
+            if (found_object != NULL) {
+                *found_object = node->value;
+            }
+            return index;
         }
+        index++;
     }
 
-    return NULL;
+    return -1;
 }
 
 List* list_map(List** list, void* (*cb)(void**), void (*new_destructor)(void**)) {
