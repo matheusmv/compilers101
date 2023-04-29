@@ -19,14 +19,14 @@ void map_entry_free(MapEntry** mapEntry);
 
 typedef struct Map {
     size_t total_entries;
-    size_t size;
+    size_t number_of_buckets;
     List** buckets;
     bool (*cmp)(const void**, void**);
     void (*destroy_key)(void**);
     void (*destroy_value)(void**);
 } Map;
 
-Map* map_new(size_t size, bool (*cmp)(const void**, void**),
+Map* map_new(size_t number_of_buckets, bool (*cmp)(const void**, void**),
     void (*destroy_key)(void**), void (*destroy_value)(void**));
 void map_free(Map** map);
 
@@ -41,8 +41,8 @@ void map_clear(Map* map);
 void map_iterate(Map* map, void (*cb)(const void**));
 
 
-#define MAP_NEW(size, cmp_fn, free_key_fn, free_value_fn)                      \
-    map_new((size),                                                            \
+#define MAP_NEW(number_of_buckets, cmp_fn, free_key_fn, free_value_fn)         \
+    map_new((number_of_buckets),                                               \
         ((bool (*)(const void**, void**)) cmp_fn),                             \
         ((void (*)(void**)) free_key_fn),                                      \
         ((void (*)(void**)) free_value_fn))

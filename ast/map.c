@@ -41,7 +41,7 @@ void map_entry_free(MapEntry** mapEntry) {
     *mapEntry = NULL;
 }
 
-Map* map_new(size_t size, bool (*cmp)(const void**, void**),
+Map* map_new(size_t number_of_buckets, bool (*cmp)(const void**, void**),
     void (*destroy_key)(void**), void (*destroy_value)(void**)) {
     Map* map = NULL;
     map = malloc(sizeof(Map));
@@ -50,18 +50,19 @@ Map* map_new(size_t size, bool (*cmp)(const void**, void**),
     }
 
     List** buckets = NULL;
-    buckets = calloc(size, sizeof(List*));
+    buckets = calloc(number_of_buckets, sizeof(List*));
     if (buckets == NULL) {
         free(map);
         return NULL;
     }
 
-    for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < number_of_buckets; i++) {
         buckets[i] = list_new((void (*)(void**)) map_entry_free);
     }
 
     *map = (Map) {
-        .size = size,
+        .total_entries = 0,
+        .number_of_buckets = number_of_buckets,
         .buckets = buckets,
         .cmp = cmp,
         .destroy_key = destroy_key,
@@ -75,7 +76,7 @@ void map_free(Map** map) {
     if (map == NULL || *map == NULL)
         return;
 
-    for (int i = 0; i < (*map)->size; i++) {
+    for (int i = 0; i < (*map)->number_of_buckets; i++) {
         list_free(&((*map)->buckets[i]));
     }
 
@@ -103,7 +104,7 @@ inline static void decrement_map_total_entries(Map* map) {
 }
 
 void map_put(Map* map, void* key, void* value) {
-    size_t index = hash(key, map->size);
+    size_t index = hash(key, map->number_of_buckets);
 
     ListNode* object = NULL;
     int object_index = list_find_first(
@@ -132,7 +133,7 @@ void map_put(Map* map, void* key, void* value) {
 }
 
 void* map_get(Map* map, void* key) {
-    size_t index = hash(key, map->size);
+    size_t index = hash(key, map->number_of_buckets);
 
     MapEntry* entry = NULL;
     int object_index = list_find_first(
@@ -149,7 +150,7 @@ void* map_get(Map* map, void* key) {
 }
 
 void map_remove(Map* map, void* key) {
-    size_t index = hash(key, map->size);
+    size_t index = hash(key, map->number_of_buckets);
 
     int object_index = list_find_first(
         &(map->buckets[index]), map->cmp,
@@ -168,7 +169,7 @@ void map_remove(Map* map, void* key) {
 }
 
 bool map_contains(Map* map, void* key) {
-    size_t index = hash(key, map->size);
+    size_t index = hash(key, map->number_of_buckets);
 
     void* entry = NULL;
     list_find_first(&(map->buckets[index]), map->cmp, &key, &entry);
@@ -183,7 +184,7 @@ void map_clear(Map* map) {
     if (map_size(map) == 0)
         return;
 
-    for (size_t i = 0; i < map->size; i++) {
+    for (size_t i = 0; i < map->number_of_buckets; i++) {
         list_clear(&map->buckets[i]);
     }
 
@@ -194,7 +195,7 @@ void map_iterate(Map* map, void (*cb)(const void**)) {
     if (map_size(map) == 0)
         return;
 
-    for (size_t i = 0; i < map->size; i++) {
+    for (size_t i = 0; i < map->number_of_buckets; i++) {
         list_for_each(&map->buckets[i], cb);
     }
 }

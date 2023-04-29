@@ -3,6 +3,7 @@
 
 #include "ast.h"
 #include "map.h"
+#include "context.h"
 
 
 bool str_cmp(const MapEntry** entry, char** key) {
@@ -194,13 +195,23 @@ int main(void) {
         NEW_NIL_LITERAL()
     );
 
-    Map* contextMap = MAP_NEW(64, str_cmp, NULL, stmt_free);
+    Context* globalContext = context_new(MAP_NEW(64, str_cmp, NULL, stmt_free));
 
-    map_put(contextMap, "object", testLetStmtWithNilValue);
+    context_define(globalContext, "object", testLetStmtWithNilValue);
 
-    map_iterate(contextMap, entry_to_string);
+    Context* innerScope = context_enclosed_new(
+        globalContext,
+        MAP_NEW(64, str_cmp, NULL, stmt_free)
+    );
 
-    map_free(&contextMap);
+    void* value = context_get(innerScope, "object");
+    if (value != NULL) {
+        stmt_to_string((Stmt**) &value);
+        printf("\n");
+    }
+
+    context_free(&innerScope);
+    context_free(&globalContext);
 
     return EXIT_SUCCESS;
 }
