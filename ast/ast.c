@@ -1,6 +1,9 @@
 #include "ast.h"
 #include "list.h"
 #include "token.h"
+#include "types.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 
 Stmt* stmt_new(StmtType type, void* stmt, void (*to_string)(void**), void (*destroy)(void**)) {
@@ -450,6 +453,110 @@ void for_stmt_free(ForStmt** forStmt) {
     *forStmt = NULL;
 }
 
+FieldDeclStmt* field_decl_stmt_new(Token* name, Type* type) {
+    FieldDeclStmt* stmt = NULL;
+    stmt = malloc(sizeof(FieldDeclStmt));
+    if (stmt == NULL) {
+        token_free(&name);
+        type_free(&type);
+        return NULL;
+    }
+
+    *stmt = (FieldDeclStmt) {
+        .name = name,
+        .type = type
+    };
+
+    return stmt;
+}
+
+void field_decl_stmt_to_string(FieldDeclStmt** fieldDecl) {
+    if (fieldDecl == NULL || *fieldDecl == NULL)
+        return;
+
+    token_to_string(&(*fieldDecl)->name);
+
+    printf(": ");
+
+    type_to_string(&(*fieldDecl)->type);
+}
+
+void field_decl_stmt_free(FieldDeclStmt** fieldDecl) {
+    if (fieldDecl == NULL || *fieldDecl == NULL)
+        return;
+
+    token_free(&(*fieldDecl)->name);
+    type_free(&(*fieldDecl)->type);
+
+    free(*fieldDecl);
+    *fieldDecl = NULL;
+}
+
+StructStmt* struct_stmt_new(Token* name, List* fields) {
+    StructStmt* stmt = NULL;
+    stmt = malloc(sizeof(StructStmt));
+    if (stmt == NULL) {
+        token_free(&name);
+        list_free(&fields);
+        return NULL;
+    }
+
+    *stmt = (StructStmt) {
+        .name = name,
+        .fields = fields
+    };
+
+    return stmt;
+}
+
+void struct_stmt_add_field(StructStmt** structStmt, Stmt* field) {
+    if (structStmt == NULL || *structStmt == NULL || field == NULL)
+        return;
+
+    list_insert_last(&(*structStmt)->fields, field);
+}
+
+void struct_stmt_to_string(StructStmt** structStmt) {
+    if (structStmt == NULL || *structStmt == NULL)
+        return;
+
+    printf("struct ");
+
+    token_to_string(&(*structStmt)->name);
+
+    printf(" {");
+
+    List* fields = (*structStmt)->fields;
+    if (!list_is_empty(&fields)) {
+        printf("\n");
+
+        for (ListNode* field = fields->head; field != NULL; field = field->next) {
+        printf("\t");
+
+        stmt_to_string((Stmt**) &field->value);
+
+        if (field->next != NULL) {
+                printf("\n");
+            }
+        }
+
+        printf("\n");
+    }
+
+    printf("}");
+}
+
+void struct_stmt_free(StructStmt** structStmt) {
+    if (structStmt == NULL || *structStmt == NULL)
+        return;
+
+    token_free(&(*structStmt)->name);
+    list_free(&(*structStmt)->fields);
+
+    free(*structStmt);
+    *structStmt = NULL;
+}
+
 BinaryExpr* binary_expr_new(Expr* left, Token* op, Expr* right) {
     BinaryExpr* expr = NULL;
     expr = malloc(sizeof(BinaryExpr));
@@ -749,6 +856,101 @@ void update_expr_free(UpdateExpr** updateExpr) {
 
     free(*updateExpr);
     *updateExpr = NULL;
+}
+
+FieldInitExpr* field_init_expr_new(Token* name, Expr* value) {
+    FieldInitExpr* expr = NULL;
+    expr = malloc(sizeof(FieldInitExpr));
+    if (expr == NULL) {
+        token_free(&name);
+        expr_free(&value);
+        return NULL;
+    }
+
+    *expr = (FieldInitExpr) {
+        .name = name,
+        .value = value
+    };
+
+    return expr;
+}
+
+void field_init_expr_to_string(FieldInitExpr** fieldInit) {
+    if (fieldInit == NULL || *fieldInit == NULL)
+        return;
+
+    token_to_string(&(*fieldInit)->name);
+    
+    printf(": ");
+
+    expr_to_string(&(*fieldInit)->value);
+}
+
+void field_init_expr_free(FieldInitExpr** fieldInit) {
+    if (fieldInit == NULL || *fieldInit == NULL)
+        return;
+
+    token_free(&(*fieldInit)->name);
+    expr_free(&(*fieldInit)->value);
+
+    free(*fieldInit);
+    *fieldInit = NULL;
+}
+
+StructInitExpr* struct_init_expr_new(Token* name, List* fields) {
+    StructInitExpr* expr = NULL;
+    expr = malloc(sizeof(StructInitExpr));
+    if (expr == NULL) {
+        token_free(&name);
+        list_free(&fields);
+        return NULL;
+    }
+
+    *expr = (StructInitExpr) {
+        .name = name,
+        .fields = fields
+    };
+
+    return expr;
+}
+
+void struct_init_expr_add_field(StructInitExpr** structInit, Expr* field) {
+    if (structInit == NULL || *structInit == NULL || field == NULL)
+        return;
+
+    list_insert_last(&(*structInit)->fields, field);
+}
+
+void struct_init_expr_to_string(StructInitExpr** structInit) {
+    if (structInit == NULL || *structInit == NULL)
+        return;
+
+    if ((*structInit)->name != NULL)
+        token_to_string(&(*structInit)->name);
+
+    printf("{ ");
+
+    List* fields = (*structInit)->fields;
+    for (ListNode* field = fields->head; field != NULL; field = field->next) {
+        expr_to_string((Expr**) &field->value);
+
+        if (field->next != NULL) {
+            printf(", ");
+        }
+    }
+
+    printf(" }");
+}
+
+void struct_init_expr_free(StructInitExpr** structInit) {
+    if (structInit == NULL || *structInit == NULL)
+        return;
+
+    token_free(&(*structInit)->name);
+    list_free(&(*structInit)->fields);
+
+    free(*structInit);
+    *structInit = NULL;
 }
 
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {

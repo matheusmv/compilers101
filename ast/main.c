@@ -4,6 +4,8 @@
 #include "ast.h"
 #include "map.h"
 #include "context.h"
+#include "token.h"
+#include "types.h"
 
 
 bool str_cmp(const MapEntry** entry, char** key) {
@@ -201,6 +203,28 @@ int main(void) {
         NEW_TOKEN(TOKEN_IDENT, "object", 1),
         NEW_NIL_LITERAL()
     );
+
+    Stmt* testStructStmt = NEW_STRUCT_STMT(NEW_TOKEN(TOKEN_IDENT, "User", 1));
+    STRUCT_STMT_ADD_FIELDS(testStructStmt,
+        NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "id", 1), NEW_INT_TYPE()),
+        NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "username", 1), NEW_STRING_TYPE()),
+        NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "password", 1), NEW_STRING_TYPE()),
+        NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "email", 1), NEW_STRING_TYPE())
+    );
+    STMT_PRINT_AND_FREE(testStructStmt);
+
+    Expr* structInit = NEW_STRUCT_INIT_EXPR(NEW_TOKEN(TOKEN_IDENT, "User", 1));
+    STRUCT_INIT_EXPR_ADD_FIELDS(structInit,
+        NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "id", 1), NEW_CALL_EXPR(NEW_IDENT_LITERAL("getId"))),
+        NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "username", 1), NEW_STRING_LITERAL("john12345")),
+        NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "password", 1), NEW_STRING_LITERAL("12345")),
+        NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "email", 1), NEW_STRING_LITERAL("john@email.com"))
+    );
+    Stmt* testStructInitExpr = NEW_LET_STMT(
+        NEW_TOKEN(TOKEN_IDENT, "john", 1),
+        structInit
+    );
+    STMT_PRINT_AND_FREE(testStructInitExpr);
 
     Context* globalContext = context_new(MAP_NEW(64, str_cmp, NULL, stmt_free));
 

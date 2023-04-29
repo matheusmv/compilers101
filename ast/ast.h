@@ -14,7 +14,9 @@ typedef enum StmtType {
     LET_STMT,
     IF_STMT,
     WHILE_STMT,
-    FOR_STMT
+    FOR_STMT,
+    FIELD_DECL_STMT,
+    STRUCT_STMT
 } StmtType;
 
 typedef enum ExprType {
@@ -25,6 +27,8 @@ typedef enum ExprType {
     LOGICAL_EXPR,
     UNARY_EXPR,
     UPDATE_EXPR,
+    FIELD_INIT_EXPR,
+    STRUCT_INIT_EXPR,
     LITERAL_EXPR
 } ExprType;
 
@@ -138,6 +142,27 @@ void for_stmt_to_string(ForStmt** forStmt);
 void for_stmt_free(ForStmt** forStmt);
 
 
+typedef struct FieldDeclStmt {
+    Token* name;
+    Type* type;
+} FieldDeclStmt;
+
+FieldDeclStmt* field_decl_stmt_new(Token* name, Type* type);
+void field_decl_stmt_to_string(FieldDeclStmt** fieldDecl);
+void field_decl_stmt_free(FieldDeclStmt** fieldDecl);
+
+
+typedef struct StructStmt {
+    Token* name;
+    List* fields; /* List of (FieldDeclStmt*) */
+} StructStmt;
+
+StructStmt* struct_stmt_new(Token* name, List* fields);
+void struct_stmt_add_field(StructStmt** structStmt, Stmt* field);
+void struct_stmt_to_string(StructStmt** structStmt);
+void struct_stmt_free(StructStmt** structStmt);
+
+
 typedef struct BinaryExpr {
     Expr* left;
     Token* op;
@@ -209,6 +234,27 @@ typedef struct UpdateExpr {
 UpdateExpr* update_expr_new(Expr* expression, Token* op);
 void update_expr_to_string(UpdateExpr** updateExpr);
 void update_expr_free(UpdateExpr** updateExpr);
+
+
+typedef struct FieldInitExpr {
+    Token* name;
+    Expr* value;
+} FieldInitExpr;
+
+FieldInitExpr* field_init_expr_new(Token* name, Expr* value);
+void field_init_expr_to_string(FieldInitExpr** fieldInit);
+void field_init_expr_free(FieldInitExpr** fieldInit);
+
+
+typedef struct StructInitExpr {
+    Token* name;
+    List* fields; /* List of (FieldInitExpr*) */
+} StructInitExpr;
+
+StructInitExpr* struct_init_expr_new(Token* name, List* fields);
+void struct_init_expr_add_field(StructInitExpr** structInit, Expr* field);
+void struct_init_expr_to_string(StructInitExpr** structInit);
+void struct_init_expr_free(StructInitExpr** structInit);
 
 
 typedef struct LiteralExpr {
@@ -292,6 +338,31 @@ void literal_expr_free(LiteralExpr** literalExpr);
         (void (*)(void **))for_stmt_to_string,                                 \
         (void (*)(void **))for_stmt_free)
 
+#define NEW_FIELD_STMT(name, type)                                             \
+    stmt_new(FIELD_DECL_STMT, field_decl_stmt_new((name), (type)),             \
+        (void (*)(void **))field_decl_stmt_to_string,                          \
+        (void (*)(void **))field_decl_stmt_free)
+
+#define NEW_STRUCT_STMT(name)                                                  \
+    stmt_new(STRUCT_STMT,                                                      \
+        struct_stmt_new((name),                                                \
+            (list_new((void (*)(void **)) stmt_free))),                        \
+        (void (*)(void **))struct_stmt_to_string,                              \
+        (void (*)(void **))struct_stmt_free)
+
+#define STRUCT_STMT_ADD_FIELD(struct_stmt, field_stmt)                         \
+    struct_stmt_add_field(                                                     \
+        (StructStmt**) (&(struct_stmt)->stmt), (field_stmt))
+
+#define STRUCT_STMT_ADD_FIELDS(struct_stmt, ...)                               \
+    do {                                                                       \
+        Stmt* stmts[] = { __VA_ARGS__ };                                       \
+        size_t n_stmts = sizeof(stmts) / sizeof(stmts[0]);                     \
+        for (size_t i = 0; i < n_stmts; i++) {                                 \
+            STRUCT_STMT_ADD_FIELD((struct_stmt), stmts[i]);                    \
+        }                                                                      \
+    } while(0)
+
 #define STMT_PRINT_AND_FREE(stmt)                                              \
     stmt_to_string((&(stmt)));                                                 \
     printf("\n");                                                              \
@@ -344,6 +415,31 @@ void literal_expr_free(LiteralExpr** literalExpr);
     expr_new(UPDATE_EXPR, update_expr_new((expr), (op)),                       \
         (void (*)(void **))update_expr_to_string,                              \
         (void (*)(void **))update_expr_free)
+
+#define NEW_FIELD_EXPR(name, expr)                                             \
+    expr_new(FIELD_INIT_EXPR, field_init_expr_new((name), (expr)),             \
+        (void (*)(void **))field_init_expr_to_string,                          \
+        (void (*)(void **))field_init_expr_free)
+
+#define NEW_STRUCT_INIT_EXPR(name)                                             \
+    expr_new(STRUCT_INIT_EXPR,                                                 \
+        struct_init_expr_new((name),                                           \
+            (list_new((void (*)(void **)) expr_free))),                        \
+        (void (*)(void **))struct_init_expr_to_string,                         \
+        (void (*)(void **))struct_init_expr_free)
+
+#define STRUCT_INIT_EXPR_ADD_FIELD(struct_init_expr, field_expr)               \
+    struct_init_expr_add_field(                                                \
+        (StructInitExpr**) (&(struct_init_expr)->expr), (field_expr))
+
+#define STRUCT_INIT_EXPR_ADD_FIELDS(struct_init_expr, ...)                     \
+    do {                                                                       \
+        Expr* exprs[] = { __VA_ARGS__ };                                       \
+        size_t n_exprs = sizeof(exprs) / sizeof(exprs[0]);                     \
+        for (size_t i = 0; i < n_exprs; i++) {                                 \
+            STRUCT_INIT_EXPR_ADD_FIELD((struct_init_expr), exprs[i]);          \
+        }                                                                      \
+    } while(0)
 
 #define NEW_LITERAL_EXPR(value)                                                \
     expr_new(LITERAL_EXPR, (value),                                            \
