@@ -9,6 +9,14 @@ bool str_cmp(const MapEntry** entry, char** key) {
     return strcmp((*entry)->key, *key) == 0;
 }
 
+void entry_to_string(const void** mapEntry) {
+    MapEntry* entry = (MapEntry*) *mapEntry;
+
+    printf("key: %s, value: ", (char*) entry->key);
+    stmt_to_string((Stmt**) &entry->value);
+    printf("\n");
+}
+
 int main(void) {
     Expr* testMath = NEW_BINARY_EXPR(
         NEW_GROUP_EXPR(
@@ -190,11 +198,7 @@ int main(void) {
 
     map_put(contextMap, "object", testLetStmtWithNilValue);
 
-    if (map_contains(contextMap, "object")) {
-        printf("exists\n");
-    }
-
-    printf("size: %ld\n", map_size(contextMap));
+    map_iterate(contextMap, entry_to_string);
 
     map_free(&contextMap);
 

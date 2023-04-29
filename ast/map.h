@@ -37,6 +37,9 @@ void* map_get(Map* map, void* key);
 void map_remove(Map* map, void* key);
 bool map_contains(Map* map, void* key);
 size_t map_size(Map* map);
+void map_clear(Map* map);
+void map_iterate(Map* map, void (*cb)(const void**));
+
 
 #define MAP_NEW(size, cmp_fn, free_key_fn, free_value_fn)                      \
     map_new((size),                                                            \

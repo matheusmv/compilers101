@@ -35,6 +35,8 @@ void list_remove_first(List** list, void** return_buffer);
 void list_remove_last(List** list, void** return_buffer);
 void list_remove_at(List** list, size_t index, void** return_buffer);
 
+void list_clear(List** list);
+
 void* list_get_at(List** list, size_t index);
 
 void list_for_each(List** list, void (*cb)(const void**));

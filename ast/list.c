@@ -237,6 +237,15 @@ void list_remove_at(List** list, size_t index, void** return_buffer) {
     }
 }
 
+void list_clear(List** list) {
+    if (!list_is_initialized(list) || list_is_empty(list))
+        return;
+
+    for (size_t i = 0; i < list_size(list); i++) {
+        list_remove_first(list, NULL);
+    }
+}
+
 void* list_get_at(List** list, size_t index) {
     if (!list_is_initialized(list) || list_is_empty(list) || index > list_size(list))
         return NULL;

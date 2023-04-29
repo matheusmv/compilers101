@@ -3,7 +3,6 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <string.h>
 
 
 MapEntry* map_entry_new(void* key, void* value,
@@ -178,4 +177,24 @@ bool map_contains(Map* map, void* key) {
 
 size_t map_size(Map* map) {
     return map->total_entries;
+}
+
+void map_clear(Map* map) {
+    if (map_size(map) == 0)
+        return;
+
+    for (size_t i = 0; i < map->size; i++) {
+        list_clear(&map->buckets[i]);
+    }
+
+    map->total_entries = 0;
+}
+
+void map_iterate(Map* map, void (*cb)(const void**)) {
+    if (map_size(map) == 0)
+        return;
+
+    for (size_t i = 0; i < map->size; i++) {
+        list_for_each(&map->buckets[i], cb);
+    }
 }
