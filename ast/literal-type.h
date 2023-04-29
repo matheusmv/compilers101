@@ -76,7 +76,7 @@ typedef struct VoidLiteral {
     void* value;
 } VoidLiteral;
 
-VoidLiteral* void_literal_new();
+VoidLiteral* void_literal_new(void);
 void void_literal_to_string(VoidLiteral**);
 void void_literal_free(VoidLiteral**);
 
@@ -84,6 +84,6 @@ typedef struct NilLiteral {
     void* value;
 } NilLiteral;
 
-NilLiteral* nil_literal_new();
+NilLiteral* nil_literal_new(void);
 void nil_literal_to_string(NilLiteral**);
 void nil_literal_free(NilLiteral**);

@@ -62,9 +62,11 @@ int main(void) {
     );
 
     Expr* testCall = NEW_CALL_EXPR(NEW_IDENT_LITERAL("lerp"));
-    CALL_EXPR_ADD_ARG(testCall, NEW_FLOAT_LITERAL(0.15));
-    CALL_EXPR_ADD_ARG(testCall, NEW_FLOAT_LITERAL(3.14));
-    CALL_EXPR_ADD_ARG(testCall, NEW_FLOAT_LITERAL(0.3));
+    CALL_EXPR_ADD_ARGS(testCall,
+        NEW_FLOAT_LITERAL(0.15),
+        NEW_FLOAT_LITERAL(3.14),
+        NEW_FLOAT_LITERAL(0.3)
+    );
 
     Expr* testLogicalAnd = NEW_LOGICAL_EXPR(
         NEW_CALL_EXPR(NEW_IDENT_LITERAL("initialized")),
@@ -80,20 +82,23 @@ int main(void) {
     Stmt* testExprStmt = NEW_EXPR_STMT(NEW_STRING_LITERAL("OK"));
 
     Stmt* testInnerBlockStmt = NEW_BLOCK_STMT();
-
-    BLOCK_STMT_ADD_STMT(testInnerBlockStmt, NEW_EXPR_STMT(testMath));
-    BLOCK_STMT_ADD_STMT(testInnerBlockStmt, NEW_EXPR_STMT(testChar));
-    BLOCK_STMT_ADD_STMT(testInnerBlockStmt, NEW_EXPR_STMT(testIdent));
-    BLOCK_STMT_ADD_STMT(testInnerBlockStmt, NEW_EXPR_STMT(testString));
+    BLOCK_STMT_ADD_STMTS(testInnerBlockStmt,
+        NEW_EXPR_STMT(testMath),
+        NEW_EXPR_STMT(testChar),
+        NEW_EXPR_STMT(testIdent),
+        NEW_EXPR_STMT(testString)
+    );
 
     Stmt* testBlockStmt = NEW_BLOCK_STMT();
-    BLOCK_STMT_ADD_STMT(testBlockStmt, testInnerBlockStmt);
-    BLOCK_STMT_ADD_STMT(testBlockStmt, NEW_EXPR_STMT(testBool));
-    BLOCK_STMT_ADD_STMT(testBlockStmt, NEW_EXPR_STMT(testAssign));
-    BLOCK_STMT_ADD_STMT(testBlockStmt, NEW_EXPR_STMT(testCall));
-    BLOCK_STMT_ADD_STMT(testBlockStmt, NEW_EXPR_STMT(testLogicalAnd));
-    BLOCK_STMT_ADD_STMT(testBlockStmt, NEW_EXPR_STMT(testUnary));
-    BLOCK_STMT_ADD_STMT(testBlockStmt, testExprStmt);
+    BLOCK_STMT_ADD_STMTS(testBlockStmt,
+        testInnerBlockStmt,
+        NEW_EXPR_STMT(testBool),
+        NEW_EXPR_STMT(testAssign),
+        NEW_EXPR_STMT(testCall),
+        NEW_EXPR_STMT(testLogicalAnd),
+        NEW_EXPR_STMT(testUnary),
+        testExprStmt
+    );
     STMT_PRINT_AND_FREE(testBlockStmt);
 
     Stmt* testFunctionBody = NEW_BLOCK_STMT();
@@ -124,9 +129,11 @@ int main(void) {
         NEW_TOKEN(TOKEN_IDENT, "lerp", 1),
         testFunctionBody
     );
-    FUNCTION_ADD_PARAM(testFunctionSmt, NEW_IDENT_LITERAL("a"));
-    FUNCTION_ADD_PARAM(testFunctionSmt, NEW_IDENT_LITERAL("b"));
-    FUNCTION_ADD_PARAM(testFunctionSmt, NEW_IDENT_LITERAL("t"));
+    FUNCTION_ADD_PARAMS(testFunctionSmt,
+        NEW_IDENT_LITERAL("a"),
+        NEW_IDENT_LITERAL("b"),
+        NEW_IDENT_LITERAL("t")
+    );
     STMT_PRINT_AND_FREE(testFunctionSmt);
 
     Stmt* testLetStmt = NEW_LET_STMT(

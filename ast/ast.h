@@ -233,6 +233,15 @@ void literal_expr_free(LiteralExpr** literalExpr);
 #define BLOCK_STMT_ADD_STMT(block_stmt, arg_stmt)                              \
     block_stmt_add_statement((BlockStmt**) (&(block_stmt)->stmt), (arg_stmt))
 
+#define BLOCK_STMT_ADD_STMTS(block_stmt, ...)                                  \
+    do {                                                                       \
+        Stmt* stmts[] = { __VA_ARGS__ };                                       \
+        size_t n_stmts = sizeof(stmts) / sizeof(stmts[0]);                     \
+        for (size_t i = 0; i < n_stmts; i++) {                                 \
+            BLOCK_STMT_ADD_STMT((block_stmt), stmts[i]);                       \
+        }                                                                      \
+    } while(0)
+
 #define NEW_EXPR_STMT(expr)                                                    \
     stmt_new(EXPRESSION_STMT, expression_stmt_new((expr)),                     \
         (void (*)(void **))expression_stmt_to_string,                          \
@@ -248,6 +257,15 @@ void literal_expr_free(LiteralExpr** literalExpr);
 
 #define FUNCTION_ADD_PARAM(func, param)                                        \
     function_stmt_add_parameter((FunctionStmt**) (&(func)->stmt), (param))
+
+#define FUNCTION_ADD_PARAMS(func, ...)                                         \
+    do {                                                                       \
+        Expr* exprs[] = { __VA_ARGS__ };                                       \
+        size_t n_exprs = sizeof(exprs) / sizeof(exprs[0]);                     \
+        for (size_t i = 0; i < n_exprs; i++) {                                 \
+            FUNCTION_ADD_PARAM((func), exprs[i]);                              \
+        }                                                                      \
+    } while(0)
 
 #define NEW_RETURN_STMT(expr)                                                  \
     stmt_new(RETURN_STMT, return_stmt_new((expr)),                             \
@@ -302,6 +320,15 @@ void literal_expr_free(LiteralExpr** literalExpr);
 
 #define CALL_EXPR_ADD_ARG(call_expr, arg_expr)                                 \
     call_expr_add_argument((CallExpr**) (&(call_expr)->expr), (arg_expr))
+
+#define CALL_EXPR_ADD_ARGS(call_expr, ...)                                     \
+    do {                                                                       \
+        Expr* exprs[] = { __VA_ARGS__ };                                       \
+        size_t n_exprs = sizeof(exprs) / sizeof(exprs[0]);                     \
+        for (size_t i = 0; i < n_exprs; i++) {                                 \
+            CALL_EXPR_ADD_ARG((call_expr), exprs[i]);                          \
+        }                                                                      \
+    } while(0)
 
 #define NEW_LOGICAL_EXPR(left, op, right)                                      \
     expr_new(LOGICAL_EXPR, logical_expr_new((left), (op), (right)),            \

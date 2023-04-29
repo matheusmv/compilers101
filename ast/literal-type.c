@@ -170,7 +170,7 @@ void bool_literal_free(BoolLiteral** boolLiteral) {
     *boolLiteral = NULL;
 }
 
-VoidLiteral* void_literal_new() {
+VoidLiteral* void_literal_new(void) {
     VoidLiteral* type = NULL;
     type = malloc(sizeof(VoidLiteral));
     if (type == NULL) {
@@ -197,7 +197,7 @@ void void_literal_free(VoidLiteral** voidLiteral) {
     *voidLiteral = NULL;
 }
 
-NilLiteral* nil_literal_new() {
+NilLiteral* nil_literal_new(void) {
     NilLiteral* type = NULL;
     type = malloc(sizeof(NilLiteral));
     if (type == NULL) {
