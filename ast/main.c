@@ -1,36 +1,15 @@
-#include "ast.h"
-#include "list.h"
-#include "map.h"
-#include "utils.h"
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
+#include "ast.h"
+#include "map.h"
 
-void str_free(char** str) {
-    free(*str);
-    *str = NULL;
-}
 
 bool str_cmp(const MapEntry** entry, char** key) {
     return strcmp((*entry)->key, *key) == 0;
 }
 
 int main(void) {
-    Map* testMap = MAP_NEW(64, str_cmp, NULL, str_free);
-
-    map_put(testMap, "john@email.com", str_dup("john@email.com"));
-    map_put(testMap, "john@email.com", str_dup("john@email.com"));
-    map_put(testMap, "alice@email.com", str_dup("alice@email.com"));
-    map_put(testMap, "john@email.com", str_dup("john@email.com"));
-
-    void* val = map_get(testMap, "alice@email.com");
-    if (val != NULL) {
-        printf("found object: %s\n", (char*) val);
-    }
-
-    map_free(&testMap);
-
     Expr* testMath = NEW_BINARY_EXPR(
         NEW_GROUP_EXPR(
             NEW_BINARY_EXPR(
@@ -206,7 +185,18 @@ int main(void) {
         NEW_TOKEN(TOKEN_IDENT, "object", 1),
         NEW_NIL_LITERAL()
     );
-    STMT_PRINT_AND_FREE(testLetStmtWithNilValue);
+
+    Map* contextMap = MAP_NEW(64, str_cmp, NULL, stmt_free);
+
+    map_put(contextMap, "object", testLetStmtWithNilValue);
+
+    void* object = map_get(contextMap, "object");
+    if (object != NULL) {
+        stmt_to_string((Stmt**) &object);
+        printf("\n");
+    }
+
+    map_free(&contextMap);
 
     return EXIT_SUCCESS;
 }
