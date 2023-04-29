@@ -170,11 +170,11 @@ void assign_expr_free(AssignExpr** assignExpr);
 
 
 typedef struct CallExpr {
-    Expr* calle;
+    Expr* callee;
     List* arguments; /* List of (Expr*) */
 } CallExpr;
 
-CallExpr* call_expr_new(Expr* calle, List* arguments);
+CallExpr* call_expr_new(Expr* callee, List* arguments);
 void call_expr_add_argument(CallExpr** callExpr, Expr* argument);
 void call_expr_to_string(CallExpr** callExpr);
 void call_expr_free(CallExpr** callExpr);
@@ -294,9 +294,9 @@ void literal_expr_free(LiteralExpr** literalExpr);
         (void (*)(void **))assign_expr_to_string,                              \
         (void (*)(void **))assign_expr_free)
 
-#define NEW_CALL_EXPR(calle)                                                   \
+#define NEW_CALL_EXPR(callee)                                                  \
     expr_new(CALL_EXPR,                                                        \
-        call_expr_new((calle), (list_new((void (*)(void **)) expr_free))),     \
+        call_expr_new((callee), (list_new((void (*)(void **)) expr_free))),    \
         (void (*)(void **))call_expr_to_string,                                \
         (void (*)(void **))call_expr_free)
 

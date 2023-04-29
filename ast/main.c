@@ -190,11 +190,11 @@ int main(void) {
 
     map_put(contextMap, "object", testLetStmtWithNilValue);
 
-    void* object = map_get(contextMap, "object");
-    if (object != NULL) {
-        stmt_to_string((Stmt**) &object);
-        printf("\n");
+    if (map_contains(contextMap, "object")) {
+        printf("exists\n");
     }
+
+    printf("size: %ld\n", map_size(contextMap));
 
     map_free(&contextMap);
 

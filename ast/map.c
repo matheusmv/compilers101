@@ -88,11 +88,19 @@ void map_free(Map** map) {
 size_t hash(const char* key, size_t size) {
     size_t hash = 5381;
 
-    size_t c;
+    unsigned char c;
     while ((c = *key++))
         hash = ((hash << 5) + hash) + c;
 
     return hash % size;
+}
+
+inline static void increment_map_total_entries(Map* map) {
+    map->total_entries += 1;
+}
+
+inline static void decrement_map_total_entries(Map* map) {
+    map->total_entries -= 1;
 }
 
 void map_put(Map* map, void* key, void* value) {
@@ -101,7 +109,7 @@ void map_put(Map* map, void* key, void* value) {
     ListNode* object = NULL;
     int object_index = list_find_first(
         &(map->buckets[index]), map->cmp,
-        (void**) &key,
+        &key,
         (void**) &object
     );
 
@@ -112,6 +120,7 @@ void map_put(Map* map, void* key, void* value) {
                 map->destroy_key, map->destroy_value
             )
         );
+        increment_map_total_entries(map);
     } else {
         list_remove_at(&(map->buckets[index]), object_index, NULL);
         list_insert_at(&(map->buckets[index]), object_index,
@@ -129,7 +138,7 @@ void* map_get(Map* map, void* key) {
     MapEntry* entry = NULL;
     int object_index = list_find_first(
         &(map->buckets[index]), map->cmp,
-        (void**) &key,
+        &key,
         (void**) &entry
     );
 
@@ -145,7 +154,7 @@ void map_remove(Map* map, void* key) {
 
     int object_index = list_find_first(
         &(map->buckets[index]), map->cmp,
-        (void**) &key,
+        &key,
         NULL
     );
 
@@ -155,5 +164,18 @@ void map_remove(Map* map, void* key) {
             object_index,
             NULL
         );
+        decrement_map_total_entries(map);
     }
+}
+
+bool map_contains(Map* map, void* key) {
+    size_t index = hash(key, map->size);
+
+    void* entry = NULL;
+    list_find_first(&(map->buckets[index]), map->cmp, &key, &entry);
+    return entry != NULL;
+}
+
+size_t map_size(Map* map) {
+    return map->total_entries;
 }

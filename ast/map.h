@@ -18,6 +18,7 @@ MapEntry* map_entry_new(void* key, void* value,
 void map_entry_free(MapEntry** mapEntry);
 
 typedef struct Map {
+    size_t total_entries;
     size_t size;
     List** buckets;
     bool (*cmp)(const void**, void**);
@@ -34,7 +35,8 @@ size_t hash(const char* key, size_t size);
 void map_put(Map* map, void* key, void* value);
 void* map_get(Map* map, void* key);
 void map_remove(Map* map, void* key);
-
+bool map_contains(Map* map, void* key);
+size_t map_size(Map* map);
 
 #define MAP_NEW(size, cmp_fn, free_key_fn, free_value_fn)                      \
     map_new((size),                                                            \

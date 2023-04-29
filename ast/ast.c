@@ -578,17 +578,17 @@ void assign_expr_free(AssignExpr** assignExpr) {
     *assignExpr = NULL;
 }
 
-CallExpr* call_expr_new(Expr* calle, List* arguments) {
+CallExpr* call_expr_new(Expr* callee, List* arguments) {
     CallExpr* expr = NULL;
     expr = malloc(sizeof(CallExpr));
     if (expr == NULL) {
-        expr_free(&calle);
+        expr_free(&callee);
         list_free(&arguments);
         return NULL;
     }
 
     *expr = (CallExpr) {
-        .calle = calle,
+        .callee = callee,
         .arguments = arguments
     };
 
@@ -606,7 +606,7 @@ void call_expr_to_string(CallExpr** callExpr) {
     if (callExpr == NULL || *callExpr == NULL)
         return;
 
-    expr_to_string(&(*callExpr)->calle);
+    expr_to_string(&(*callExpr)->callee);
 
     printf("(");
 
@@ -626,7 +626,7 @@ void call_expr_free(CallExpr** callExpr) {
     if (callExpr == NULL || *callExpr == NULL)
         return;
 
-    expr_free(&(*callExpr)->calle);
+    expr_free(&(*callExpr)->callee);
     list_free(&(*callExpr)->arguments);
 
     free(*callExpr);
