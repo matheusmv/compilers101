@@ -46,3 +46,16 @@ void map_iterate(Map* map, void (*cb)(const void**));
         ((bool (*)(const void**, void**)) cmp_fn),                             \
         ((void (*)(void**)) free_key_fn),                                      \
         ((void (*)(void**)) free_value_fn))
+
+
+typedef struct MapIterator {
+    const Map* map;
+    size_t bucket_index;
+    ListNode* current_node;
+} MapIterator;
+
+MapIterator* map_iterator_new(const Map* map);
+void map_iterator_free(MapIterator** iterator);
+
+bool map_iterator_has_next(MapIterator* iterator);
+MapEntry* map_iterator_next(MapIterator* iterator);

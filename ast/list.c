@@ -64,11 +64,10 @@ size_t list_size(List** list) {
 }
 
 bool list_is_empty(List** list) {
-    if (list == NULL || *list == NULL) {
+    if (list == NULL || *list == NULL)
         return true;
-    }
 
-    return (*list)->head == NULL;
+    return (*list)->size == 0;
 }
 
 static inline bool list_is_initialized(List** list) {
@@ -250,7 +249,7 @@ void list_clear(List** list) {
     if (!list_is_initialized(list) || list_is_empty(list))
         return;
 
-    for (size_t i = 0; i < list_size(list); i++) {
+    while (!list_is_empty(list)) {
         list_remove_first(list, NULL);
     }
 }
@@ -313,6 +312,9 @@ bool list_find_and_remove(List** list, bool (*cb)(const void**, void**), void** 
             ListNode* prev = node->prev;
             ListNode* next = node->next;
 
+            if (node == (*list)->head)
+                (*list)->head = next;
+
             if (prev != NULL)
                 prev->next = next;
 
@@ -320,9 +322,9 @@ bool list_find_and_remove(List** list, bool (*cb)(const void**, void**), void** 
                 next->prev = prev;
 
             list_node_free(&node, (*list)->destroy);
-
+            
             decrease_list_size(list);
-
+            
             return true;
         }
     }

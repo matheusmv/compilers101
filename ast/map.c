@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 
@@ -192,4 +193,67 @@ void map_iterate(Map* map, void (*cb)(const void**)) {
     for (size_t i = 0; i < map->number_of_buckets; i++) {
         list_for_each(&map->buckets[i], cb);
     }
+}
+
+MapIterator* map_iterator_new(const Map* map) {
+    if (map == NULL) {
+        return NULL;
+    }
+
+    MapIterator* iterator = NULL;
+    iterator = malloc(sizeof(MapIterator));
+    if (iterator == NULL) {
+        return NULL;
+    }
+
+    *iterator = (MapIterator) {
+        .map = map,
+        .bucket_index = 0,
+        .current_node = NULL
+    };
+
+    return iterator;
+}
+
+void map_iterator_free(MapIterator** iterator) {
+    if (iterator == NULL || *iterator == NULL)
+        return;
+
+    free(*iterator);
+    *iterator = NULL;
+}
+
+bool map_iterator_has_next(MapIterator* iterator) {
+    while (iterator->bucket_index < iterator->map->number_of_buckets) {
+        List* bucket = iterator->map->buckets[iterator->bucket_index];
+
+        if (iterator->current_node == NULL && !list_is_empty(&bucket)) {
+            return true;
+        }
+
+        if (iterator->current_node != NULL && iterator->current_node->next != NULL) {
+            return true;
+        }
+
+        iterator->bucket_index += 1;
+        iterator->current_node = NULL;
+    }
+
+    return false;
+}
+
+MapEntry* map_iterator_next(MapIterator* iterator) {
+    if (!map_iterator_has_next(iterator)) {
+        return NULL;
+    }
+
+    List* bucket = iterator->map->buckets[iterator->bucket_index];
+
+    if (iterator->current_node == NULL) {
+        iterator->current_node = bucket->head;
+    } else {
+        iterator->current_node = iterator->current_node->next;
+    }
+
+    return (MapEntry*) iterator->current_node->value;
 }

@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -19,6 +20,20 @@ void entry_to_string(const void** mapEntry) {
     printf("key: %s, value: ", (char*) entry->key);
     stmt_to_string((Stmt**) &entry->value);
     printf("\n");
+}
+
+void print_map_entry(const MapEntry* entry) {
+    printf("key=%s, value=%s\n",
+        (char*) entry->key, (char*) entry->value);
+}
+
+void print_map(const Map* map) {
+    MapIterator* iterator = map_iterator_new(map);
+    while (map_iterator_has_next(iterator)) {
+        MapEntry* entry = map_iterator_next(iterator);
+        print_map_entry(entry);
+    }
+    map_iterator_free(&iterator);
 }
 
 int main(void) {
@@ -255,6 +270,18 @@ int main(void) {
 
     context_free(&innerScope);
     context_free(&globalContext);
+
+    Map* map = MAP_NEW(10, (bool (*)(const void**, void**)) entry_cmp, NULL, NULL);
+
+    map_put(map, "one", "um");
+    map_put(map, "two", "dois");
+    map_put(map, "three", "três");
+
+    map_remove(map, "two");
+
+    print_map(map);
+
+    map_free(&map);
 
     return EXIT_SUCCESS;
 }
