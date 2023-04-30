@@ -24,7 +24,7 @@ Type* type_new(TypeID id, size_t size, char* name, List* fields) {
     return new_type;
 }
 
-void type_add_field(Type** type, Type* field) {
+void type_add_field(Type** type, NamedType* field) {
     if (type == NULL || *type == NULL || field == NULL)
         return;
 
@@ -42,7 +42,7 @@ void type_to_string(Type** type) {
         printf(" { ");
 
         for (ListNode* field = fields->head; field != NULL; field = field->next) {
-            type_to_string((Type**) &field->value);
+            named_type_to_string((NamedType**) &field->value);
 
             if (field->next != NULL) {
                 printf(", ");
@@ -62,4 +62,42 @@ void type_free(Type** type) {
 
     free(*type);
     *type = NULL;
+}
+
+NamedType* named_type_new(char* name, Type* type) {
+    NamedType* new_type = NULL;
+    new_type = malloc(sizeof(NamedType));
+    if (new_type == NULL) {
+        type_free(&type);
+        return NULL;
+    }
+
+    *new_type = (NamedType) {
+        .name = str_dup(name),
+        .type = type
+    };
+
+    return new_type;
+}
+
+void named_type_to_string(NamedType** namedType) {
+    if (namedType == NULL || *namedType == NULL)
+        return;
+
+    printf("%s", (*namedType)->name);
+
+    printf(": ");
+
+    type_to_string(&(*namedType)->type);
+}
+
+void named_type_free(NamedType** namedType) {
+    if (namedType == NULL || *namedType == NULL)
+        return;
+
+    free((*namedType)->name);
+    type_free(&(*namedType)->type);
+
+    free(*namedType);
+    *namedType = NULL;
 }
