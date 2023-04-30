@@ -64,8 +64,11 @@ size_t list_size(List** list) {
 }
 
 bool list_is_empty(List** list) {
-    bool not_initialized = (list == NULL) || (*list == NULL);
-    return not_initialized || (*list)->head == NULL;
+    if (list == NULL || *list == NULL) {
+        return true;
+    }
+
+    return (*list)->head == NULL;
 }
 
 static inline bool list_is_initialized(List** list) {
@@ -251,6 +254,21 @@ void* list_get_at(List** list, size_t index) {
         return NULL;
 
     return get_node(list, index)->value;
+}
+
+void list_replace_at(List** list, size_t index, void* object) {
+    if (list == NULL || *list == NULL || object == NULL)
+        return;
+
+    ListNode* old_node = get_node(list, index);
+    if (old_node != NULL) {
+        void* old_value = old_node->value;
+
+        old_node->value = object;
+
+        if ((*list)->destroy != NULL)
+            (*list)->destroy(&old_value);
+    }
 }
 
 void list_for_each(List** list, void (*cb)(const void**)) {

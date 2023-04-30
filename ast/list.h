@@ -39,6 +39,8 @@ void list_clear(List** list);
 
 void* list_get_at(List** list, size_t index);
 
+void list_replace_at(List** list, size_t index, void* object);
+
 void list_for_each(List** list, void (*cb)(const void**));
 int list_find_first(List** list,
     bool (*cb)(const void**, void**), void** key, void** found_object);

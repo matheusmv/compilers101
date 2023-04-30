@@ -8,7 +8,7 @@
 #include "types.h"
 
 
-bool str_cmp(const MapEntry** entry, char** key) {
+bool entry_cmp(const MapEntry** entry, char** key) {
     return strcmp((*entry)->key, *key) == 0;
 }
 
@@ -237,13 +237,13 @@ int main(void) {
     );
     STMT_PRINT_AND_FREE(testStructInitExpr);
 
-    Context* globalContext = context_new(MAP_NEW(64, str_cmp, NULL, stmt_free));
+    Context* globalContext = context_new(MAP_NEW(64, entry_cmp, NULL, stmt_free));
 
     context_define(globalContext, "object", testLetStmtWithNilValue);
 
     Context* innerScope = context_enclosed_new(
         globalContext,
-        MAP_NEW(64, str_cmp, NULL, stmt_free)
+        MAP_NEW(64, entry_cmp, NULL, stmt_free)
     );
 
     void* value = context_get(innerScope, "object");

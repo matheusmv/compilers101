@@ -204,7 +204,7 @@ void function_stmt_to_string(FunctionStmt** functionStmt) {
     token_to_string(&(*functionStmt)->name);
 
     printf("(");
-    
+
     List* params = (*functionStmt)->parameters;
     if (!list_is_empty(&params)) {
         for(ListNode* param = params->head; param != NULL; param = param->next) {
@@ -425,9 +425,9 @@ void for_stmt_to_string(ForStmt** forStmt) {
         return;
 
     printf("for (");
-    
+
     stmt_to_string(&(*forStmt)->initialization);
-    
+
     printf("; ");
 
     expr_to_string(&(*forStmt)->condition);
@@ -884,7 +884,7 @@ void field_init_expr_to_string(FieldInitExpr** fieldInit) {
         return;
 
     token_to_string(&(*fieldInit)->name);
-    
+
     printf(": ");
 
     expr_to_string(&(*fieldInit)->value);
@@ -988,7 +988,8 @@ void literal_expr_free(LiteralExpr** literalExpr) {
     if (literalExpr == NULL || *literalExpr == NULL)
         return;
 
-    (*literalExpr)->destroy(&(*literalExpr)->value);
+    if ((*literalExpr)->destroy != NULL)
+        (*literalExpr)->destroy(&(*literalExpr)->value);
 
     free(*literalExpr);
     *literalExpr = NULL;

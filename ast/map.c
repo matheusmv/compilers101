@@ -2,6 +2,7 @@
 #include "list.h"
 
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 
@@ -122,8 +123,7 @@ void map_put(Map* map, void* key, void* value) {
         );
         increment_map_total_entries(map);
     } else {
-        list_remove_at(&(map->buckets[index]), object_index, NULL);
-        list_insert_at(&(map->buckets[index]), object_index,
+        list_replace_at(&(map->buckets[index]), object_index,
             map_entry_new(
                 key, value,
                 map->destroy_key, map->destroy_value
