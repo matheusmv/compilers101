@@ -2,6 +2,7 @@
 #include "list.h"
 #include "token.h"
 #include "types.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -114,13 +115,13 @@ void block_stmt_to_string(BlockStmt** blockStmt) {
 
     List* args = (*blockStmt)->statements;
     if (!list_is_empty(&args)) {
+        printf("\n");
 
         for (ListNode* arg = args->head; arg != NULL; arg = arg->next) {
-            printf("\n");
             stmt_to_string((Stmt**) &arg->value);
-        }
 
-        printf("\n");
+            printf("\n");
+        }
     }
 
     printf("}");
@@ -522,20 +523,23 @@ void struct_stmt_to_string(StructStmt** structStmt) {
 
     printf("struct ");
 
-    token_to_string(&(*structStmt)->name);
+    if ((*structStmt)->name != NULL) {
+        token_to_string(&(*structStmt)->name);
+        printf(" ");
+    }
 
-    printf(" {");
+    printf("{");
 
     List* fields = (*structStmt)->fields;
     if (!list_is_empty(&fields)) {
         printf("\n");
 
         for (ListNode* field = fields->head; field != NULL; field = field->next) {
-        printf("\t");
+            printf("\t");
 
-        stmt_to_string((Stmt**) &field->value);
+            stmt_to_string((Stmt**) &field->value);
 
-        if (field->next != NULL) {
+            if (field->next != NULL) {
                 printf("\n");
             }
         }

@@ -151,7 +151,6 @@ int main(void) {
     BLOCK_STMT_ADD_STMT(thenBlock, NEW_EXPR_STMT(printMessage));
 
     Stmt* elseBlock = NULL;
-
     Stmt* testIfStmt = NEW_IF_STMT(
         NEW_BINARY_EXPR(
             NEW_BINARY_EXPR(
@@ -209,7 +208,7 @@ int main(void) {
         NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "id", 1), NEW_INT_TYPE()),
         NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "username", 1), NEW_STRING_TYPE()),
         NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "password", 1), NEW_STRING_TYPE()),
-        NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "email", 1), NEW_STRING_TYPE())
+        NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "email", 1), NEW_STRING_TYPE()),
     );
     STMT_PRINT_AND_FREE(testStructStmt);
 
@@ -225,6 +224,20 @@ int main(void) {
         structInit
     );
     STMT_PRINT_AND_FREE(testStructInitExpr);
+
+    Type* testCustomType = NEW_STRUCT_TYPE(40);
+    CUSTOM_TYPE_ADD_FIELDS(testCustomType,
+        NEW_STRING_TYPE(),
+        NEW_INT_TYPE(),
+        NEW_FLOAT_TYPE(),
+        NEW_CHAR_TYPE(),
+        NEW_BOOL_TYPE(),
+        NEW_VOID_TYPE(),
+        NEW_NIL_TYPE()
+    );
+    type_to_string(&testCustomType);
+    type_free(&testCustomType);
+    printf("\n");
 
     Context* globalContext = context_new(MAP_NEW(64, str_cmp, NULL, stmt_free));
 
