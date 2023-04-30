@@ -1,8 +1,8 @@
 #include "map.h"
 #include "list.h"
 
+#include <stdbool.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 
@@ -44,6 +44,10 @@ void map_entry_free(MapEntry** mapEntry) {
 
 Map* map_new(size_t number_of_buckets, bool (*cmp)(const void**, void**),
     void (*destroy_key)(void**), void (*destroy_value)(void**)) {
+    if (cmp == NULL) {
+        return NULL;
+    }
+
     Map* map = NULL;
     map = malloc(sizeof(Map));
     if (map == NULL) {
@@ -152,18 +156,8 @@ void* map_get(Map* map, void* key) {
 void map_remove(Map* map, void* key) {
     size_t index = hash(key, map->number_of_buckets);
 
-    int object_index = list_find_first(
-        &(map->buckets[index]), map->cmp,
-        &key,
-        NULL
-    );
-
-    if (object_index != -1) {
-        list_remove_at(
-            &(map->buckets[index]),
-            object_index,
-            NULL
-        );
+    bool ok = list_find_and_remove(&(map->buckets[index]), map->cmp, &key);
+    if (ok) {
         decrement_map_total_entries(map);
     }
 }

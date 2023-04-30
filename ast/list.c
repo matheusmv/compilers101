@@ -155,8 +155,11 @@ void list_insert_at(List** list, size_t index, void* object) {
     if (new_node == NULL)
         return;
 
-    previous->next = new_node;
-    current->prev = new_node;
+    if (previous != NULL)
+        previous->next = new_node;
+
+    if (current != NULL)
+        current->prev = new_node;
 
     increase_list_size(list);
 }
@@ -227,8 +230,11 @@ void list_remove_at(List** list, size_t index, void** return_buffer) {
     ListNode* previous = current->prev;
     ListNode* next = current->next;
 
-    previous->next = next;
-    next->prev = previous;
+    if (previous != NULL)
+        previous->next = next;
+
+    if (next != NULL)
+        next->prev = previous;
 
     decrease_list_size(list);
 
@@ -296,6 +302,32 @@ int list_find_first(List** list, bool (*cb)(const void**, void**), void** key, v
     }
 
     return -1;
+}
+
+bool list_find_and_remove(List** list, bool (*cb)(const void**, void**), void** key) {
+    if (list == NULL || *list == NULL || cb == NULL || key == NULL)
+        return false;
+
+    for (ListNode* node = (*list)->head; node != NULL; node = node->next) {
+        if (cb((const void**) &node->value, key)) {
+            ListNode* prev = node->prev;
+            ListNode* next = node->next;
+
+            if (prev != NULL)
+                prev->next = next;
+
+            if (next != NULL)
+                next->prev = prev;
+
+            list_node_free(&node, (*list)->destroy);
+
+            decrease_list_size(list);
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
 List* list_map(List** list, void* (*cb)(void**), void (*new_destructor)(void**)) {

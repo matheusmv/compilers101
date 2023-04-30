@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "ast.h"
+#include "list.h"
 #include "map.h"
 #include "context.h"
 #include "token.h"
