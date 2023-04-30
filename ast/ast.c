@@ -117,7 +117,7 @@ void block_stmt_to_string(BlockStmt** blockStmt) {
     if (!list_is_empty(&args)) {
         printf("\n");
 
-        for (ListNode* arg = args->head; arg != NULL; arg = arg->next) {
+        list_foreach(arg, args) {
             stmt_to_string((Stmt**) &arg->value);
 
             printf("\n");
@@ -207,7 +207,7 @@ void function_stmt_to_string(FunctionStmt** functionStmt) {
 
     List* params = (*functionStmt)->parameters;
     if (!list_is_empty(&params)) {
-        for(ListNode* param = params->head; param != NULL; param = param->next) {
+        list_foreach(param, params) {
             expr_to_string((Expr**) &param->value);
 
             if (param->next != NULL) {
@@ -534,7 +534,7 @@ void struct_stmt_to_string(StructStmt** structStmt) {
     if (!list_is_empty(&fields)) {
         printf("\n");
 
-        for (ListNode* field = fields->head; field != NULL; field = field->next) {
+        list_foreach(field, fields) {
             printf("\t");
 
             stmt_to_string((Stmt**) &field->value);
@@ -721,8 +721,7 @@ void call_expr_to_string(CallExpr** callExpr) {
 
     printf("(");
 
-    List* args = (*callExpr)->arguments;
-    for (ListNode* arg = args->head; arg != NULL; arg = arg->next) {
+    list_foreach(arg, (*callExpr)->arguments) {
         expr_to_string((Expr**) &arg->value);
 
         if (arg->next != NULL) {
@@ -934,8 +933,7 @@ void struct_init_expr_to_string(StructInitExpr** structInit) {
 
     printf("{ ");
 
-    List* fields = (*structInit)->fields;
-    for (ListNode* field = fields->head; field != NULL; field = field->next) {
+    list_foreach(field, (*structInit)->fields) {
         expr_to_string((Expr**) &field->value);
 
         if (field->next != NULL) {

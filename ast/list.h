@@ -50,3 +50,7 @@ List* list_map(List** list, void* (*cb)(void**), void (*new_destructor)(void**))
 char* list_join_str(List** list, const char* delimiter,
     char* (*to_string)(const void**),
     void (*free_str)(char**));
+
+
+#define list_foreach(item, list)                                               \
+    for(ListNode *(item) = (list)->head; (item) != NULL; (item) = (item)->next)
