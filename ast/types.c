@@ -4,11 +4,12 @@
 #include <stdlib.h>
 
 #include "utils.h"
+#include "smem.h"
 
 
 Type* type_new(TypeID id, size_t size, char* name, List* fields) {
     Type* new_type = NULL;
-    new_type = malloc(sizeof(Type));
+    new_type = safe_malloc(sizeof(Type), NULL);
     if (new_type == NULL) {
         list_free(&fields);
         return NULL;
@@ -57,16 +58,15 @@ void type_free(Type** type) {
     if (type == NULL || *type == NULL)
         return;
 
-    free((*type)->name);
+    safe_free((void**) &(*type)->name);
     list_free(&(*type)->fields);
 
-    free(*type);
-    *type = NULL;
+    safe_free((void**) type);
 }
 
 NamedType* named_type_new(char* name, Type* type) {
     NamedType* new_type = NULL;
-    new_type = malloc(sizeof(NamedType));
+    new_type = safe_malloc(sizeof(NamedType), NULL);
     if (new_type == NULL) {
         type_free(&type);
         return NULL;
@@ -95,9 +95,8 @@ void named_type_free(NamedType** namedType) {
     if (namedType == NULL || *namedType == NULL)
         return;
 
-    free((*namedType)->name);
+    safe_free((void**) &(*namedType)->name);
     type_free(&(*namedType)->type);
 
-    free(*namedType);
-    *namedType = NULL;
+    safe_free((void**) namedType);
 }

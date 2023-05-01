@@ -2,13 +2,18 @@
 
 #include <stdlib.h>
 #include <memory.h>
+#include "smem.h"
 
 
 char* str_dup(const char* other) {
-    char* copy = NULL;
     size_t len = strlen(other);
 
-    copy = malloc(len + 1);
+    char* copy = NULL;
+    copy = safe_malloc(len + 1, NULL);
+    if (copy == NULL) {
+        return "";
+    }
+
     memcpy(copy, other, len);
     copy[len] = '\0';
 
@@ -74,9 +79,9 @@ unsigned long hash_char(char value) {
     return y;
 }
 
-unsigned long hash_string(char* value) {
+unsigned long hash_string(const char* value) {
     unsigned long hash = 5381;
-    int c;
+    unsigned char c;
 
     while ((c = *value++) != 0) {
         hash = ((hash << 5) + hash) + c;

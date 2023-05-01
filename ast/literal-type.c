@@ -3,10 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "smem.h"
+
 
 IndentLiteral* ident_literal_new(const char* ident) {
     IndentLiteral* type = NULL;
-    type = malloc(sizeof(IndentLiteral));
+    type = safe_malloc(sizeof(IndentLiteral), NULL);
     if (type == NULL) {
         return NULL;
     }
@@ -27,15 +29,14 @@ void ident_literal_free(IndentLiteral** identType) {
     if (identType == NULL || *identType == NULL)
         return;
 
-    free((*identType)->value);
+    safe_free((void**) &(*identType)->value);
 
-    free(*identType);
-    *identType = NULL;
+    safe_free((void**) identType);
 }
 
 IntLiteral* int_literal_new(int value) {
     IntLiteral* type = NULL;
-    type = malloc(sizeof(IntLiteral));
+    type = safe_malloc(sizeof(IntLiteral), NULL);
     if (type == NULL) {
         return NULL;
     }
@@ -56,13 +57,12 @@ void int_literal_free(IntLiteral** intLiteral) {
     if (intLiteral == NULL || *intLiteral == NULL)
         return;
 
-    free(*intLiteral);
-    *intLiteral = NULL;
+    safe_free((void**) intLiteral);
 }
 
 FloatLiteral* float_literal_new(double value) {
     FloatLiteral* type = NULL;
-    type = malloc(sizeof(FloatLiteral));
+    type = safe_malloc(sizeof(FloatLiteral), NULL);
     if (type == NULL) {
         return NULL;
     }
@@ -83,13 +83,12 @@ void float_literal_free(FloatLiteral** floatLiteral) {
     if (floatLiteral == NULL || *floatLiteral == NULL)
         return;
 
-    free(*floatLiteral);
-    *floatLiteral = NULL;
+    safe_free((void**) floatLiteral);
 }
 
 CharLiteral* char_literal_new(char value) {
     CharLiteral* type = NULL;
-    type = malloc(sizeof(CharLiteral));
+    type = safe_malloc(sizeof(CharLiteral), NULL);
     if (type == NULL) {
         return NULL;
     }
@@ -110,13 +109,12 @@ void char_literal_free(CharLiteral** charLiteral) {
     if (charLiteral == NULL || *charLiteral == NULL)
         return;
 
-    free(*charLiteral);
-    *charLiteral = NULL;
+    safe_free((void**) charLiteral);
 }
 
 StringLiteral* string_literal_new(const char* value) {
     StringLiteral* type = NULL;
-    type = malloc(sizeof(StringLiteral));
+    type = safe_malloc(sizeof(StringLiteral), NULL);
     if (type == NULL) {
         return NULL;
     }
@@ -137,15 +135,14 @@ void string_literal_free(StringLiteral** stringLiteral) {
     if (stringLiteral == NULL || *stringLiteral == NULL)
         return;
 
-    free((*stringLiteral)->value);
+    safe_free((void**) &(*stringLiteral)->value);
 
-    free(*stringLiteral);
-    *stringLiteral = NULL;
+    safe_free((void**) stringLiteral);
 }
 
 BoolLiteral* bool_literal_new(bool value) {
     BoolLiteral* type = NULL;
-    type = malloc(sizeof(BoolLiteral));
+    type = safe_malloc(sizeof(BoolLiteral), NULL);
     if (type == NULL) {
         return NULL;
     }
@@ -166,13 +163,12 @@ void bool_literal_free(BoolLiteral** boolLiteral) {
     if (boolLiteral == NULL || *boolLiteral == NULL)
         return;
 
-    free(*boolLiteral);
-    *boolLiteral = NULL;
+    safe_free((void**) boolLiteral);
 }
 
 VoidLiteral* void_literal_new(void) {
     VoidLiteral* type = NULL;
-    type = malloc(sizeof(VoidLiteral));
+    type = safe_malloc(sizeof(VoidLiteral), NULL);
     if (type == NULL) {
         return NULL;
     }
@@ -193,13 +189,12 @@ void void_literal_free(VoidLiteral** voidLiteral) {
     if (voidLiteral == NULL || *voidLiteral == NULL)
         return;
 
-    free(*voidLiteral);
-    *voidLiteral = NULL;
+    safe_free((void**) voidLiteral);
 }
 
 NilLiteral* nil_literal_new(void) {
     NilLiteral* type = NULL;
-    type = malloc(sizeof(NilLiteral));
+    type = safe_malloc(sizeof(NilLiteral), NULL);
     if (type == NULL) {
         return NULL;
     }
@@ -220,6 +215,5 @@ void nil_literal_free(NilLiteral** nilLiteral) {
     if (nilLiteral == NULL || *nilLiteral == NULL)
         return;
 
-    free(*nilLiteral);
-    *nilLiteral = NULL;
+    safe_free((void**) nilLiteral);
 }

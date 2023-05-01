@@ -5,10 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "smem.h"
+
 
 ListNode* list_node_new(void* value, ListNode* prev, ListNode* next) {
     ListNode* new_node = NULL;
-    new_node = malloc(sizeof(ListNode));
+    new_node = safe_malloc(sizeof(ListNode), NULL);
     if (new_node == NULL) {
         return NULL;
     }
@@ -29,13 +31,12 @@ void list_node_free(ListNode** node, void (*destroy)(void**)) {
     if (destroy != NULL)
         destroy(&(*node)->value);
 
-    free(*node);
-    *node = NULL;
+    safe_free((void**) node);
 }
 
 List* list_new(void (*destroy)(void**)) {
     List* new_list = NULL;
-    new_list = calloc(1, sizeof(List));
+    new_list = safe_calloc(1, sizeof(List), NULL);
     if (new_list == NULL) {
         return NULL;
     }
@@ -55,8 +56,7 @@ void list_free(List** list) {
         list_remove_first(list, NULL);
     }
 
-    free(*list);
-    *list = NULL;
+    safe_free((void**) list);
 }
 
 size_t list_size(List** list) {
@@ -377,7 +377,7 @@ char* list_join_str(List** list, const char* delimiter, char* (*to_string)(const
         str_len += (list_size(&objects_as_strings) - 1) * delimiter_len;
     }
 
-    char* result = malloc(str_len + 1);
+    char* result = safe_malloc((str_len + 1), NULL);
     if (result == NULL) {
         list_free(&objects_as_strings);
         return NULL;

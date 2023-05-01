@@ -1,16 +1,19 @@
 #include "map.h"
-#include "list.h"
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
+
+
+#include "list.h"
+#include "smem.h"
+#include "utils.h"
 
 
 MapEntry* map_entry_new(void* key, void* value,
     void (*destroy_key)(void**), void (*destroy_value)(void**)) {
     MapEntry* entry = NULL;
-    entry = malloc(sizeof(MapEntry));
+    entry = safe_malloc(sizeof(MapEntry), NULL);
     if (entry == NULL) {
         if (destroy_key != NULL)
             destroy_key(&key);
@@ -39,8 +42,7 @@ void map_entry_free(MapEntry** mapEntry) {
     if ((*mapEntry)->destroy_value != NULL)
         (*mapEntry)->destroy_value(&(*mapEntry)->value);
 
-    free(*mapEntry);
-    *mapEntry = NULL;
+    safe_free((void**) mapEntry);
 }
 
 Map* map_new(size_t number_of_buckets, bool (*cmp)(const void**, void**),
@@ -50,15 +52,15 @@ Map* map_new(size_t number_of_buckets, bool (*cmp)(const void**, void**),
     }
 
     Map* map = NULL;
-    map = malloc(sizeof(Map));
+    map = safe_malloc(sizeof(Map), NULL);
     if (map == NULL) {
         return NULL;
     }
 
     List** buckets = NULL;
-    buckets = calloc(number_of_buckets, sizeof(List*));
+    buckets = safe_calloc(number_of_buckets, sizeof(List*), NULL);
     if (buckets == NULL) {
-        free(map);
+        safe_free((void**) &map);
         return NULL;
     }
 
@@ -86,19 +88,12 @@ void map_free(Map** map) {
         list_free(&((*map)->buckets[i]));
     }
 
-    free((*map)->buckets);
-    free(*map);
-    *map = NULL;
+    safe_free((void**) &(*map)->buckets);
+    safe_free((void**) map);
 }
 
-size_t hash(const char* key, size_t size) {
-    size_t hash = 5381;
-
-    unsigned char c;
-    while ((c = *key++))
-        hash = ((hash << 5) + hash) + c;
-
-    return hash % size;
+size_t get_index(const char* key, size_t number_of_buckets) {
+    return hash_string(key) % number_of_buckets;
 }
 
 inline static void increment_map_total_entries(Map* map) {
@@ -110,7 +105,7 @@ inline static void decrement_map_total_entries(Map* map) {
 }
 
 void map_put(Map* map, void* key, void* value) {
-    size_t index = hash(key, map->number_of_buckets);
+    size_t index = get_index(key, map->number_of_buckets);
 
     ListNode* object = NULL;
     int object_index = list_find_first(
@@ -138,7 +133,7 @@ void map_put(Map* map, void* key, void* value) {
 }
 
 void* map_get(Map* map, void* key) {
-    size_t index = hash(key, map->number_of_buckets);
+    size_t index = get_index(key, map->number_of_buckets);
 
     MapEntry* entry = NULL;
     int object_index = list_find_first(
@@ -155,7 +150,7 @@ void* map_get(Map* map, void* key) {
 }
 
 void map_remove(Map* map, void* key) {
-    size_t index = hash(key, map->number_of_buckets);
+    size_t index = get_index(key, map->number_of_buckets);
 
     bool ok = list_find_and_remove(&(map->buckets[index]), map->cmp, &key);
     if (ok) {
@@ -164,7 +159,7 @@ void map_remove(Map* map, void* key) {
 }
 
 bool map_contains(Map* map, void* key) {
-    size_t index = hash(key, map->number_of_buckets);
+    size_t index = get_index(key, map->number_of_buckets);
 
     void* entry = NULL;
     list_find_first(&(map->buckets[index]), map->cmp, &key, &entry);
@@ -201,7 +196,7 @@ MapIterator* map_iterator_new(const Map* map) {
     }
 
     MapIterator* iterator = NULL;
-    iterator = malloc(sizeof(MapIterator));
+    iterator = safe_malloc(sizeof(MapIterator), NULL);
     if (iterator == NULL) {
         return NULL;
     }
@@ -219,8 +214,7 @@ void map_iterator_free(MapIterator** iterator) {
     if (iterator == NULL || *iterator == NULL)
         return;
 
-    free(*iterator);
-    *iterator = NULL;
+    safe_free((void**) iterator);
 }
 
 bool map_iterator_has_next(MapIterator* iterator) {

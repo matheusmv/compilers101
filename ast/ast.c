@@ -1,15 +1,17 @@
 #include "ast.h"
-#include "list.h"
-#include "token.h"
-#include "types.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "list.h"
+#include "token.h"
+#include "types.h"
+#include "smem.h"
+
 
 Stmt* stmt_new(StmtType type, void* stmt, void (*to_string)(void**), void (*destroy)(void**)) {
     Stmt* new_stmt = NULL;
-    new_stmt = malloc(sizeof(Expr));
+    new_stmt = safe_malloc(sizeof(Expr), NULL);
     if (new_stmt == NULL) {
         if (destroy != NULL) {
             destroy(&stmt);
@@ -42,13 +44,12 @@ void stmt_free(Stmt** stmt) {
     if ((*stmt)->destroy != NULL)
         (*stmt)->destroy(&(*stmt)->stmt);
 
-    free(*stmt);
-    *stmt = NULL;
+    safe_free((void**) stmt);
 }
 
 Expr* expr_new(ExprType type, void* expr, void (*to_string)(void**), void (*destroy)(void**)) {
     Expr* new_expr = NULL;
-    new_expr = malloc(sizeof(Expr));
+    new_expr = safe_malloc(sizeof(Expr), NULL);
     if (new_expr == NULL) {
         if (destroy != NULL) {
             destroy(&expr);
@@ -81,13 +82,12 @@ void expr_free(Expr** expr) {
     if ((*expr)->destroy != NULL)
         (*expr)->destroy(&(*expr)->expr);
 
-    free(*expr);
-    *expr = NULL;
+    safe_free((void**) expr);
 }
 
 BlockStmt* block_stmt_new(List* statements) {
     BlockStmt* stmt = NULL;
-    stmt = malloc(sizeof(BlockStmt));
+    stmt = safe_malloc(sizeof(BlockStmt), NULL);
     if (stmt == NULL) {
         list_free(&statements);
         return NULL;
@@ -133,13 +133,12 @@ void block_stmt_free(BlockStmt** blockStmt) {
 
     list_free(&(*blockStmt)->statements);
 
-    free(*blockStmt);
-    *blockStmt = NULL;
+    safe_free((void**) blockStmt);
 }
 
 ExpressionStmt* expression_stmt_new(Expr* expression) {
     ExpressionStmt* stmt = NULL;
-    stmt = malloc(sizeof(ExpressionStmt));
+    stmt = safe_malloc(sizeof(ExpressionStmt), NULL);
     if (stmt == NULL) {
         expr_free(&expression);
         return NULL;
@@ -165,13 +164,12 @@ void expression_stmt_free(ExpressionStmt** expressionStmt) {
 
     expr_free(&(*expressionStmt)->expression);
 
-    free(*expressionStmt);
-    *expressionStmt = NULL;
+    safe_free((void**) expressionStmt);
 }
 
 FunctionStmt* function_stmt_new(Token* name, List* parameters, Stmt* body) {
     FunctionStmt* stmt = NULL;
-    stmt = malloc(sizeof(FunctionStmt));
+    stmt = safe_malloc(sizeof(FunctionStmt), NULL);
     if (stmt == NULL) {
         token_free(&name);
         list_free(&parameters);
@@ -229,13 +227,12 @@ void function_stmt_free(FunctionStmt** functionStmt) {
     list_free(&(*functionStmt)->parameters);
     stmt_free(&(*functionStmt)->body);
 
-    free(*functionStmt);
-    *functionStmt = NULL;
+    safe_free((void**) functionStmt);
 }
 
 ReturnStmt* return_stmt_new(Expr* expression) {
     ReturnStmt* stmt = NULL;
-    stmt = malloc(sizeof(ReturnStmt));
+    stmt = safe_malloc(sizeof(ReturnStmt), NULL);
     if (stmt == NULL) {
         expr_free(&expression);
         return NULL;
@@ -263,13 +260,12 @@ void return_stmt_free(ReturnStmt** returnStmt) {
 
     expr_free(&(*returnStmt)->expression);
 
-    free(*returnStmt);
-    *returnStmt = NULL;
+    safe_free((void**) returnStmt);
 }
 
 LetStmt* let_stmt_new(Token* name, Expr* expression) {
     LetStmt* stmt = NULL;
-    stmt = malloc(sizeof(LetStmt));
+    stmt = safe_malloc(sizeof(LetStmt), NULL);
     if (stmt == NULL) {
         token_free(&name);
         expr_free(&expression);
@@ -304,13 +300,12 @@ void let_stmt_free(LetStmt** letStmt) {
     token_free(&(*letStmt)->name);
     expr_free(&(*letStmt)->expression);
 
-    free(*letStmt);
-    *letStmt = NULL;
+    safe_free((void**) letStmt);
 }
 
 IfStmt* if_stmt_new(Expr* condition, Stmt* thenBranch, Stmt* elseBranch) {
     IfStmt* stmt = NULL;
-    stmt = malloc(sizeof(IfStmt));
+    stmt = safe_malloc(sizeof(IfStmt), NULL);
     if (stmt == NULL) {
         expr_free(&condition);
         stmt_free(&thenBranch);
@@ -354,13 +349,12 @@ void if_stmt_free(IfStmt** ifStmt) {
     stmt_free(&(*ifStmt)->thenBranch);
     stmt_free(&(*ifStmt)->elseBranch);
 
-    free(*ifStmt);
-    *ifStmt = NULL;
+    safe_free((void**) ifStmt);
 }
 
 WhileStmt* while_stmt_new(Expr* condition, Stmt* body) {
     WhileStmt* stmt = NULL;
-    stmt = malloc(sizeof(WhileStmt));
+    stmt = safe_malloc(sizeof(WhileStmt), NULL);
     if (stmt == NULL) {
         expr_free(&condition);
         stmt_free(&body);
@@ -395,13 +389,12 @@ void while_stmt_free(WhileStmt** whileStmt) {
     expr_free(&(*whileStmt)->condition);
     stmt_free(&(*whileStmt)->body);
 
-    free(*whileStmt);
-    *whileStmt = NULL;
+    safe_free((void**) whileStmt);
 }
 
 ForStmt* for_stmt_new(Stmt* initialization, Expr* condition, Expr* action, Stmt* body) {
     ForStmt* stmt = NULL;
-    stmt = malloc(sizeof(ForStmt));
+    stmt = safe_malloc(sizeof(ForStmt), NULL);
     if (stmt == NULL) {
         stmt_free(&initialization);
         expr_free(&condition);
@@ -450,13 +443,12 @@ void for_stmt_free(ForStmt** forStmt) {
     expr_free(&(*forStmt)->action);
     stmt_free(&(*forStmt)->body);
 
-    free(*forStmt);
-    *forStmt = NULL;
+    safe_free((void**) forStmt);
 }
 
 FieldDeclStmt* field_decl_stmt_new(Token* name, Type* type) {
     FieldDeclStmt* stmt = NULL;
-    stmt = malloc(sizeof(FieldDeclStmt));
+    stmt = safe_malloc(sizeof(FieldDeclStmt), NULL);
     if (stmt == NULL) {
         token_free(&name);
         type_free(&type);
@@ -489,13 +481,12 @@ void field_decl_stmt_free(FieldDeclStmt** fieldDecl) {
     token_free(&(*fieldDecl)->name);
     type_free(&(*fieldDecl)->type);
 
-    free(*fieldDecl);
-    *fieldDecl = NULL;
+    safe_free((void**) fieldDecl);
 }
 
 StructStmt* struct_stmt_new(Token* name, List* fields) {
     StructStmt* stmt = NULL;
-    stmt = malloc(sizeof(StructStmt));
+    stmt = safe_malloc(sizeof(StructStmt), NULL);
     if (stmt == NULL) {
         token_free(&name);
         list_free(&fields);
@@ -557,13 +548,12 @@ void struct_stmt_free(StructStmt** structStmt) {
     token_free(&(*structStmt)->name);
     list_free(&(*structStmt)->fields);
 
-    free(*structStmt);
-    *structStmt = NULL;
+    safe_free((void**) structStmt);
 }
 
 BinaryExpr* binary_expr_new(Expr* left, Token* op, Expr* right) {
     BinaryExpr* expr = NULL;
-    expr = malloc(sizeof(BinaryExpr));
+    expr = safe_malloc(sizeof(BinaryExpr), NULL);
     if (expr == NULL) {
         expr_free(&left);
         token_free(&op);
@@ -603,13 +593,12 @@ void binary_expr_free(BinaryExpr** binaryExpr) {
     token_free(&(*binaryExpr)->op);
     expr_free(&(*binaryExpr)->right);
 
-    free(*binaryExpr);
-    *binaryExpr = NULL;
+    safe_free((void**) binaryExpr);
 }
 
 GroupExpr* group_expr_new(Expr* expression) {
     GroupExpr* expr = NULL;
-    expr = malloc(sizeof(GroupExpr));
+    expr = safe_malloc(sizeof(GroupExpr), NULL);
     if (expr == NULL) {
         expr_free(&expression);
         return NULL;
@@ -639,13 +628,12 @@ void group_expr_free(GroupExpr** groupExpr) {
 
     expr_free(&(*groupExpr)->expression);
 
-    free(*groupExpr);
-    *groupExpr = NULL;
+    safe_free((void**) groupExpr);
 }
 
 AssignExpr* assign_expr_new(Expr* identifier, Token* op, Expr* expression) {
     AssignExpr* expr = NULL;
-    expr = malloc(sizeof(AssignExpr));
+    expr = safe_malloc(sizeof(AssignExpr), NULL);
     if (expr == NULL) {
         expr_free(&identifier);
         token_free(&op);
@@ -685,13 +673,12 @@ void assign_expr_free(AssignExpr** assignExpr) {
     token_free(&(*assignExpr)->op);
     expr_free(&(*assignExpr)->expression);
 
-    free(*assignExpr);
-    *assignExpr = NULL;
+    safe_free((void**) assignExpr);
 }
 
 CallExpr* call_expr_new(Expr* callee, List* arguments) {
     CallExpr* expr = NULL;
-    expr = malloc(sizeof(CallExpr));
+    expr = safe_malloc(sizeof(CallExpr), NULL);
     if (expr == NULL) {
         expr_free(&callee);
         list_free(&arguments);
@@ -739,13 +726,12 @@ void call_expr_free(CallExpr** callExpr) {
     expr_free(&(*callExpr)->callee);
     list_free(&(*callExpr)->arguments);
 
-    free(*callExpr);
-    *callExpr = NULL;
+    safe_free((void**) callExpr);
 }
 
 LogicalExpr* logical_expr_new(Expr* left, Token* op, Expr* right) {
     LogicalExpr* expr = NULL;
-    expr = malloc(sizeof(BinaryExpr));
+    expr = safe_malloc(sizeof(BinaryExpr), NULL);
     if (expr == NULL) {
         expr_free(&left);
         token_free(&op);
@@ -785,13 +771,12 @@ void logical_expr_free(LogicalExpr** logicalExpr) {
     token_free(&(*logicalExpr)->op);
     expr_free(&(*logicalExpr)->right);
 
-    free(*logicalExpr);
-    *logicalExpr = NULL;
+    safe_free((void**) logicalExpr);
 }
 
 UnaryExpr* unary_expr_new(Token* op, Expr* expression) {
     UnaryExpr* expr = NULL;
-    expr = malloc(sizeof(UnaryExpr));
+    expr = safe_malloc(sizeof(UnaryExpr), NULL);
     if (expr == NULL) {
         token_free(&op);
         expr_free(&expression);
@@ -821,13 +806,12 @@ void unary_expr_free(UnaryExpr** unaryExpr) {
     token_free(&(*unaryExpr)->op);
     expr_free(&(*unaryExpr)->expression);
 
-    free(*unaryExpr);
-    *unaryExpr = NULL;
+    safe_free((void**) unaryExpr);
 }
 
 UpdateExpr* update_expr_new(Expr* expression, Token* op) {
     UpdateExpr* expr = NULL;
-    expr = malloc(sizeof(UpdateExpr));
+    expr = safe_malloc(sizeof(UpdateExpr), NULL);
     if (expr == NULL) {
         expr_free(&expression);
         token_free(&op);
@@ -857,13 +841,12 @@ void update_expr_free(UpdateExpr** updateExpr) {
     expr_free(&(*updateExpr)->expression);
     token_free(&(*updateExpr)->op);
 
-    free(*updateExpr);
-    *updateExpr = NULL;
+    safe_free((void**) updateExpr);
 }
 
 FieldInitExpr* field_init_expr_new(Token* name, Expr* value) {
     FieldInitExpr* expr = NULL;
-    expr = malloc(sizeof(FieldInitExpr));
+    expr = safe_malloc(sizeof(FieldInitExpr), NULL);
     if (expr == NULL) {
         token_free(&name);
         expr_free(&value);
@@ -896,13 +879,12 @@ void field_init_expr_free(FieldInitExpr** fieldInit) {
     token_free(&(*fieldInit)->name);
     expr_free(&(*fieldInit)->value);
 
-    free(*fieldInit);
-    *fieldInit = NULL;
+    safe_free((void**) fieldInit);
 }
 
 StructInitExpr* struct_init_expr_new(Token* name, List* fields) {
     StructInitExpr* expr = NULL;
-    expr = malloc(sizeof(StructInitExpr));
+    expr = safe_malloc(sizeof(StructInitExpr), NULL);
     if (expr == NULL) {
         token_free(&name);
         list_free(&fields);
@@ -951,13 +933,12 @@ void struct_init_expr_free(StructInitExpr** structInit) {
     token_free(&(*structInit)->name);
     list_free(&(*structInit)->fields);
 
-    free(*structInit);
-    *structInit = NULL;
+    safe_free((void**) structInit);
 }
 
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {
     LiteralExpr* expr = NULL;
-    expr = malloc(sizeof(LiteralExpr));
+    expr = safe_malloc(sizeof(LiteralExpr), NULL);
     if (expr == NULL) {
         if (destroy != NULL) {
             destroy(&value);
@@ -989,6 +970,5 @@ void literal_expr_free(LiteralExpr** literalExpr) {
     if ((*literalExpr)->destroy != NULL)
         (*literalExpr)->destroy(&(*literalExpr)->value);
 
-    free(*literalExpr);
-    *literalExpr = NULL;
+    safe_free((void**) literalExpr);
 }

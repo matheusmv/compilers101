@@ -1,13 +1,15 @@
 #include "context.h"
-#include "map.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "map.h"
+#include "smem.h"
+
 
 Context* context_new(Map* environment) {
     Context* new_ctx = NULL;
-    new_ctx = calloc(1, sizeof(Context));
+    new_ctx = safe_calloc(1, sizeof(Context), NULL);
     if (new_ctx == NULL) {
         map_free(&environment);
         return NULL;
@@ -23,7 +25,7 @@ Context* context_new(Map* environment) {
 
 Context* context_enclosed_new(Context* enclosing, Map* environment) {
     Context* new_ctx = NULL;
-    new_ctx = calloc(1, sizeof(Context));
+    new_ctx = safe_calloc(1, sizeof(Context), NULL);
     if (new_ctx == NULL) {
         context_free(&enclosing);
         map_free(&environment);
@@ -44,8 +46,7 @@ void context_free(Context** ctx) {
 
     map_free(&(*ctx)->environment);
 
-    free(*ctx);
-    *ctx = NULL;
+    safe_free((void**) ctx);
 }
 
 void context_define(Context* ctx, void* name, void* value) {

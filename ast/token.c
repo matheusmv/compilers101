@@ -3,10 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "smem.h"
+
 
 Token* token_new(TokenType type, const char* literal, size_t line) {
     Token* tok = NULL;
-    tok = malloc(sizeof(Token));
+    tok = safe_malloc(sizeof(Token), NULL);
     if (tok == NULL) {
         return NULL;
     }
@@ -31,9 +33,8 @@ void token_free(Token** token) {
     if (token == NULL || *token == NULL)
         return;
 
-    free((*token)->literal);
-    free(*token);
-    *token = NULL;
+    safe_free((void**) &(*token)->literal);
+    safe_free((void**) token);
 }
 
 bool token_is_literal(Token** token) {

@@ -30,7 +30,7 @@ Map* map_new(size_t number_of_buckets, bool (*cmp)(const void**, void**),
     void (*destroy_key)(void**), void (*destroy_value)(void**));
 void map_free(Map** map);
 
-size_t hash(const char* key, size_t size);
+size_t get_index(const char* key, size_t number_of_buckets);
 
 void map_put(Map* map, void* key, void* value);
 void* map_get(Map* map, void* key);
