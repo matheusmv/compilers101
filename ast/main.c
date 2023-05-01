@@ -2,12 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ast.h"
-#include "list.h"
-#include "map.h"
-#include "context.h"
-#include "token.h"
-#include "types.h"
+#include "src/ast.h"
+#include "src/list.h"
+#include "src/map.h"
+#include "src/context.h"
+#include "src/token.h"
+#include "src/types.h"
 
 
 bool entry_cmp(const MapEntry** entry, char** key) {

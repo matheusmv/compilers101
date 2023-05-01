@@ -1,6 +1,11 @@
 BIN=ast
+TEST_BIN=test
 
-SOURCE_FILES=$(wildcard *.c)
+MAIN_FILE=main.c
+TEST_FILE=tests.c
+
+SOURCE_FILES=$(wildcard src/*.c)
+TEST_FILES=$(wildcard tests/**/*.c)
 
 CC=gcc
 
@@ -19,7 +24,6 @@ all: CFLAGS += -O2
 all: $(BIN)
 
 run: all
-run:
 	./$(BIN)
 
 debug: CFLAGS += -O0 -g
@@ -29,8 +33,17 @@ valgrind: debug
 valgrind:
 	$(VALGRIND) ./$(BIN)
 
-$(BIN): $(SOURCE_FILES)
+test: CFLAGS += -g -O0
+test: SOURCE_FILES += tests.c
+test: $(TEST_FILES) $(SOURCE_FILES) $(TEST_FILE)
+	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
+
+run_tests: test
+run_tests:
+	$(VALGRIND) ./$(TEST_BIN)
+
+$(BIN): $(SOURCE_FILES) $(MAIN_FILE)
 	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
 
 clean:
-	$(RM) $(BIN)
+	$(RM) $(BIN) $(TEST_BIN)
