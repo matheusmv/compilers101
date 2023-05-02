@@ -6,9 +6,15 @@
 #include "src/list.h"
 #include "src/map.h"
 #include "src/context.h"
+#include "src/smem.h"
 #include "src/token.h"
 #include "src/types.h"
+#include "src/utils.h"
 
+
+int str_cmp(const void* a, const void* b) {
+    return strcmp(a, b);
+}
 
 bool entry_cmp(const MapEntry** entry, char** key) {
     return strcmp((*entry)->key, *key) == 0;
@@ -282,6 +288,30 @@ int main(void) {
     print_map(map);
 
     map_free(&map);
+
+    List* testSort = list_new(safe_free);
+
+    list_insert_last(&testSort, str_dup("z"));
+    list_insert_last(&testSort, str_dup("a"));
+    list_insert_last(&testSort, str_dup("j"));
+    list_insert_last(&testSort, str_dup("k"));
+    list_insert_last(&testSort, str_dup("w"));
+    list_insert_last(&testSort, str_dup("b"));
+    list_insert_last(&testSort, str_dup("c"));
+
+    printf("Before list_sort:\n");
+    list_foreach(word, testSort) {
+        printf("%s\n", (char*) word->value);
+    }
+
+    list_sort(&testSort, str_cmp);
+
+    printf("After list_sort in order:\n");
+    list_foreach(word, testSort) {
+        printf("%s\n", (char*) word->value);
+    }
+
+    list_free(&testSort);
 
     return EXIT_SUCCESS;
 }

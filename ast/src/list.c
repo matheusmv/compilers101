@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 
 #include "smem.h"
 
@@ -243,6 +244,76 @@ void list_remove_at(List** list, size_t index, void** return_buffer) {
     } else {
         list_node_free(&current, (*list)->destroy);
     }
+}
+
+static void split_list(ListNode* source, ListNode** front, ListNode** back) {
+    ListNode* slow = source;
+    ListNode* fast = source->next;
+
+    while (fast != NULL) {
+        fast = fast->next;
+        if (fast != NULL) {
+            slow = slow->next;
+            fast = fast->next;
+        }
+    }
+
+    *front = source;
+    *back = slow->next;
+    slow->next = NULL;
+    (*back)->prev = NULL;
+}
+
+static ListNode* merge(ListNode* left, ListNode* right, int (*cmp)(const void*, const void*)) {
+    if (left == NULL) {
+        return right;
+    } else if (right == NULL) {
+        return left;
+    }
+
+    ListNode* result = NULL;
+
+    if (cmp(left->value, right->value) <= 0) {
+        result = left;
+        result->next = merge(left->next, right, cmp);
+        result->next->prev = result;
+    } else {
+        result = right;
+        result->next = merge(left, right->next, cmp);
+        result->next->prev = result;
+    }
+
+    return result;
+}
+
+static void merge_sort(ListNode** head_ref, int (*cmp)(const void*, const void*)) {
+    if (head_ref == NULL || *head_ref == NULL || (*head_ref)->next == NULL)
+        return;
+
+    (*head_ref)->prev = NULL;
+    ListNode* head = *head_ref;
+    ListNode* left = NULL;
+    ListNode* right = NULL;
+
+    split_list(head, &left, &right);
+
+    merge_sort(&left, cmp);
+    merge_sort(&right, cmp);
+
+    *head_ref = merge(left, right, cmp);
+}
+
+void list_sort(List** list, int (*cmp)(const void*, const void*)) {
+    if (!list_is_initialized(list) || list_size(list) < 2 || cmp == NULL)
+        return;
+
+    merge_sort(&(*list)->head, cmp);
+
+    ListNode* tail = (*list)->head;
+    while (tail->next != NULL) {
+        tail = tail->next;
+    }
+    (*list)->tail = tail;
 }
 
 void list_clear(List** list) {
