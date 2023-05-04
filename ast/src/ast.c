@@ -1086,6 +1086,60 @@ void struct_init_expr_free(StructInitExpr** structInit) {
     safe_free((void**) structInit);
 }
 
+StructInlineExpr* struct_inline_expr_new(Type* type, List* fields) {
+    StructInlineExpr* expr = NULL;
+    expr = safe_malloc(sizeof(StructInlineExpr), NULL);
+    if (expr == NULL) {
+        type_free(&type);
+        list_free(&fields);
+        return NULL;
+    }
+
+    *expr = (StructInlineExpr) {
+        .type = type,
+        .fields = fields
+    };
+
+    return expr;
+}
+
+void struct_inline_expr_add_field(StructInlineExpr** structInline, Expr* field) {
+    if (structInline == NULL || *structInline == NULL)
+        return;
+
+    list_insert_last(&(*structInline)->fields, field);
+}
+
+void struct_inline_expr_to_string(StructInlineExpr** structInline) {
+    if (structInline == NULL || *structInline == NULL)
+        return;
+
+    if ((*structInline)->type != NULL)
+        type_to_string(&(*structInline)->type);
+
+    printf("{ ");
+
+    list_foreach(field, (*structInline)->fields) {
+        expr_to_string((Expr**) &field->value);
+
+        if (field->next != NULL) {
+            printf(", ");
+        }
+    }
+
+    printf(" }");
+}
+
+void struct_inline_expr_free(StructInlineExpr** structInline) {
+    if (structInline == NULL || *structInline == NULL)
+        return;
+
+    type_free(&(*structInline)->type);
+    list_free(&(*structInline)->fields);
+
+    safe_free((void**) structInline);
+}
+
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {
     LiteralExpr* expr = NULL;
     expr = safe_malloc(sizeof(LiteralExpr), NULL);

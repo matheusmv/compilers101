@@ -34,6 +34,7 @@ typedef enum ExprType {
     UPDATE_EXPR,
     FIELD_INIT_EXPR,
     STRUCT_INIT_EXPR,
+    STRUCT_INLINE_EXPR,
     LITERAL_EXPR
 } ExprType;
 
@@ -298,6 +299,17 @@ void struct_init_expr_to_string(StructInitExpr** structInit);
 void struct_init_expr_free(StructInitExpr** structInit);
 
 
+typedef struct StructInlineExpr {
+    Type* type; /* STRUCT_TYPE */
+    List* fields; /* List of (FieldInitExpr*) */
+} StructInlineExpr;
+
+StructInlineExpr* struct_inline_expr_new(Type* type, List* fields);
+void struct_inline_expr_add_field(StructInlineExpr** structInline, Expr* field);
+void struct_inline_expr_to_string(StructInlineExpr** structInline);
+void struct_inline_expr_free(StructInlineExpr** structInline);
+
+
 typedef struct LiteralExpr {
     LiteralType type;
     void* value; /* Ident | Int | Float | Char | String | Bool | Void | Nil */
@@ -326,6 +338,33 @@ void literal_expr_free(LiteralExpr** literalExpr);
             (name),                                                            \
             (list_new((void (*)(void **)) decl_free)),                         \
             (list_new((void (*)(void **)) type_free)),                         \
+            (body)),                                                           \
+        (void (*)(void **))function_decl_to_string,                            \
+        (void (*)(void **))function_decl_free)
+
+#define NEW_FUNCTION_DECL_WITH_PARAMS(name, params, body)                      \
+    decl_new(FUNC_DECL, function_decl_new(                                     \
+            (name),                                                            \
+            (params),                                                          \
+            (list_new((void (*)(void **)) type_free)),                         \
+            (body)),                                                           \
+        (void (*)(void **))function_decl_to_string,                            \
+        (void (*)(void **))function_decl_free)
+
+#define NEW_FUNCTION_DECL_WITH_RETURNS(name, retrns, body)                     \
+    decl_new(FUNC_DECL, function_decl_new(                                     \
+            (name),                                                            \
+            (list_new((void (*)(void **)) decl_free)),                         \
+            (retrns),                                                          \
+            (body)),                                                           \
+        (void (*)(void **))function_decl_to_string,                            \
+        (void (*)(void **))function_decl_free)
+
+#define NEW_FUNCTION_DECL_WITH_PARAMS_AND_RETURNS(name, params, retrns, body)  \
+    decl_new(FUNC_DECL, function_decl_new(                                     \
+            (name),                                                            \
+            (params),                                                          \
+            (retrns),                                                          \
             (body)),                                                           \
         (void (*)(void **))function_decl_to_string,                            \
         (void (*)(void **))function_decl_free)
@@ -366,6 +405,13 @@ void literal_expr_free(LiteralExpr** literalExpr);
         (void (*)(void **))struct_decl_to_string,                              \
         (void (*)(void **))struct_decl_free)
 
+#define NEW_STRUCT_DECL_WITH_FIELDS(name, fields)                              \
+    decl_new(STRUCT_DECL,                                                      \
+        struct_decl_new((name),                                                \
+            (fields)),                                                         \
+        (void (*)(void **))struct_decl_to_string,                              \
+        (void (*)(void **))struct_decl_free)
+
 #define STRUCT_DECL_ADD_FIELD(struct_decl, field_decl)                         \
     struct_decl_add_field(                                                     \
         (StructDecl**) (&(struct_decl)->decl), (field_decl))
@@ -392,6 +438,12 @@ void literal_expr_free(LiteralExpr** literalExpr);
 #define NEW_BLOCK_STMT()                                                       \
     stmt_new(BLOCK_STMT,                                                       \
         block_stmt_new((list_new((void (*)(void **)) decl_free))),             \
+        (void (*)(void **))block_stmt_to_string,                               \
+        (void (*)(void **))block_stmt_free)
+
+#define NEW_BLOCK_STMT_WITH_DECLS(declarations)                                \
+    stmt_new(BLOCK_STMT,                                                       \
+        block_stmt_new((declarations)),                                        \
         (void (*)(void **))block_stmt_to_string,                               \
         (void (*)(void **))block_stmt_free)
 
@@ -458,6 +510,12 @@ void literal_expr_free(LiteralExpr** literalExpr);
         (void (*)(void **))call_expr_to_string,                                \
         (void (*)(void **))call_expr_free)
 
+#define NEW_CALL_EXPR_WITH_ARGS(callee, args)                                  \
+    expr_new(CALL_EXPR,                                                        \
+        call_expr_new((callee), (args)),                                       \
+        (void (*)(void **))call_expr_to_string,                                \
+        (void (*)(void **))call_expr_free)
+
 #define CALL_EXPR_ADD_ARG(call_expr, arg_expr)                                 \
     call_expr_add_argument((CallExpr**) (&(call_expr)->expr), (arg_expr))
 
@@ -497,6 +555,12 @@ void literal_expr_free(LiteralExpr** literalExpr);
         (void (*)(void **))struct_init_expr_to_string,                         \
         (void (*)(void **))struct_init_expr_free)
 
+#define NEW_STRUCT_INIT_EXPR_WITH_FIELDS(name, fields)                         \
+    expr_new(STRUCT_INIT_EXPR,                                                 \
+        struct_init_expr_new((name), (fields)),                                \
+        (void (*)(void **))struct_init_expr_to_string,                         \
+        (void (*)(void **))struct_init_expr_free)
+
 #define STRUCT_INIT_EXPR_ADD_FIELD(struct_init_expr, field_expr)               \
     struct_init_expr_add_field(                                                \
         (StructInitExpr**) (&(struct_init_expr)->expr), (field_expr))
@@ -507,6 +571,32 @@ void literal_expr_free(LiteralExpr** literalExpr);
         size_t n_exprs = sizeof(exprs) / sizeof(exprs[0]);                     \
         for (size_t i = 0; i < n_exprs; i++) {                                 \
             STRUCT_INIT_EXPR_ADD_FIELD((struct_init_expr), exprs[i]);          \
+        }                                                                      \
+    } while(0)
+
+#define NEW_STRUCT_INLINE_EXPR(struct_type)                                    \
+    expr_new(STRUCT_INLINE_EXPR,                                               \
+        struct_inline_expr_new((struct_type),                                  \
+            (list_new((void (*)(void **)) expr_free))),                        \
+        (void (*)(void **))struct_inline_expr_to_string,                       \
+        (void (*)(void **))struct_inline_expr_free)
+
+#define NEW_STRUCT_INLINE_EXPR_WITH_FIELDS(struct_type, fields)                \
+    expr_new(STRUCT_INLINE_EXPR,                                               \
+        struct_inline_expr_new((struct_type), (fields)),                       \
+        (void (*)(void **))struct_inline_expr_to_string,                       \
+        (void (*)(void **))struct_inline_expr_free)
+
+#define STRUCT_INLINE_EXPR_ADD_FIELD(struct_inline_expr, field_expr)           \
+    struct_init_expr_add_field(                                                \
+        (StructInlineExpr**) (&(struct_inline_expr)->expr), (field_expr))
+
+#define STRUCT_INLINE_EXPR_ADD_FIELDS(struct_inline_expr, ...)                 \
+    do {                                                                       \
+        Expr* exprs[] = { __VA_ARGS__ };                                       \
+        size_t n_exprs = sizeof(exprs) / sizeof(exprs[0]);                     \
+        for (size_t i = 0; i < n_exprs; i++) {                                 \
+            STRUCT_INLINE_EXPR_ADD_FIELD((struct_inline_expr), exprs[i]);      \
         }                                                                      \
     } while(0)
 

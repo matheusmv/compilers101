@@ -248,17 +248,22 @@ int main(void) {
     DECL_PRINT_AND_FREE(testStructDecl);
 
     Expr* structInit = NEW_STRUCT_INIT_EXPR(NEW_TOKEN(TOKEN_IDENT, "User", 1));
-    Expr* innerStructInit = NEW_STRUCT_INIT_EXPR(NULL);
-    STRUCT_INIT_EXPR_ADD_FIELDS(innerStructInit,
+    Type* structType = NEW_STRUCT_TYPE(0);
+    CUSTOM_TYPE_ADD_FIELDS(structType,
+        NEW_NAMED_TYPE("street", NEW_STRING_TYPE()),
+        NEW_NAMED_TYPE("zip", NEW_STRING_TYPE())
+    );
+    Expr* inlineStruct = NEW_STRUCT_INLINE_EXPR(structType);
+    STRUCT_INIT_EXPR_ADD_FIELDS(inlineStruct,
         NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "street", 1), NEW_STRING_LITERAL("street 101")),
-        NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "zip", 1), NEW_STRING_LITERAL("000111222")),
+        NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "zip", 1), NEW_STRING_LITERAL("000111222"))
     );
     STRUCT_INIT_EXPR_ADD_FIELDS(structInit,
         NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "id", 1), NEW_CALL_EXPR(NEW_IDENT_LITERAL("getId"))),
         NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "username", 1), NEW_STRING_LITERAL("john12345")),
         NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "password", 1), NEW_STRING_LITERAL("12345")),
         NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "email", 1), NEW_STRING_LITERAL("john@email.com")),
-        NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "address", 1), innerStructInit),
+        NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "address", 1), inlineStruct),
     );
     Decl* testStructInitExpr = NEW_LET_DECL(
         NEW_TOKEN(TOKEN_IDENT, "john", 1),

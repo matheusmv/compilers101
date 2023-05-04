@@ -54,6 +54,9 @@ void named_type_free(NamedType** namedType);
     type_new(STRUCT_TYPE, (size), "struct",                                    \
         (list_new((void (*)(void **)) named_type_free)))
 
+#define NEW_STRUCT_TYPE_WITH_FIELDS(size, fields)                              \
+    type_new(STRUCT_TYPE, (size), "struct", (fields))
+
 #define NEW_CUSTOM_TYPE(size, name)                                            \
     type_new(CUSTOM_TYPE, (size), (name), NULL)
 
