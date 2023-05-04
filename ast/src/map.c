@@ -84,7 +84,7 @@ void map_free(Map** map) {
     if (map == NULL || *map == NULL)
         return;
 
-    for (int i = 0; i < (*map)->number_of_buckets; i++) {
+    for (size_t i = 0; i < (*map)->number_of_buckets; i++) {
         list_free(&((*map)->buckets[i]));
     }
 

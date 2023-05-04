@@ -106,71 +106,75 @@ int main(void) {
     Stmt* testExprStmt = NEW_EXPR_STMT(NEW_STRING_LITERAL("OK"));
 
     Stmt* testInnerBlockStmt = NEW_BLOCK_STMT();
-    BLOCK_STMT_ADD_STMTS(testInnerBlockStmt,
-        NEW_EXPR_STMT(testMath),
-        NEW_EXPR_STMT(testChar),
-        NEW_EXPR_STMT(testIdent),
-        NEW_EXPR_STMT(testString)
+    BLOCK_STMT_ADD_DECLS(testInnerBlockStmt,
+        NEW_STMT_DECL(NEW_EXPR_STMT(testMath)),
+        NEW_STMT_DECL(NEW_EXPR_STMT(testChar)),
+        NEW_STMT_DECL(NEW_EXPR_STMT(testIdent)),
+        NEW_STMT_DECL(NEW_EXPR_STMT(testString))
     );
 
     Stmt* testBlockStmt = NEW_BLOCK_STMT();
-    BLOCK_STMT_ADD_STMTS(testBlockStmt,
-        testInnerBlockStmt,
-        NEW_EXPR_STMT(testBool),
-        NEW_EXPR_STMT(testAssign),
-        NEW_EXPR_STMT(testCall),
-        NEW_EXPR_STMT(testLogicalAnd),
-        NEW_EXPR_STMT(testUnary),
-        testExprStmt
+    BLOCK_STMT_ADD_DECLS(testBlockStmt,
+        NEW_STMT_DECL(testInnerBlockStmt),
+        NEW_STMT_DECL(NEW_EXPR_STMT(testBool)),
+        NEW_STMT_DECL(NEW_EXPR_STMT(testAssign)),
+        NEW_STMT_DECL(NEW_EXPR_STMT(testCall)),
+        NEW_STMT_DECL(NEW_EXPR_STMT(testLogicalAnd)),
+        NEW_STMT_DECL(NEW_EXPR_STMT(testUnary)),
+        NEW_STMT_DECL(testExprStmt)
     );
     STMT_PRINT_AND_FREE(testBlockStmt);
 
     Stmt* testFunctionBody = NEW_BLOCK_STMT();
-    BLOCK_STMT_ADD_STMT(testFunctionBody, 
-        NEW_RETURN_STMT(
-            NEW_BINARY_EXPR(
-                NEW_IDENT_LITERAL("a"),
-                NEW_TOKEN(TOKEN_MUL, "*", 1),
+    BLOCK_STMT_ADD_DECL(testFunctionBody,
+        NEW_STMT_DECL(
+            NEW_RETURN_STMT(
                 NEW_BINARY_EXPR(
-                    NEW_GROUP_EXPR(
+                    NEW_IDENT_LITERAL("a"),
+                    NEW_TOKEN(TOKEN_MUL, "*", 1),
+                    NEW_BINARY_EXPR(
+                        NEW_GROUP_EXPR(
+                            NEW_BINARY_EXPR(
+                                NEW_FLOAT_LITERAL(1.0),
+                                NEW_TOKEN(TOKEN_SUB, "-", 1),
+                                NEW_IDENT_LITERAL("t")
+                            )
+                        ),
+                        NEW_TOKEN(TOKEN_ADD, "+", 1),
                         NEW_BINARY_EXPR(
-                            NEW_FLOAT_LITERAL(1.0),
-                            NEW_TOKEN(TOKEN_SUB, "-", 1),
+                            NEW_IDENT_LITERAL("b"),
+                            NEW_TOKEN(TOKEN_MUL, "*", 1),
                             NEW_IDENT_LITERAL("t")
                         )
-                    ),
-                    NEW_TOKEN(TOKEN_ADD, "+", 1),
-                    NEW_BINARY_EXPR(
-                        NEW_IDENT_LITERAL("b"),
-                        NEW_TOKEN(TOKEN_MUL, "*", 1),
-                        NEW_IDENT_LITERAL("t")
                     )
                 )
             )
         )
     );
-    Stmt* testFunctionSmt = NEW_FUNCTION_STMT(
+    Decl* testFunctionDecl = NEW_FUNCTION_DECL(
         NEW_TOKEN(TOKEN_IDENT, "lerp", 1),
         testFunctionBody
     );
-    FUNCTION_ADD_PARAMS(testFunctionSmt,
+    FUNCTION_ADD_PARAMS(testFunctionDecl,
         NEW_IDENT_LITERAL("a"),
         NEW_IDENT_LITERAL("b"),
         NEW_IDENT_LITERAL("t")
     );
-    STMT_PRINT_AND_FREE(testFunctionSmt);
+    FUNCTION_ADD_RETURN_TYPE(testFunctionDecl, NEW_FLOAT_TYPE());
+    DECL_PRINT_AND_FREE(testFunctionDecl);
 
-    Stmt* testLetStmt = NEW_LET_STMT(
+    Decl* testLetDecl = NEW_LET_DECL(
         NEW_TOKEN(TOKEN_IDENT, "name", 1),
+        NEW_STRING_TYPE(),
         NEW_STRING_LITERAL("john nash")
     );
-    STMT_PRINT_AND_FREE(testLetStmt);
+    DECL_PRINT_AND_FREE(testLetDecl);
 
     Expr* printMessage = NEW_CALL_EXPR(NEW_IDENT_LITERAL("print"));
     CALL_EXPR_ADD_ARG(printMessage, NEW_STRING_LITERAL("the number is even"));
 
     Stmt* thenBlock = NEW_BLOCK_STMT();
-    BLOCK_STMT_ADD_STMT(thenBlock, NEW_EXPR_STMT(printMessage));
+    BLOCK_STMT_ADD_DECL(thenBlock, NEW_STMT_DECL(NEW_EXPR_STMT(printMessage)));
 
     Stmt* elseBlock = NULL;
     Stmt* testIfStmt = NEW_IF_STMT(
@@ -189,12 +193,14 @@ int main(void) {
     STMT_PRINT_AND_FREE(testIfStmt);
 
     Stmt* whileStmtBody = NEW_BLOCK_STMT();
-    BLOCK_STMT_ADD_STMT(whileStmtBody,
-        NEW_EXPR_STMT(
-            NEW_ASSIGN_EXPR(
-                NEW_IDENT_LITERAL("i"),
-                NEW_TOKEN(TOKEN_ADD_ASSIGN, "+=", 1),
-                NEW_INT_LITERAL(1)
+    BLOCK_STMT_ADD_DECL(whileStmtBody,
+        NEW_STMT_DECL(
+            NEW_EXPR_STMT(
+                NEW_ASSIGN_EXPR(
+                    NEW_IDENT_LITERAL("i"),
+                    NEW_TOKEN(TOKEN_ADD_ASSIGN, "+=", 1),
+                    NEW_INT_LITERAL(1)
+                )
             )
         )
     );
@@ -209,7 +215,7 @@ int main(void) {
     STMT_PRINT_AND_FREE(testWhileStmt);
 
     Stmt* testForStmt = NEW_FOR_STMT(
-        NEW_LET_STMT(NEW_TOKEN(TOKEN_IDENT, "i", 1), NEW_INT_LITERAL(0)),
+        NEW_LET_DECL(NEW_TOKEN(TOKEN_IDENT, "i", 1), NEW_INT_TYPE(), NEW_INT_LITERAL(0)),
         NEW_BINARY_EXPR(
             NEW_IDENT_LITERAL("i"),
             NEW_TOKEN(TOKEN_LSS, "<", 1),
@@ -220,25 +226,26 @@ int main(void) {
     );
     STMT_PRINT_AND_FREE(testForStmt);
 
-    Stmt *testLetStmtWithNilValue = NEW_LET_STMT(
+    Decl *testLetDeclWithNilValue = NEW_LET_DECL(
         NEW_TOKEN(TOKEN_IDENT, "object", 1),
+        NULL,
         NEW_NIL_LITERAL()
     );
 
-    Stmt* testStructStmt = NEW_STRUCT_STMT(NEW_TOKEN(TOKEN_IDENT, "User", 1));
+    Decl* testStructDecl = NEW_STRUCT_DECL(NEW_TOKEN(TOKEN_IDENT, "User", 1));
     Type* testCustomType = NEW_STRUCT_TYPE(8);
     CUSTOM_TYPE_ADD_FIELDS(testCustomType,
         NEW_NAMED_TYPE("street", NEW_STRING_TYPE()),
         NEW_NAMED_TYPE("zip", NEW_STRING_TYPE()),
     );
-    STRUCT_STMT_ADD_FIELDS(testStructStmt,
-        NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "id", 1), NEW_INT_TYPE()),
-        NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "username", 1), NEW_STRING_TYPE()),
-        NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "password", 1), NEW_STRING_TYPE()),
-        NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "email", 1), NEW_STRING_TYPE()),
-        NEW_FIELD_STMT(NEW_TOKEN(TOKEN_STRING, "address", 1), testCustomType)
+    STRUCT_DECL_ADD_FIELDS(testStructDecl,
+        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_STRING, "id", 1), NEW_INT_TYPE()),
+        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_STRING, "username", 1), NEW_STRING_TYPE()),
+        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_STRING, "password", 1), NEW_STRING_TYPE()),
+        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_STRING, "email", 1), NEW_STRING_TYPE()),
+        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_STRING, "address", 1), testCustomType)
     );
-    STMT_PRINT_AND_FREE(testStructStmt);
+    DECL_PRINT_AND_FREE(testStructDecl);
 
     Expr* structInit = NEW_STRUCT_INIT_EXPR(NEW_TOKEN(TOKEN_IDENT, "User", 1));
     Expr* innerStructInit = NEW_STRUCT_INIT_EXPR(NULL);
@@ -253,15 +260,16 @@ int main(void) {
         NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "email", 1), NEW_STRING_LITERAL("john@email.com")),
         NEW_FIELD_EXPR(NEW_TOKEN(TOKEN_STRING, "address", 1), innerStructInit),
     );
-    Stmt* testStructInitExpr = NEW_LET_STMT(
+    Decl* testStructInitExpr = NEW_LET_DECL(
         NEW_TOKEN(TOKEN_IDENT, "john", 1),
+        NEW_CUSTOM_TYPE(40, "User"),
         structInit
     );
-    STMT_PRINT_AND_FREE(testStructInitExpr);
+    DECL_PRINT_AND_FREE(testStructInitExpr);
 
-    Context* globalContext = context_new(MAP_NEW(64, entry_cmp, NULL, stmt_free));
+    Context* globalContext = context_new(MAP_NEW(64, entry_cmp, NULL, decl_free));
 
-    context_define(globalContext, "object", testLetStmtWithNilValue);
+    context_define(globalContext, "object", testLetDeclWithNilValue);
 
     Context* innerScope = context_enclosed_new(
         globalContext,

@@ -9,6 +9,44 @@
 #include "smem.h"
 
 
+Decl* decl_new(DeclType type, void* decl, void (*to_string)(void**), void (*destroy)(void**)) {
+    Decl* new_decl = NULL;
+    new_decl = safe_malloc(sizeof(Decl), NULL);
+    if (new_decl == NULL) {
+        if (destroy != NULL) {
+            destroy(&decl);
+        }
+        return NULL;
+    }
+
+    *new_decl = (Decl) {
+        .type = type,
+        .decl = decl,
+        .to_string = to_string,
+        .destroy = destroy
+    };
+
+    return new_decl;
+}
+
+void decl_to_string(Decl** decl) {
+    if (decl == NULL || *decl == NULL)
+        return;
+
+    if ((*decl)->to_string != NULL)
+        (*decl)->to_string(&(*decl)->decl);
+}
+
+void decl_free(Decl** decl) {
+    if (decl == NULL || *decl == NULL)
+        return;
+
+    if ((*decl)->destroy != NULL)
+        (*decl)->destroy(&(*decl)->decl);
+
+    safe_free((void**) decl);
+}
+
 Stmt* stmt_new(StmtType type, void* stmt, void (*to_string)(void**), void (*destroy)(void**)) {
     Stmt* new_stmt = NULL;
     new_stmt = safe_malloc(sizeof(Expr), NULL);
@@ -85,26 +123,346 @@ void expr_free(Expr** expr) {
     safe_free((void**) expr);
 }
 
-BlockStmt* block_stmt_new(List* statements) {
+LetDecl* let_decl_new(Token* name, Type* type, Expr* expression) {
+    LetDecl* decl = NULL;
+    decl = safe_malloc(sizeof(LetDecl), NULL);
+    if (decl == NULL) {
+        token_free(&name);
+        type_free(&type);
+        expr_free(&expression);
+        return NULL;
+    }
+
+    *decl = (LetDecl) {
+        .name = name,
+        .type = type,
+        .expression = expression
+    };
+
+    return decl;
+}
+
+void let_decl_to_string(LetDecl** letDecl) {
+    if (letDecl == NULL || *letDecl == NULL)
+        return;
+
+    printf("let ");
+
+    token_to_string(&(*letDecl)->name);
+
+    if ((*letDecl)->type != NULL) {
+        printf(": ");
+        type_to_string(&(*letDecl)->type);
+    }
+
+    printf(" = ");
+
+    expr_to_string(&(*letDecl)->expression);
+}
+
+void let_decl_free(LetDecl** letDecl) {
+    if (letDecl == NULL || *letDecl == NULL)
+        return;
+
+    token_free(&(*letDecl)->name);
+    type_free(&(*letDecl)->type);
+    expr_free(&(*letDecl)->expression);
+
+    safe_free((void**) letDecl);
+}
+
+ConstDecl* const_decl_new(Token* name, Type* type, Expr* expression) {
+    ConstDecl* decl = NULL;
+    decl = safe_malloc(sizeof(ConstDecl), NULL);
+    if (decl == NULL) {
+        token_free(&name);
+        type_free(&type);
+        expr_free(&expression);
+        return NULL;
+    }
+
+    *decl = (ConstDecl) {
+        .name = name,
+        .type = type,
+        .expression = expression
+    };
+
+    return decl;
+}
+
+void const_decl_to_string(ConstDecl** constDecl) {
+    if (constDecl == NULL || *constDecl == NULL)
+        return;
+
+    printf("const ");
+
+    token_to_string(&(*constDecl)->name);
+
+    if ((*constDecl)->type != NULL) {
+        printf(": ");
+        type_to_string(&(*constDecl)->type);
+    }
+
+    printf(" = ");
+
+    expr_to_string(&(*constDecl)->expression);
+}
+
+void const_decl_free(ConstDecl** constDecl) {
+    if (constDecl == NULL || *constDecl == NULL)
+        return;
+
+    token_free(&(*constDecl)->name);
+    type_free(&(*constDecl)->type);
+    expr_free(&(*constDecl)->expression);
+
+    safe_free((void**) constDecl);
+}
+
+FunctionDecl* function_decl_new(Token* name, List* parameters, List* returnTypes, Stmt* body) {
+    FunctionDecl* decl = NULL;
+    decl = safe_malloc(sizeof(FunctionDecl), NULL);
+    if (decl == NULL) {
+        token_free(&name);
+        list_free(&parameters);
+        list_free(&returnTypes);
+        stmt_free(&body);
+        return NULL;
+    }
+
+    *decl = (FunctionDecl) {
+        .name = name,
+        .parameters = parameters,
+        .returnTypes = returnTypes,
+        .body = body
+    };
+
+    return decl;
+}
+
+void function_decl_add_parameter(FunctionDecl** functionDecl, Expr* parameter) {
+    if (functionDecl == NULL || *functionDecl == NULL || parameter == NULL)
+        return;
+
+    list_insert_last(&(*functionDecl)->parameters, parameter);
+}
+
+void function_decl_add_return_type(FunctionDecl** functionDecl, Type* type) {
+    if (functionDecl == NULL || *functionDecl == NULL || type == NULL)
+        return;
+
+    list_insert_last(&(*functionDecl)->returnTypes, type);
+}
+
+void function_decl_to_string(FunctionDecl** functionDecl) {
+    if (functionDecl == NULL || *functionDecl == NULL)
+        return;
+
+    printf("func ");
+
+    token_to_string(&(*functionDecl)->name);
+
+    printf("(");
+
+    List* params = (*functionDecl)->parameters;
+    if (!list_is_empty(&params)) {
+        list_foreach(param, params) {
+            expr_to_string((Expr**) &param->value);
+
+            if (param->next != NULL) {
+                printf(", ");
+            }
+        }
+    }
+
+    printf(")");
+
+    List* returnTypes = (*functionDecl)->returnTypes;
+    if (!list_is_empty(&returnTypes)) {
+        printf(": ");
+
+        list_foreach(type, returnTypes) {
+            type_to_string((Type**) &type->value);
+
+            if (type->next != NULL) {
+                printf(" | ");
+            }
+        }
+    }
+
+    printf(" ");
+
+    stmt_to_string(&(*functionDecl)->body);
+}
+
+void function_decl_free(FunctionDecl** functionDecl) {
+    if (functionDecl == NULL || *functionDecl == NULL)
+        return;
+
+    token_free(&(*functionDecl)->name);
+    list_free(&(*functionDecl)->parameters);
+    list_free(&(*functionDecl)->returnTypes);
+    stmt_free(&(*functionDecl)->body);
+
+    safe_free((void**) functionDecl);
+}
+
+FieldDecl* field_decl_new(Token* name, Type* type) {
+    FieldDecl* decl = NULL;
+    decl = safe_malloc(sizeof(FieldDecl), NULL);
+    if (decl == NULL) {
+        token_free(&name);
+        type_free(&type);
+        return NULL;
+    }
+
+    *decl = (FieldDecl) {
+        .name = name,
+        .type = type
+    };
+
+    return decl;
+}
+
+void field_decl_to_string(FieldDecl** fieldDecl) {
+    if (fieldDecl == NULL || *fieldDecl == NULL)
+        return;
+
+    token_to_string(&(*fieldDecl)->name);
+
+    printf(": ");
+
+    type_to_string(&(*fieldDecl)->type);
+}
+
+void field_decl_free(FieldDecl** fieldDecl) {
+    if (fieldDecl == NULL || *fieldDecl == NULL)
+        return;
+
+    token_free(&(*fieldDecl)->name);
+    type_free(&(*fieldDecl)->type);
+
+    safe_free((void**) fieldDecl);
+}
+
+StructDecl* struct_decl_new(Token* name, List* fields) {
+    StructDecl* decl = NULL;
+    decl = safe_malloc(sizeof(StructDecl), NULL);
+    if (decl == NULL) {
+        token_free(&name);
+        list_free(&fields);
+        return NULL;
+    }
+
+    *decl = (StructDecl) {
+        .name = name,
+        .fields = fields
+    };
+
+    return decl;
+}
+
+void struct_decl_add_field(StructDecl** structDecl, Decl* field) {
+    if (structDecl == NULL || *structDecl == NULL || field == NULL)
+        return;
+
+    list_insert_last(&(*structDecl)->fields, field);
+}
+
+void struct_decl_to_string(StructDecl** structDecl) {
+    if (structDecl == NULL || *structDecl == NULL)
+        return;
+
+    printf("struct ");
+
+    if ((*structDecl)->name != NULL) {
+        token_to_string(&(*structDecl)->name);
+        printf(" ");
+    }
+
+    printf("{");
+
+    List* fields = (*structDecl)->fields;
+    if (!list_is_empty(&fields)) {
+        printf("\n");
+
+        list_foreach(field, fields) {
+            printf("\t");
+
+            stmt_to_string((Stmt**) &field->value);
+
+            if (field->next != NULL) {
+                printf("\n");
+            }
+        }
+
+        printf("\n");
+    }
+
+    printf("}");
+}
+
+void struct_decl_free(StructDecl** structDecl) {
+    if (structDecl == NULL || *structDecl == NULL)
+        return;
+
+    token_free(&(*structDecl)->name);
+    list_free(&(*structDecl)->fields);
+
+    safe_free((void**) structDecl);
+}
+
+StmtDecl* stmt_decl_new(Stmt* stmt) {
+    StmtDecl* decl = NULL;
+    decl = safe_malloc(sizeof(StmtDecl), NULL);
+    if (decl == NULL) {
+        stmt_free(&stmt);
+        return NULL;
+    }
+
+    *decl = (StmtDecl) {
+        .stmt = stmt
+    };
+
+    return decl;
+}
+
+void stmt_decl_to_string(StmtDecl** stmtDecl) {
+    if (stmtDecl == NULL || *stmtDecl == NULL)
+        return;
+
+    stmt_to_string(&(*stmtDecl)->stmt);
+}
+
+void stmt_decl_free(StmtDecl** stmtDecl) {
+    if (stmtDecl == NULL || *stmtDecl == NULL)
+        return;
+
+    stmt_free(&(*stmtDecl)->stmt);
+
+    safe_free((void**) stmtDecl);
+}
+
+BlockStmt* block_stmt_new(List* declarations) {
     BlockStmt* stmt = NULL;
     stmt = safe_malloc(sizeof(BlockStmt), NULL);
     if (stmt == NULL) {
-        list_free(&statements);
+        list_free(&declarations);
         return NULL;
     }
 
     *stmt = (BlockStmt) {
-        .statements = statements
+        .declarations = declarations
     };
 
     return stmt;
 }
 
-void block_stmt_add_statement(BlockStmt** blockStmt, Stmt* statement) {
-    if (blockStmt == NULL || *blockStmt == NULL || statement == NULL)
+void block_stmt_add_declaration(BlockStmt** blockStmt, Decl* declaration) {
+    if (blockStmt == NULL || *blockStmt == NULL || declaration == NULL)
         return;
 
-    list_insert_last(&(*blockStmt)->statements, statement);
+    list_insert_last(&(*blockStmt)->declarations, declaration);
 }
 
 void block_stmt_to_string(BlockStmt** blockStmt) {
@@ -113,12 +471,12 @@ void block_stmt_to_string(BlockStmt** blockStmt) {
 
     printf("{");
 
-    List* args = (*blockStmt)->statements;
+    List* args = (*blockStmt)->declarations;
     if (!list_is_empty(&args)) {
         printf("\n");
 
         list_foreach(arg, args) {
-            stmt_to_string((Stmt**) &arg->value);
+            decl_to_string((Decl**) &arg->value);
 
             printf("\n");
         }
@@ -131,7 +489,7 @@ void block_stmt_free(BlockStmt** blockStmt) {
     if (blockStmt == NULL || *blockStmt == NULL)
         return;
 
-    list_free(&(*blockStmt)->statements);
+    list_free(&(*blockStmt)->declarations);
 
     safe_free((void**) blockStmt);
 }
@@ -167,69 +525,6 @@ void expression_stmt_free(ExpressionStmt** expressionStmt) {
     safe_free((void**) expressionStmt);
 }
 
-FunctionStmt* function_stmt_new(Token* name, List* parameters, Stmt* body) {
-    FunctionStmt* stmt = NULL;
-    stmt = safe_malloc(sizeof(FunctionStmt), NULL);
-    if (stmt == NULL) {
-        token_free(&name);
-        list_free(&parameters);
-        stmt_free(&body);
-        return NULL;
-    }
-
-    *stmt = (FunctionStmt) {
-        .name = name,
-        .parameters = parameters,
-        .body = body
-    };
-
-    return stmt;
-}
-
-void function_stmt_add_parameter(FunctionStmt** functionStmt, Expr* parameter) {
-    if (functionStmt == NULL || *functionStmt == NULL || parameter == NULL)
-        return;
-
-    list_insert_last(&(*functionStmt)->parameters, parameter);
-}
-
-void function_stmt_to_string(FunctionStmt** functionStmt) {
-    if (functionStmt == NULL || *functionStmt == NULL)
-        return;
-
-    printf("func ");
-
-    token_to_string(&(*functionStmt)->name);
-
-    printf("(");
-
-    List* params = (*functionStmt)->parameters;
-    if (!list_is_empty(&params)) {
-        list_foreach(param, params) {
-            expr_to_string((Expr**) &param->value);
-
-            if (param->next != NULL) {
-                printf(", ");
-            }
-        }
-    }
-
-    printf(") ");
-
-    stmt_to_string(&(*functionStmt)->body);
-}
-
-void function_stmt_free(FunctionStmt** functionStmt) {
-    if (functionStmt == NULL || *functionStmt == NULL)
-        return;
-
-    token_free(&(*functionStmt)->name);
-    list_free(&(*functionStmt)->parameters);
-    stmt_free(&(*functionStmt)->body);
-
-    safe_free((void**) functionStmt);
-}
-
 ReturnStmt* return_stmt_new(Expr* expression) {
     ReturnStmt* stmt = NULL;
     stmt = safe_malloc(sizeof(ReturnStmt), NULL);
@@ -261,46 +556,6 @@ void return_stmt_free(ReturnStmt** returnStmt) {
     expr_free(&(*returnStmt)->expression);
 
     safe_free((void**) returnStmt);
-}
-
-LetStmt* let_stmt_new(Token* name, Expr* expression) {
-    LetStmt* stmt = NULL;
-    stmt = safe_malloc(sizeof(LetStmt), NULL);
-    if (stmt == NULL) {
-        token_free(&name);
-        expr_free(&expression);
-        return NULL;
-    }
-
-    *stmt = (LetStmt) {
-        .name = name,
-        .expression = expression
-    };
-
-    return stmt;
-}
-
-void let_stmt_to_string(LetStmt** letStmt) {
-    if (letStmt == NULL || *letStmt == NULL)
-        return;
-
-    printf("let ");
-
-    token_to_string(&(*letStmt)->name);
-
-    printf(" = ");
-
-    expr_to_string(&(*letStmt)->expression);
-}
-
-void let_stmt_free(LetStmt** letStmt) {
-    if (letStmt == NULL || *letStmt == NULL)
-        return;
-
-    token_free(&(*letStmt)->name);
-    expr_free(&(*letStmt)->expression);
-
-    safe_free((void**) letStmt);
 }
 
 IfStmt* if_stmt_new(Expr* condition, Stmt* thenBranch, Stmt* elseBranch) {
@@ -392,11 +647,11 @@ void while_stmt_free(WhileStmt** whileStmt) {
     safe_free((void**) whileStmt);
 }
 
-ForStmt* for_stmt_new(Stmt* initialization, Expr* condition, Expr* action, Stmt* body) {
+ForStmt* for_stmt_new(Decl* initialization, Expr* condition, Expr* action, Stmt* body) {
     ForStmt* stmt = NULL;
     stmt = safe_malloc(sizeof(ForStmt), NULL);
     if (stmt == NULL) {
-        stmt_free(&initialization);
+        decl_free(&initialization);
         expr_free(&condition);
         expr_free(&action);
         stmt_free(&body);
@@ -419,7 +674,7 @@ void for_stmt_to_string(ForStmt** forStmt) {
 
     printf("for (");
 
-    stmt_to_string(&(*forStmt)->initialization);
+    decl_to_string(&(*forStmt)->initialization);
 
     printf("; ");
 
@@ -438,117 +693,12 @@ void for_stmt_free(ForStmt** forStmt) {
     if (forStmt == NULL || *forStmt == NULL)
         return;
 
-    stmt_free(&(*forStmt)->initialization);
+    decl_free(&(*forStmt)->initialization);
     expr_free(&(*forStmt)->condition);
     expr_free(&(*forStmt)->action);
     stmt_free(&(*forStmt)->body);
 
     safe_free((void**) forStmt);
-}
-
-FieldDeclStmt* field_decl_stmt_new(Token* name, Type* type) {
-    FieldDeclStmt* stmt = NULL;
-    stmt = safe_malloc(sizeof(FieldDeclStmt), NULL);
-    if (stmt == NULL) {
-        token_free(&name);
-        type_free(&type);
-        return NULL;
-    }
-
-    *stmt = (FieldDeclStmt) {
-        .name = name,
-        .type = type
-    };
-
-    return stmt;
-}
-
-void field_decl_stmt_to_string(FieldDeclStmt** fieldDecl) {
-    if (fieldDecl == NULL || *fieldDecl == NULL)
-        return;
-
-    token_to_string(&(*fieldDecl)->name);
-
-    printf(": ");
-
-    type_to_string(&(*fieldDecl)->type);
-}
-
-void field_decl_stmt_free(FieldDeclStmt** fieldDecl) {
-    if (fieldDecl == NULL || *fieldDecl == NULL)
-        return;
-
-    token_free(&(*fieldDecl)->name);
-    type_free(&(*fieldDecl)->type);
-
-    safe_free((void**) fieldDecl);
-}
-
-StructStmt* struct_stmt_new(Token* name, List* fields) {
-    StructStmt* stmt = NULL;
-    stmt = safe_malloc(sizeof(StructStmt), NULL);
-    if (stmt == NULL) {
-        token_free(&name);
-        list_free(&fields);
-        return NULL;
-    }
-
-    *stmt = (StructStmt) {
-        .name = name,
-        .fields = fields
-    };
-
-    return stmt;
-}
-
-void struct_stmt_add_field(StructStmt** structStmt, Stmt* field) {
-    if (structStmt == NULL || *structStmt == NULL || field == NULL)
-        return;
-
-    list_insert_last(&(*structStmt)->fields, field);
-}
-
-void struct_stmt_to_string(StructStmt** structStmt) {
-    if (structStmt == NULL || *structStmt == NULL)
-        return;
-
-    printf("struct ");
-
-    if ((*structStmt)->name != NULL) {
-        token_to_string(&(*structStmt)->name);
-        printf(" ");
-    }
-
-    printf("{");
-
-    List* fields = (*structStmt)->fields;
-    if (!list_is_empty(&fields)) {
-        printf("\n");
-
-        list_foreach(field, fields) {
-            printf("\t");
-
-            stmt_to_string((Stmt**) &field->value);
-
-            if (field->next != NULL) {
-                printf("\n");
-            }
-        }
-
-        printf("\n");
-    }
-
-    printf("}");
-}
-
-void struct_stmt_free(StructStmt** structStmt) {
-    if (structStmt == NULL || *structStmt == NULL)
-        return;
-
-    token_free(&(*structStmt)->name);
-    list_free(&(*structStmt)->fields);
-
-    safe_free((void**) structStmt);
 }
 
 BinaryExpr* binary_expr_new(Expr* left, Token* op, Expr* right) {

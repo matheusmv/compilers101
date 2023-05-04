@@ -6,17 +6,22 @@
 #include "types.h"
 
 
+typedef enum DeclType {
+    LET_DECL,
+    CONST_DECL,
+    FUNC_DECL,
+    FIELD_DECL,
+    STRUCT_DECL,
+    STMT_DECL
+} DeclType;
+
 typedef enum StmtType {
     BLOCK_STMT,
     EXPRESSION_STMT,
-    FUNCTION_STMT,
     RETURN_STMT,
-    LET_STMT,
     IF_STMT,
     WHILE_STMT,
-    FOR_STMT,
-    FIELD_DECL_STMT,
-    STRUCT_STMT
+    FOR_STMT
 } StmtType;
 
 typedef enum ExprType {
@@ -31,6 +36,19 @@ typedef enum ExprType {
     STRUCT_INIT_EXPR,
     LITERAL_EXPR
 } ExprType;
+
+
+typedef struct Decl {
+    DeclType type;
+    void* decl;
+    void (*to_string)(void**);
+    void (*destroy)(void**);
+} Decl;
+
+Decl* decl_new(DeclType type, void* decl,
+    void (*to_string)(void**), void (*destroy)(void**));
+void decl_to_string(Decl** decl);
+void decl_free(Decl** decl);
 
 
 typedef struct Stmt {
@@ -59,12 +77,78 @@ void expr_to_string(Expr** expr);
 void expr_free(Expr** expr);
 
 
+typedef struct LetDecl {
+    Token* name;
+    Type* type;
+    Expr* expression;
+} LetDecl;
+
+LetDecl* let_decl_new(Token* name, Type* type, Expr* expression);
+void let_decl_to_string(LetDecl** letDecl);
+void let_decl_free(LetDecl** letDecl);
+
+
+typedef struct ConstDecl {
+    Token* name;
+    Type* type;
+    Expr* expression;
+} ConstDecl;
+
+ConstDecl* const_decl_new(Token* name, Type* type, Expr* expression);
+void const_decl_to_string(ConstDecl** constDecl);
+void const_decl_free(ConstDecl** constDecl);
+
+
+typedef struct FunctionDecl {
+    Token* name;
+    List* parameters; /* List of (Expr*) */
+    List* returnTypes; /* List of (Type*) */
+    Stmt* body;
+} FunctionDecl;
+
+FunctionDecl* function_decl_new(Token* name, List* parameters, List* returnTypes, Stmt* body);
+void function_decl_add_parameter(FunctionDecl** functionDecl, Expr* parameter);
+void function_decl_add_return_type(FunctionDecl** functionDecl, Type* type);
+void function_decl_to_string(FunctionDecl** functionDecl);
+void function_decl_free(FunctionDecl** functionDecl);
+
+
+typedef struct FieldDecl {
+    Token* name;
+    Type* type;
+} FieldDecl;
+
+FieldDecl* field_decl_new(Token* name, Type* type);
+void field_decl_to_string(FieldDecl** fieldDecl);
+void field_decl_free(FieldDecl** fieldDecl);
+
+
+typedef struct StructDecl {
+    Token* name;
+    List* fields; /* List of (FieldDecl*) */
+} StructDecl;
+
+StructDecl* struct_decl_new(Token* name, List* fields);
+void struct_decl_add_field(StructDecl** structDecl, Decl* field);
+void struct_decl_to_string(StructDecl** structDecl);
+void struct_decl_free(StructDecl** structDecl);
+
+
+typedef struct StmtDecl {
+    Stmt* stmt;
+} StmtDecl;
+
+StmtDecl* stmt_decl_new(Stmt* stmt);
+void stmt_decl_to_string(StmtDecl** stmtDecl);
+void stmt_decl_free(StmtDecl** stmtDecl);
+
+
 typedef struct BlockStmt {
-    List* statements; /* List of (Stmt*) */
+    List* declarations; /* List of (Decl*) */
 } BlockStmt;
 
 BlockStmt* block_stmt_new(List* statements);
-void block_stmt_add_statement(BlockStmt** blockStmt, Stmt* statement);
+void block_stmt_add_declaration(BlockStmt** blockStmt, Decl* declaration);
 void block_stmt_to_string(BlockStmt** blockStmt);
 void block_stmt_free(BlockStmt** blockStmt);
 
@@ -78,18 +162,6 @@ void expression_stmt_to_string(ExpressionStmt** expressionStmt);
 void expression_stmt_free(ExpressionStmt** expressionStmt);
 
 
-typedef struct FunctionStmt {
-    Token* name;
-    List* parameters; /* List of (Expr*) */
-    Stmt* body;
-} FunctionStmt;
-
-FunctionStmt* function_stmt_new(Token* name, List* parameters, Stmt* body);
-void function_stmt_add_parameter(FunctionStmt** functionStmt, Expr* parameter);
-void function_stmt_to_string(FunctionStmt** functionStmt);
-void function_stmt_free(FunctionStmt** functionStmt);
-
-
 typedef struct ReturnStmt {
     Expr* expression;
 } ReturnStmt;
@@ -97,16 +169,6 @@ typedef struct ReturnStmt {
 ReturnStmt* return_stmt_new(Expr* expression);
 void return_stmt_to_string(ReturnStmt** returnStmt);
 void return_stmt_free(ReturnStmt** returnStmt);
-
-
-typedef struct LetStmt {
-    Token* name;
-    Expr* expression;
-} LetStmt;
-
-LetStmt* let_stmt_new(Token* name, Expr* expression);
-void let_stmt_to_string(LetStmt** letStmt);
-void let_stmt_free(LetStmt** letStmt);
 
 
 typedef struct IfStmt {
@@ -131,36 +193,15 @@ void while_stmt_free(WhileStmt** whileStmt);
 
 
 typedef struct ForStmt {
-    Stmt* initialization;
+    Decl* initialization;
     Expr* condition;
     Expr* action;
     Stmt* body;
 } ForStmt;
 
-ForStmt* for_stmt_new(Stmt* initialization, Expr* condition, Expr* action, Stmt* body);
+ForStmt* for_stmt_new(Decl* initialization, Expr* condition, Expr* action, Stmt* body);
 void for_stmt_to_string(ForStmt** forStmt);
 void for_stmt_free(ForStmt** forStmt);
-
-
-typedef struct FieldDeclStmt {
-    Token* name;
-    Type* type;
-} FieldDeclStmt;
-
-FieldDeclStmt* field_decl_stmt_new(Token* name, Type* type);
-void field_decl_stmt_to_string(FieldDeclStmt** fieldDecl);
-void field_decl_stmt_free(FieldDeclStmt** fieldDecl);
-
-
-typedef struct StructStmt {
-    Token* name;
-    List* fields; /* List of (FieldDeclStmt*) */
-} StructStmt;
-
-StructStmt* struct_stmt_new(Token* name, List* fields);
-void struct_stmt_add_field(StructStmt** structStmt, Stmt* field);
-void struct_stmt_to_string(StructStmt** structStmt);
-void struct_stmt_free(StructStmt** structStmt);
 
 
 typedef struct BinaryExpr {
@@ -270,39 +311,27 @@ void literal_expr_to_string(LiteralExpr** literalExpr);
 void literal_expr_free(LiteralExpr** literalExpr);
 
 
-#define NEW_BLOCK_STMT()                                                       \
-    stmt_new(BLOCK_STMT,                                                       \
-        block_stmt_new((list_new((void (*)(void **)) stmt_free))),             \
-        (void (*)(void **))block_stmt_to_string,                               \
-        (void (*)(void **))block_stmt_free)
+#define NEW_LET_DECL(name, type, expr)                                         \
+    decl_new(LET_DECL, let_decl_new((name), (type), (expr)),                   \
+        (void (*)(void **))let_decl_to_string,                                 \
+        (void (*)(void **))let_decl_free)
 
-#define BLOCK_STMT_ADD_STMT(block_stmt, arg_stmt)                              \
-    block_stmt_add_statement((BlockStmt**) (&(block_stmt)->stmt), (arg_stmt))
+#define NEW_CONST_DECL(name, type, expr)                                       \
+    decl_new(CONST_DECL, const_decl_new((name), (type), (expr)),               \
+        (void (*)(void **))const_decl_to_string,                               \
+        (void (*)(void **))const_decl_free)
 
-#define BLOCK_STMT_ADD_STMTS(block_stmt, ...)                                  \
-    do {                                                                       \
-        Stmt* stmts[] = { __VA_ARGS__ };                                       \
-        size_t n_stmts = sizeof(stmts) / sizeof(stmts[0]);                     \
-        for (size_t i = 0; i < n_stmts; i++) {                                 \
-            BLOCK_STMT_ADD_STMT((block_stmt), stmts[i]);                       \
-        }                                                                      \
-    } while(0)
-
-#define NEW_EXPR_STMT(expr)                                                    \
-    stmt_new(EXPRESSION_STMT, expression_stmt_new((expr)),                     \
-        (void (*)(void **))expression_stmt_to_string,                          \
-        (void (*)(void **))expression_stmt_free)
-
-#define NEW_FUNCTION_STMT(name, body)                                          \
-    stmt_new(FUNCTION_STMT, function_stmt_new(                                 \
+#define NEW_FUNCTION_DECL(name, body)                                          \
+    decl_new(FUNC_DECL, function_decl_new(                                     \
             (name),                                                            \
             (list_new((void (*)(void **)) expr_free)),                         \
+            (list_new((void (*)(void **)) type_free)),                         \
             (body)),                                                           \
-        (void (*)(void **))function_stmt_to_string,                            \
-        (void (*)(void **))function_stmt_free)
+        (void (*)(void **))function_decl_to_string,                            \
+        (void (*)(void **))function_decl_free)
 
 #define FUNCTION_ADD_PARAM(func, param)                                        \
-    function_stmt_add_parameter((FunctionStmt**) (&(func)->stmt), (param))
+    function_decl_add_parameter((FunctionDecl**) (&(func)->decl), (param))
 
 #define FUNCTION_ADD_PARAMS(func, ...)                                         \
     do {                                                                       \
@@ -313,15 +342,80 @@ void literal_expr_free(LiteralExpr** literalExpr);
         }                                                                      \
     } while(0)
 
+#define FUNCTION_ADD_RETURN_TYPE(func, type)                                   \
+    function_decl_add_return_type((FunctionDecl**) (&(func)->decl), (type))
+
+#define FUNCTION_ADD_RETURN_TYPES(func, ...)                                   \
+    do {                                                                       \
+        Type* types[] = { __VA_ARGS__ };                                       \
+        size_t n_types = sizeof(types) / sizeof(types[0]);                     \
+        for (size_t i = 0; i < n_types; i++) {                                 \
+            FUNCTION_ADD_RETURN_TYPE((func), types[i]);                        \
+        }                                                                      \
+    } while(0)
+
+#define NEW_FIELD_DECL(name, type)                                             \
+    decl_new(FIELD_DECL, field_decl_new((name), (type)),                       \
+        (void (*)(void **))field_decl_to_string,                               \
+        (void (*)(void **))field_decl_free)
+
+#define NEW_STRUCT_DECL(name)                                                  \
+    decl_new(STRUCT_DECL,                                                      \
+        struct_decl_new((name),                                                \
+            (list_new((void (*)(void **)) decl_free))),                        \
+        (void (*)(void **))struct_decl_to_string,                              \
+        (void (*)(void **))struct_decl_free)
+
+#define STRUCT_DECL_ADD_FIELD(struct_decl, field_decl)                         \
+    struct_decl_add_field(                                                     \
+        (StructDecl**) (&(struct_decl)->decl), (field_decl))
+
+#define STRUCT_DECL_ADD_FIELDS(struct_decl, ...)                               \
+    do {                                                                       \
+        Decl* decls[] = { __VA_ARGS__ };                                       \
+        size_t n_decls = sizeof(decls) / sizeof(decls[0]);                     \
+        for (size_t i = 0; i < n_decls; i++) {                                 \
+            STRUCT_DECL_ADD_FIELD((struct_decl), decls[i]);                    \
+        }                                                                      \
+    } while(0)
+
+#define NEW_STMT_DECL(stmt)                                                    \
+    decl_new(STMT_DECL, stmt_decl_new((stmt)),                                 \
+        (void (*)(void **))stmt_decl_to_string,                                \
+        (void (*)(void **))stmt_decl_free)
+
+#define DECL_PRINT_AND_FREE(decl)                                              \
+    decl_to_string((&(decl)));                                                 \
+    printf("\n");                                                              \
+    decl_free((&(decl)))
+
+#define NEW_BLOCK_STMT()                                                       \
+    stmt_new(BLOCK_STMT,                                                       \
+        block_stmt_new((list_new((void (*)(void **)) decl_free))),             \
+        (void (*)(void **))block_stmt_to_string,                               \
+        (void (*)(void **))block_stmt_free)
+
+#define BLOCK_STMT_ADD_DECL(block_stmt, arg_decl)                              \
+    block_stmt_add_declaration((BlockStmt**) (&(block_stmt)->stmt), (arg_decl))
+
+#define BLOCK_STMT_ADD_DECLS(block_stmt, ...)                                  \
+    do {                                                                       \
+        Decl* decls[] = { __VA_ARGS__ };                                       \
+        size_t n_decls = sizeof(decls) / sizeof(decls[0]);                     \
+        for (size_t i = 0; i < n_decls; i++) {                                 \
+            BLOCK_STMT_ADD_DECL((block_stmt), decls[i]);                       \
+        }                                                                      \
+    } while(0)
+
+#define NEW_EXPR_STMT(expr)                                                    \
+    stmt_new(EXPRESSION_STMT, expression_stmt_new((expr)),                     \
+        (void (*)(void **))expression_stmt_to_string,                          \
+        (void (*)(void **))expression_stmt_free)
+
 #define NEW_RETURN_STMT(expr)                                                  \
     stmt_new(RETURN_STMT, return_stmt_new((expr)),                             \
         (void (*)(void **))return_stmt_to_string,                              \
         (void (*)(void **))return_stmt_free)
-
-#define NEW_LET_STMT(name, expr)                                               \
-    stmt_new(LET_STMT, let_stmt_new((name), (expr)),                           \
-        (void (*)(void **))let_stmt_to_string,                                 \
-        (void (*)(void **))let_stmt_free)
 
 #define NEW_IF_STMT(cond_expr, then_block, else_block)                         \
     stmt_new(IF_STMT, if_stmt_new((cond_expr), (then_block), (else_block)),    \
@@ -337,31 +431,6 @@ void literal_expr_free(LiteralExpr** literalExpr);
     stmt_new(FOR_STMT, for_stmt_new((init), (cond_expr), (action), (body)),    \
         (void (*)(void **))for_stmt_to_string,                                 \
         (void (*)(void **))for_stmt_free)
-
-#define NEW_FIELD_STMT(name, type)                                             \
-    stmt_new(FIELD_DECL_STMT, field_decl_stmt_new((name), (type)),             \
-        (void (*)(void **))field_decl_stmt_to_string,                          \
-        (void (*)(void **))field_decl_stmt_free)
-
-#define NEW_STRUCT_STMT(name)                                                  \
-    stmt_new(STRUCT_STMT,                                                      \
-        struct_stmt_new((name),                                                \
-            (list_new((void (*)(void **)) stmt_free))),                        \
-        (void (*)(void **))struct_stmt_to_string,                              \
-        (void (*)(void **))struct_stmt_free)
-
-#define STRUCT_STMT_ADD_FIELD(struct_stmt, field_stmt)                         \
-    struct_stmt_add_field(                                                     \
-        (StructStmt**) (&(struct_stmt)->stmt), (field_stmt))
-
-#define STRUCT_STMT_ADD_FIELDS(struct_stmt, ...)                               \
-    do {                                                                       \
-        Stmt* stmts[] = { __VA_ARGS__ };                                       \
-        size_t n_stmts = sizeof(stmts) / sizeof(stmts[0]);                     \
-        for (size_t i = 0; i < n_stmts; i++) {                                 \
-            STRUCT_STMT_ADD_FIELD((struct_stmt), stmts[i]);                    \
-        }                                                                      \
-    } while(0)
 
 #define STMT_PRINT_AND_FREE(stmt)                                              \
     stmt_to_string((&(stmt)));                                                 \

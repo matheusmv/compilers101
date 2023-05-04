@@ -9,7 +9,7 @@ TEST_FILES=$(wildcard tests/**/*.c)
 
 CC=gcc
 
-CFLAGS=-pedantic -Wall -Werror -std=c11
+CFLAGS=-Wall -Wextra -Werror -std=c11
 LFLAGS=
 
 VALGRIND=valgrind -s \
