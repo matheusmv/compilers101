@@ -9,8 +9,8 @@
 typedef enum DeclType {
     LET_DECL,
     CONST_DECL,
-    FUNC_DECL,
     FIELD_DECL,
+    FUNC_DECL,
     STRUCT_DECL,
     STMT_DECL
 } DeclType;
@@ -99,20 +99,6 @@ void const_decl_to_string(ConstDecl** constDecl);
 void const_decl_free(ConstDecl** constDecl);
 
 
-typedef struct FunctionDecl {
-    Token* name;
-    List* parameters; /* List of (Expr*) */
-    List* returnTypes; /* List of (Type*) */
-    Stmt* body;
-} FunctionDecl;
-
-FunctionDecl* function_decl_new(Token* name, List* parameters, List* returnTypes, Stmt* body);
-void function_decl_add_parameter(FunctionDecl** functionDecl, Expr* parameter);
-void function_decl_add_return_type(FunctionDecl** functionDecl, Type* type);
-void function_decl_to_string(FunctionDecl** functionDecl);
-void function_decl_free(FunctionDecl** functionDecl);
-
-
 typedef struct FieldDecl {
     Token* name;
     Type* type;
@@ -121,6 +107,20 @@ typedef struct FieldDecl {
 FieldDecl* field_decl_new(Token* name, Type* type);
 void field_decl_to_string(FieldDecl** fieldDecl);
 void field_decl_free(FieldDecl** fieldDecl);
+
+
+typedef struct FunctionDecl {
+    Token* name;
+    List* parameters; /* List of (FieldDecl*) */
+    List* returnTypes; /* List of (Type*) */
+    Stmt* body;
+} FunctionDecl;
+
+FunctionDecl* function_decl_new(Token* name, List* parameters, List* returnTypes, Stmt* body);
+void function_decl_add_parameter(FunctionDecl** functionDecl, Decl* parameter);
+void function_decl_add_return_type(FunctionDecl** functionDecl, Type* type);
+void function_decl_to_string(FunctionDecl** functionDecl);
+void function_decl_free(FunctionDecl** functionDecl);
 
 
 typedef struct StructDecl {
@@ -324,7 +324,7 @@ void literal_expr_free(LiteralExpr** literalExpr);
 #define NEW_FUNCTION_DECL(name, body)                                          \
     decl_new(FUNC_DECL, function_decl_new(                                     \
             (name),                                                            \
-            (list_new((void (*)(void **)) expr_free)),                         \
+            (list_new((void (*)(void **)) decl_free)),                         \
             (list_new((void (*)(void **)) type_free)),                         \
             (body)),                                                           \
         (void (*)(void **))function_decl_to_string,                            \
@@ -335,10 +335,10 @@ void literal_expr_free(LiteralExpr** literalExpr);
 
 #define FUNCTION_ADD_PARAMS(func, ...)                                         \
     do {                                                                       \
-        Expr* exprs[] = { __VA_ARGS__ };                                       \
-        size_t n_exprs = sizeof(exprs) / sizeof(exprs[0]);                     \
-        for (size_t i = 0; i < n_exprs; i++) {                                 \
-            FUNCTION_ADD_PARAM((func), exprs[i]);                              \
+        Decl* decls[] = { __VA_ARGS__ };                                       \
+        size_t n_decls = sizeof(decls) / sizeof(decls[0]);                     \
+        for (size_t i = 0; i < n_decls; i++) {                                 \
+            FUNCTION_ADD_PARAM((func), decls[i]);                              \
         }                                                                      \
     } while(0)
 

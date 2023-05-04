@@ -240,7 +240,7 @@ FunctionDecl* function_decl_new(Token* name, List* parameters, List* returnTypes
     return decl;
 }
 
-void function_decl_add_parameter(FunctionDecl** functionDecl, Expr* parameter) {
+void function_decl_add_parameter(FunctionDecl** functionDecl, Decl* parameter) {
     if (functionDecl == NULL || *functionDecl == NULL || parameter == NULL)
         return;
 

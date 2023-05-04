@@ -156,9 +156,9 @@ int main(void) {
         testFunctionBody
     );
     FUNCTION_ADD_PARAMS(testFunctionDecl,
-        NEW_IDENT_LITERAL("a"),
-        NEW_IDENT_LITERAL("b"),
-        NEW_IDENT_LITERAL("t")
+        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_IDENT, "a", 1), NEW_FLOAT_TYPE()),
+        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_IDENT, "b", 1), NEW_FLOAT_TYPE()),
+        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_IDENT, "t", 1), NEW_FLOAT_TYPE()),
     );
     FUNCTION_ADD_RETURN_TYPE(testFunctionDecl, NEW_FLOAT_TYPE());
     DECL_PRINT_AND_FREE(testFunctionDecl);
