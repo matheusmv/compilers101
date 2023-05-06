@@ -1,0 +1,105 @@
+struct User {
+    id: int
+    username: string
+    password: string
+    email: string
+    address: struct {
+        street: string
+        zip: string
+    }
+}
+
+struct List {
+    data: User
+    next: ListNode
+}
+
+func print() {
+    let not: struct{} = struct{}{};
+    print("ok");
+    call()(a, b);
+}
+
+func print(): void {
+    print("ok");
+}
+
+func print(msg: string) {
+    print(msg);
+}
+
+func sort(list: List): List | error {
+    let t: User = User{ list: list, name1: 0};
+    return mergeSort(list);
+}
+
+func makeUser(id: int, username: string, password: string, email: string, address: struct { street: string zip: string }): User | nil {
+    return User{
+        id: id,
+        username: username,
+        password: password,
+        email: email,
+        address: address
+    };
+}
+
+func main() {
+    const john: User = User{id: getId(), username: "", password: "", email: "", address: struct{
+        street: string
+        zip: string
+    }{
+        street: "",
+        zip: ""
+    }};
+
+    let two: int = 2;
+    let PI: float = 3.1415;
+    let newLine: char = '\n';
+    let name: string = "matheus matias\n";
+    let trueVal: bool = true;
+    let falseVal: bool = false;
+
+    const two: int = 2;
+    const PI: float = 3.1415;
+    const newLine: char = '\n';
+    const name: string = "matheus matias\n";
+    const trueVal: bool = true;
+    const falseVal: bool = false;
+
+    for (let i = 0; i < 10; i++) {
+        print(i);
+    }
+
+    let i: int = 10;
+    while (i > 0) {
+        print(i);
+        i--;
+    }
+
+    print(fib(10));
+}
+
+func add(a: int, b: int): int {
+    return a + b;
+}
+
+func sub(a: int, b: int): int {
+    return a - b;
+}
+
+func mul(a: int, b: int): int {
+    return a * b;
+}
+
+func div(a: int, b: int): int | nil {
+    if (b == 0) {
+        print("Error: division by zero");
+        return nil;
+    }
+
+    return a / b;
+}
+
+func rem(a: int, b: int): int {
+    return a % b;
+}
