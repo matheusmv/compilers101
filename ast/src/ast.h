@@ -35,6 +35,7 @@ typedef enum ExprType {
     FIELD_INIT_EXPR,
     STRUCT_INIT_EXPR,
     STRUCT_INLINE_EXPR,
+    ARRAY_INIT_EXPR,
     LITERAL_EXPR
 } ExprType;
 
@@ -309,6 +310,16 @@ void struct_inline_expr_add_field(StructInlineExpr** structInline, Expr* field);
 void struct_inline_expr_to_string(StructInlineExpr** structInline);
 void struct_inline_expr_free(StructInlineExpr** structInline);
 
+
+typedef struct ArrayInitExpr {
+    Type* type;
+    List* elements;
+} ArrayInitExpr;
+
+ArrayInitExpr* array_init_expr_new(Type* type, List* elements);
+void array_init_expr_add_element(ArrayInitExpr** arrayInit, Expr* element);
+void array_init_expr_to_string(ArrayInitExpr** arrayInit);
+void array_init_expr_free(ArrayInitExpr** arrayInit);
 
 typedef struct LiteralExpr {
     LiteralType type;
@@ -597,6 +608,32 @@ void literal_expr_free(LiteralExpr** literalExpr);
         size_t n_exprs = sizeof(exprs) / sizeof(exprs[0]);                     \
         for (size_t i = 0; i < n_exprs; i++) {                                 \
             STRUCT_INLINE_EXPR_ADD_FIELD((struct_inline_expr), exprs[i]);      \
+        }                                                                      \
+    } while(0)
+
+#define NEW_ARRAY_INIT_EXPR(array_type)                                        \
+    expr_new(ARRAY_INIT_EXPR,                                                  \
+        array_init_expr_new((array_type),                                      \
+            (list_new((void (*)(void **)) expr_free))),                        \
+        (void (*)(void **))array_init_expr_to_string,                          \
+        (void (*)(void **))array_init_expr_free)
+
+#define NEW_ARRAY_INIT_EXPR_WITH_ELEMENTS(array_type, elements)                \
+    expr_new(ARRAY_INIT_EXPR,                                                  \
+        array_init_expr_new((array_type), (elements)),                         \
+        (void (*)(void **))array_init_expr_to_string,                          \
+        (void (*)(void **))array_init_expr_free)
+
+#define ARRAY_INIT_EXPR_ADD_ELEMENT(array_init_expr, element_expr)             \
+    array_init_expr_add_element(                                               \
+        (ArrayInitExpr**) (&(array_init_expr)->expr), (element_expr))
+
+#define ARRAY_INIT_EXPR_ADD_ELEMENTS(array_init_expr, ...)                     \
+    do {                                                                       \
+        Expr* exprs[] = { __VA_ARGS__ };                                       \
+        size_t n_exprs = sizeof(exprs) / sizeof(exprs[0]);                     \
+        for (size_t i = 0; i < n_exprs; i++) {                                 \
+            ARRAY_INIT_EXPR_ADD_ELEMENT((array_init_expr), exprs[i]);          \
         }                                                                      \
     } while(0)
 

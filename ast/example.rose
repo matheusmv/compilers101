@@ -43,6 +43,12 @@ func makeUser(id: int, username: string, password: string, email: string, addres
     };
 }
 
+func showArr(arr: []int) {
+    for (let i = 0; i < size(arr); i++) {
+        print(arr);
+    }
+}
+
 func main() {
     const john: User = User{id: getId(), username: "", password: "", email: "", address: struct{
         street: string
@@ -65,6 +71,19 @@ func main() {
     const name: string = "matheus matias\n";
     const trueVal: bool = true;
     const falseVal: bool = false;
+
+    const users: [4]User = [4]User{john, User{}, User{}, User{}};
+
+    const numbers: [5]int = [5]int{1, 2, 3, 4, 5};
+    const numbers: []int = []int{};
+    const numbers = [5]int{1, 2, 3, 4, 5};
+    const numbers = []int{};
+
+    const userTable: [][]User = [][]User{
+        []User{User{}, User{}, User{}},
+        []User{User{}, User{}, User{}},
+        []User{User{}, User{}, User{}}
+    };
 
     for (let i = 0; i < 10; i++) {
         print(i);

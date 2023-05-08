@@ -234,7 +234,7 @@ int main(void) {
 
     Decl* testStructDecl = NEW_STRUCT_DECL(NEW_TOKEN(TOKEN_IDENT, "User", 1));
     Type* testCustomType = NEW_STRUCT_TYPE(8);
-    CUSTOM_TYPE_ADD_FIELDS(testCustomType,
+    STRUCT_TYPE_ADD_FIELDS(testCustomType,
         NEW_NAMED_TYPE("street", NEW_STRING_TYPE()),
         NEW_NAMED_TYPE("zip", NEW_STRING_TYPE()),
     );
@@ -249,7 +249,7 @@ int main(void) {
 
     Expr* structInit = NEW_STRUCT_INIT_EXPR(NEW_TOKEN(TOKEN_IDENT, "User", 1));
     Type* structType = NEW_STRUCT_TYPE(0);
-    CUSTOM_TYPE_ADD_FIELDS(structType,
+    STRUCT_TYPE_ADD_FIELDS(structType,
         NEW_NAMED_TYPE("street", NEW_STRING_TYPE()),
         NEW_NAMED_TYPE("zip", NEW_STRING_TYPE())
     );
@@ -325,6 +325,20 @@ int main(void) {
     }
 
     list_free(&testSort);
+
+    Type* arrayType = NEW_ARRAY_TYPE(NEW_CUSTOM_TYPE(0, "User"));
+    ARRAY_TYPE_ADD_DIMENSIONS(arrayType,
+        NEW_ARRAY_DIMENSION(4),
+    );
+
+    Expr* arrayTest = NEW_ARRAY_INIT_EXPR(arrayType);
+    ARRAY_INIT_EXPR_ADD_ELEMENTS(arrayTest, 
+        NEW_STRUCT_INIT_EXPR(NEW_TOKEN(TOKEN_IDENT, "User", 1)),
+        NEW_STRUCT_INIT_EXPR(NEW_TOKEN(TOKEN_IDENT, "User", 1)),
+        NEW_STRUCT_INIT_EXPR(NEW_TOKEN(TOKEN_IDENT, "User", 1)),
+        NEW_STRUCT_INIT_EXPR(NEW_TOKEN(TOKEN_IDENT, "User", 1))
+    );
+    EXPR_PRINT_AND_FREE(arrayTest);
 
     return EXIT_SUCCESS;
 }

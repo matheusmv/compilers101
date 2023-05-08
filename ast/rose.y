@@ -125,13 +125,12 @@ void yyerror(const char*);
                 ShiftOperator RelationalOperator EqualityOperator AssignmentOperator
 
 %nterm <type_t> TypeDeclaration StructType PrimitiveType FunctionType ArrayType
+                ArrayDimension ValidArrayType
 
-%nterm <named_type_t> StructNamedTypeDeclaration
-
-%nterm <list_t> Declarations ArrayArguments ArrayInitializationExpression
+%nterm <list_t> Declarations ArrayArguments
                 StructArguments StructInitializationListExpression CallExpressionArguments
                 StructFieldsDeclaration FunctionParametersDeclaration FunctionReturnDeclaration
-                StructNamedTypesDeclaration
+                StructNamedTypesDeclaration ArrayDimensionList
 
 %nterm <decl_t> Statement StructDeclaration FunctionDeclaration IdentifierDeclaration
                 ConstDeclaration LetDeclaration CommentDeclaration Declaration
@@ -140,7 +139,7 @@ void yyerror(const char*);
                 ContinueStatement BreakStatement ReturnStatement FunctionBody
 
 %nterm <expr_t> Expression StructArgumentsExpession StructInitializationExpression
-                Literal Identifier GroupExpression
+                Literal Identifier GroupExpression ArrayInitializationExpression
                 PrimaryExpression CastExpression FunctionExpression PostfixExpression
                 MemberExpression CallExpression ArrayMemberExpression
                 UnaryExpression MultiplicativeExpression AdditiveExpression ShiftExpression
@@ -479,30 +478,18 @@ StructType
 StructNamedTypesDeclaration
     : %empty
         {
-            $$ = list_new((void (*)(void**)) named_type_free);
+            $$ = list_new((void (*)(void**)) type_free);
         }
-    | StructNamedTypeDeclaration
+    | IdentifierDeclaration
         {
-            List* list = list_new((void (*)(void**)) named_type_free);
+            List* list = list_new((void (*)(void**)) type_free);
             list_insert_last(&list, $1);
             $$ = list;
         }
-    | StructNamedTypesDeclaration StructNamedTypeDeclaration
+    | StructNamedTypesDeclaration IdentifierDeclaration
         {
             list_insert_last(&$1, $2);
             $$ = $1;
-        }
-    ;
-
-StructNamedTypeDeclaration
-    : IDENT ":" TypeDeclaration
-        {
-            NamedType* type = NEW_NAMED_TYPE(
-                $1,
-                $3
-            );
-            safe_free((void**) &$1);
-            $$ = type;
         }
     ;
 
@@ -532,10 +519,56 @@ StructFieldsDeclaration
     ;
 
 ArrayType
-    : "[" "]" TypeDeclaration
+    : ArrayDimensionList ValidArrayType
         {
-            // TODO: add array type in type system
-            $$ = NULL;
+            Type* type = NEW_ARRAY_TYPE_WITH_DIMENSION($1, $2);
+            $$ = type;
+        }
+    ;
+
+ValidArrayType
+    : IDENT
+        {
+            Type* type = NEW_CUSTOM_TYPE(0, $1);
+            safe_free((void**) &$1);
+            $$ = type;
+        }
+    | PrimitiveType
+        {
+            $$ = $1;
+        }
+    | FunctionType
+        {
+            $$ = $1;
+        }
+    | StructType
+        {
+            $$ = $1;
+        }
+    ;
+
+ArrayDimensionList
+    : ArrayDimension
+        {
+            List* list = list_new((void (*)(void**)) type_free);
+            list_insert_last(&list, $1);
+            $$ = list;
+        }
+    | ArrayDimensionList ArrayDimension
+        {
+            list_insert_last(&$1, $2);
+            $$ = $1;
+        }
+    ;
+
+ArrayDimension
+    : "[" "]"
+        {
+            $$ = NEW_ARRAY_UNDEFINED_DIMENSION();
+        }
+    | "[" INT "]"
+        {
+            $$ = NEW_ARRAY_DIMENSION($2);
         }
     ;
 
@@ -945,7 +978,11 @@ UnaryOperator
     ;
 
 PostfixExpression
-    : CastExpression
+    : PrimaryExpression
+        {
+            $$ = $1;
+        }
+    | CastExpression
         {
             $$ = $1;
         }
@@ -987,7 +1024,7 @@ ArrayMemberExpression
     ;
 
 CallExpression
-    : PostfixExpression"("CallExpressionArguments")"
+    : PostfixExpression "(" CallExpressionArguments ")"
         {
             $$ = NEW_CALL_EXPR_WITH_ARGS($1, $3);
         }
@@ -998,13 +1035,13 @@ CallExpressionArguments
         {
             $$ = list_new((void (*)(void**)) expr_free);;
         }
-    | AssignmentExpression
+    | Expression
         {
             List* list = list_new((void (*)(void**)) expr_free);
             list_insert_last(&list, $1);
             $$ = list;
         }
-    | CallExpressionArguments "," AssignmentExpression
+    | CallExpressionArguments "," Expression
         {
             list_insert_last(&$1, $3);
             $$ = $1;
@@ -1020,11 +1057,7 @@ MemberExpression
     ;
 
 CastExpression
-    : PrimaryExpression
-        {
-            $$ = $1;
-        }
-    | "(" TypeDeclaration ")" CastExpression
+    : PostfixExpression "." "(" TypeDeclaration ")"
         {
             // TODO: add cast expression to AST
             $$ = NULL;
@@ -1054,8 +1087,7 @@ PrimaryExpression
         }
     | ArrayInitializationExpression
         {
-            // TODO: add array in AST
-            list_free(&$1);
+            $$ = $1;
         }
     ;
 
@@ -1173,9 +1205,9 @@ StructArgumentsExpession
     ;
 
 ArrayInitializationExpression
-    : "[" ArrayArguments "]"
+    : ArrayType "{" ArrayArguments "}"
         {
-            $$ = $2;
+            $$ = NEW_ARRAY_INIT_EXPR_WITH_ELEMENTS($1, $3);
         }
     ;
 

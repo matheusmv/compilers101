@@ -1140,6 +1140,60 @@ void struct_inline_expr_free(StructInlineExpr** structInline) {
     safe_free((void**) structInline);
 }
 
+ArrayInitExpr* array_init_expr_new(Type* type, List* elements) {
+    ArrayInitExpr* expr = NULL;
+    expr = safe_malloc(sizeof(ArrayInitExpr), NULL);
+    if (expr == NULL) {
+        type_free(&type);
+        list_free(&elements);
+        return NULL;
+    }
+
+    *expr = (ArrayInitExpr) {
+        .type = type,
+        .elements = elements
+    };
+
+    return expr;
+}
+
+void array_init_expr_add_element(ArrayInitExpr** arrayInit, Expr* element) {
+    if (arrayInit == NULL || *arrayInit == NULL || element == NULL)
+        return;
+
+    list_insert_last(&(*arrayInit)->elements, element);
+}
+
+void array_init_expr_to_string(ArrayInitExpr** arrayInit) {
+    if (arrayInit == NULL || *arrayInit == NULL)
+        return;
+
+    type_to_string(&(*arrayInit)->type);
+
+    printf("{ ");
+
+    List* elements = (*arrayInit)->elements;
+    list_foreach(element, elements) {
+        expr_to_string((Expr**) &element->value);
+
+        if (element->next != NULL) {
+            printf(", ");
+        }
+    }
+
+    printf(" }");
+}
+
+void array_init_expr_free(ArrayInitExpr** arrayInit) {
+    if (arrayInit == NULL || *arrayInit == NULL)
+        return;
+
+    type_free(&(*arrayInit)->type);
+    list_free(&(*arrayInit)->elements);
+
+    safe_free((void**) arrayInit);
+}
+
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {
     LiteralExpr* expr = NULL;
     expr = safe_malloc(sizeof(LiteralExpr), NULL);

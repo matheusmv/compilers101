@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
     extern bool success;
     if (success) {
         printf("Parsing Successful\n");
-        return EXIT_FAILURE;
+        return EXIT_SUCCESS;
     }
 
-    return EXIT_SUCCESS;
+    return EXIT_FAILURE;
 }
