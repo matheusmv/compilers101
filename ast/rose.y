@@ -127,7 +127,7 @@ void yyerror(const char*);
 %nterm <type_t> TypeDeclaration StructType PrimitiveType FunctionType ArrayType
                 ArrayDimension ValidArrayType
 
-%nterm <list_t> Declarations ArrayArguments
+%nterm <list_t> Declarations ArrayArguments FunctionParameterTypeList FunctionReturnTypeList
                 StructArguments StructInitializationListExpression CallExpressionArguments
                 StructFieldsDeclaration FunctionParametersDeclaration FunctionReturnDeclaration
                 StructNamedTypesDeclaration ArrayDimensionList
@@ -420,15 +420,45 @@ PrimitiveType
     ;
 
 FunctionType
-    : "func" "(" FunctionParametersDeclaration ")"
+    : "func" "(" FunctionParameterTypeList ")"
         {
-            // TODO: implement func type in type system
-            $$ = NULL;
+            $$ = NEW_FUNCTION_TYPE_WITH_PARAMS($3);
         }
-    | "func" "(" FunctionParametersDeclaration ")" ":" FunctionReturnDeclaration
+    | "func" "(" FunctionParameterTypeList ")" ":" FunctionReturnTypeList
         {
-            // TODO: implement func type in type system
-            $$ = NULL;
+            $$ = NEW_FUNCTION_TYPE_WITH_PARAMS_AND_RETURNS($3, $6);
+        }
+    ;
+
+FunctionParameterTypeList
+    : %empty
+        {
+            $$ = list_new((void (*)(void **)) type_free);
+        }
+    | TypeDeclaration
+        {
+            List* list = list_new((void (*)(void **)) type_free);
+            list_insert_last(&list, $1);
+            $$ = list;
+        }
+    | FunctionParameterTypeList "," TypeDeclaration
+        {
+            list_insert_last(&$1, $3);
+            $$ = $1;
+        }
+    ;
+
+FunctionReturnTypeList
+    : TypeDeclaration
+        {
+            List* list = list_new((void (*)(void **)) type_free);
+            list_insert_last(&list, $1);
+            $$ = list;
+        }
+    | FunctionReturnTypeList "|" TypeDeclaration
+        {
+            list_insert_last(&$1, $3);
+            $$ = $1;
         }
     ;
 
@@ -1141,11 +1171,11 @@ Literal
 FunctionExpression
     : "func" "(" FunctionParametersDeclaration ")" FunctionBody
         {
-            $$ = NULL;
+            $$ = NEW_FUNCTION_EXPR_WITH_PARAMS($3, $5);
         }
     | "func" "(" FunctionParametersDeclaration ")" ":" FunctionReturnDeclaration FunctionBody
         {
-            $$ = NULL;
+            $$ = NEW_FUNCTION_EXPR_WITH_PARAMS_AND_RETURNS($3, $6, $7);
         }
     ;
 

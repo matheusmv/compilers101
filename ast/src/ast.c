@@ -1194,6 +1194,84 @@ void array_init_expr_free(ArrayInitExpr** arrayInit) {
     safe_free((void**) arrayInit);
 }
 
+FunctionExpr* function_expr_new(List* parameters, List* returnTypes, Stmt* body) {
+    FunctionExpr* expr = NULL;
+    expr = safe_malloc(sizeof(FunctionExpr), NULL);
+    if (expr == NULL) {
+        list_free(&parameters);
+        list_free(&returnTypes);
+        stmt_free(&body);
+        return NULL;
+    }
+
+    *expr = (FunctionExpr) {
+        .parameters = parameters,
+        .returnTypes = returnTypes,
+        .body = body
+    };
+
+    return expr;
+}
+
+void function_expr_add_parameter(FunctionExpr** functionExpr, Decl* parameter) {
+    if (functionExpr == NULL || *functionExpr == NULL || parameter == NULL)
+        return;
+
+    list_insert_last(&(*functionExpr)->parameters, parameter);
+}
+
+void function_expr_add_return_type(FunctionExpr** functionExpr, Type* type) {
+    if (functionExpr == NULL || *functionExpr == NULL || type == NULL)
+        return;
+
+    list_insert_last(&(*functionExpr)->returnTypes, type);
+}
+
+void function_expr_to_string(FunctionExpr** functionExpr) {
+    if (functionExpr == NULL || *functionExpr == NULL)
+        return;
+
+    printf("func(");
+
+    list_foreach(param, (*functionExpr)->parameters) {
+        expr_to_string((Expr**) &param->value);
+
+        if (param->next != NULL) {
+            printf(", ");
+        }
+    }
+
+    printf(")");
+
+    List* returnTypes = (*functionExpr)->returnTypes;
+    if (!list_is_empty(&returnTypes)) {
+        printf(": ");
+
+        list_foreach(type, returnTypes) {
+            type_to_string((Type**) &type->value);
+
+            if (type->next != NULL) {
+                printf(" | ");
+            }
+        }
+    }
+
+    printf(" ");
+
+    stmt_to_string(&(*functionExpr)->body);
+}
+
+void function_expr_free(FunctionExpr** functionExpr) {
+    if (functionExpr == NULL || *functionExpr == NULL)
+        return;
+
+    list_free(&(*functionExpr)->parameters);
+    list_free(&(*functionExpr)->returnTypes);
+    stmt_free(&(*functionExpr)->body);
+
+    safe_free((void**) functionExpr);
+}
+
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {
     LiteralExpr* expr = NULL;
     expr = safe_malloc(sizeof(LiteralExpr), NULL);

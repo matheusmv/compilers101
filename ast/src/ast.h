@@ -36,6 +36,7 @@ typedef enum ExprType {
     STRUCT_INIT_EXPR,
     STRUCT_INLINE_EXPR,
     ARRAY_INIT_EXPR,
+    FUNC_EXPR,
     LITERAL_EXPR
 } ExprType;
 
@@ -320,6 +321,20 @@ ArrayInitExpr* array_init_expr_new(Type* type, List* elements);
 void array_init_expr_add_element(ArrayInitExpr** arrayInit, Expr* element);
 void array_init_expr_to_string(ArrayInitExpr** arrayInit);
 void array_init_expr_free(ArrayInitExpr** arrayInit);
+
+
+typedef struct FunctionExpr {
+    List* parameters; /* List of (FieldDecl*) */
+    List* returnTypes; /* List of (Type*) */
+    Stmt* body;
+} FunctionExpr;
+
+FunctionExpr* function_expr_new(List* parameters, List* returnTypes, Stmt* body);
+void function_expr_add_parameter(FunctionExpr** functionExpr, Decl* parameter);
+void function_expr_add_return_type(FunctionExpr** functionExpr, Type* type);
+void function_expr_to_string(FunctionExpr** functionExpr);
+void function_expr_free(FunctionExpr** functionExpr);
+
 
 typedef struct LiteralExpr {
     LiteralType type;
@@ -634,6 +649,62 @@ void literal_expr_free(LiteralExpr** literalExpr);
         size_t n_exprs = sizeof(exprs) / sizeof(exprs[0]);                     \
         for (size_t i = 0; i < n_exprs; i++) {                                 \
             ARRAY_INIT_EXPR_ADD_ELEMENT((array_init_expr), exprs[i]);          \
+        }                                                                      \
+    } while(0)
+
+#define NEW_FUNCTION_EXPR(body)                                                \
+    expr_new(FUNC_EXPR, function_expr_new(                                     \
+            (list_new((void (*)(void **)) decl_free)),                         \
+            (list_new((void (*)(void **)) type_free)),                         \
+            (body)),                                                           \
+        (void (*)(void **))function_expr_to_string,                            \
+        (void (*)(void **))function_expr_free)
+
+#define NEW_FUNCTION_EXPR_WITH_PARAMS(params, body)                            \
+    expr_new(FUNC_EXPR, function_expr_new(                                     \
+            (params),                                                          \
+            (list_new((void (*)(void **)) type_free)),                         \
+            (body)),                                                           \
+        (void (*)(void **))function_expr_to_string,                            \
+        (void (*)(void **))function_expr_free)
+
+#define NEW_FUNCTION_EXPR_WITH_RETURNS(retrns, body)                           \
+    expr_new(FUNC_EXPR, function_expr_new(                                     \
+            (list_new((void (*)(void **)) decl_free)),                         \
+            (retrns),                                                          \
+            (body)),                                                           \
+        (void (*)(void **))function_expr_to_string,                            \
+        (void (*)(void **))function_expr_free)
+
+#define NEW_FUNCTION_EXPR_WITH_PARAMS_AND_RETURNS(params, retrns, body)        \
+    expr_new(FUNC_EXPR, function_expr_new(                                     \
+            (params),                                                          \
+            (retrns),                                                          \
+            (body)),                                                           \
+        (void (*)(void **))function_expr_to_string,                            \
+        (void (*)(void **))function_expr_free)
+
+#define FUNCTION_EXPR_ADD_PARAM(func, param)                                   \
+    function_expr_add_parameter((FunctionExpr**) (&(func)->expr), (param))
+
+#define FUNCTION_EXPR_ADD_PARAMS(func, ...)                                    \
+    do {                                                                       \
+        Decl* params[] = { __VA_ARGS__ };                                      \
+        size_t n_params = sizeof(params) / sizeof(params[0]);                  \
+        for (size_t i = 0; i < n_params; i++) {                                \
+            FUNCTION_EXPR_ADD_PARAM((func), params[i]);                        \
+        }                                                                      \
+    } while(0)
+
+#define FUNCTION_EXPR_ADD_RETURN_TYPE(func, type)                              \
+    function_expr_add_return_type((FunctionExpr**) (&(func)->expr), (type))
+
+#define FUNCTION_EXPR_ADD_RETURN_TYPES(func, ...)                              \
+    do {                                                                       \
+        Type* types[] = { __VA_ARGS__ };                                       \
+        size_t n_types = sizeof(types) / sizeof(types[0]);                     \
+        for (size_t i = 0; i < n_types; i++) {                                 \
+            FUNCTION_EXPR_ADD_RETURN_TYPE((func), types[i]);                   \
         }                                                                      \
     } while(0)
 

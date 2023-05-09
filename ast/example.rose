@@ -49,6 +49,16 @@ func showArr(arr: []int) {
     }
 }
 
+func sumIntArr(arr: []int, cb: func(int): int): int {
+    let result: int = 0;
+
+    for (let i = 0; i < size(arr); i++) {
+        result += cb(arr);
+    }
+
+    return result;
+}
+
 func main() {
     const john: User = User{id: getId(), username: "", password: "", email: "", address: struct{
         street: string
@@ -85,6 +95,10 @@ func main() {
         []User{User{}, User{}, User{}}
     };
 
+    mapIntArr(numbers, func(num: int): int {
+        return num * 2;
+    });
+
     for (let i = 0; i < 10; i++) {
         print(i);
     }
@@ -94,6 +108,14 @@ func main() {
         print(i);
         i--;
     }
+
+    let fib: func(int): int = func(num: int): int {
+        if (num <= 1) {
+            return num;
+        }
+
+        return fib(num - 1) + fib(num - 2);
+    };
 
     print(fib(10));
 }

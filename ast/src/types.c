@@ -247,3 +247,74 @@ void array_type_free(ArrayType** arrayType) {
 
     safe_free((void**) arrayType);
 }
+
+FunctionType* function_type_new(List* parameterTypes, List* returnTypes) {
+    FunctionType* type = NULL;
+    type = safe_malloc(sizeof(FunctionType), NULL);
+    if (type == NULL) {
+        list_free(&parameterTypes);
+        list_free(&returnTypes);
+        return NULL;
+    }
+
+    *type = (FunctionType) {
+        .parameterTypes = parameterTypes,
+        .returnTypes = returnTypes
+    };
+
+    return type;
+}
+
+void function_type_add_parameter(FunctionType** functionType, Type* parameter) {
+    if (functionType == NULL || *functionType == NULL || parameter == NULL)
+        return;
+
+    list_insert_last(&(*functionType)->parameterTypes, parameter);
+}
+
+void function_type_add_return(FunctionType** functionType, Type* returnType) {
+    if (functionType == NULL || *functionType == NULL || returnType == NULL)
+        return;
+
+    list_insert_last(&(*functionType)->returnTypes, returnType);
+}
+
+void function_type_to_string(FunctionType** functionType) {
+    if (functionType == NULL || *functionType == NULL)
+        return;
+
+    printf("func(");
+
+    list_foreach(parameter, (*functionType)->parameterTypes) {
+        type_to_string((Type**) &parameter->value);
+
+        if (parameter->next != NULL) {
+            printf(", ");
+        }
+    }
+
+    printf(")");
+
+    List* returnTypes = (*functionType)->returnTypes;
+    if (!list_is_empty(&returnTypes)) {
+        printf(": ");
+
+        list_foreach(retType, returnTypes) {
+            type_to_string((Type**) &retType->value);
+
+            if (retType->next != NULL) {
+                printf(" | ");
+            }
+        }
+    }
+}
+
+void function_type_free(FunctionType** functionType) {
+    if (functionType == NULL || *functionType == NULL)
+        return;
+
+    list_free(&(*functionType)->parameterTypes);
+    list_free(&(*functionType)->returnTypes);
+
+    safe_free((void**) functionType);
+}

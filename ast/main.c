@@ -340,5 +340,25 @@ int main(void) {
     );
     EXPR_PRINT_AND_FREE(arrayTest);
 
+    Type* funcTypeTest = NEW_FUNCTION_TYPE();
+    FUNCTION_TYPE_ADD_PARAMS(funcTypeTest,
+        NEW_CUSTOM_TYPE(0, "User")
+    );
+    FUNCTION_TYPE_ADD_RETURNS(funcTypeTest,
+        NEW_VOID_TYPE()
+    );
+
+    Expr* funcExprTest = NEW_FUNCTION_EXPR(NEW_BLOCK_STMT());
+    FUNCTION_EXPR_ADD_PARAMS(funcExprTest,
+        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_IDENT, "user", 1), NEW_CUSTOM_TYPE(0, "User"))
+    );
+    FUNCTION_EXPR_ADD_RETURN_TYPES(funcExprTest,
+        NEW_VOID_TYPE()
+    );
+
+    Decl* letDeclWithFuncExpr = NEW_LET_DECL(
+        NEW_TOKEN(TOKEN_IDENT, "funcTest", 1), funcTypeTest, funcExprTest);
+    DECL_PRINT_AND_FREE(letDeclWithFuncExpr);
+
     return EXIT_SUCCESS;
 }

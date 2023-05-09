@@ -18,6 +18,7 @@ typedef enum TypeID {
     ARRAY_DIMENSION_TYPE,
     ARRAY_TYPE,
     NAMED_TYPE,
+    FUNC_TYPE,
     CUSTOM_TYPE
 } TypeID;
 
@@ -78,6 +79,17 @@ ArrayType* array_type_new(List* dimensions, Type* type);
 void array_type_add_dimension(ArrayType** arrayType, Type* dimension);
 void array_type_to_string(ArrayType** arrayType);
 void array_type_free(ArrayType** arrayType);
+
+typedef struct FunctionType {
+    List* parameterTypes;
+    List* returnTypes;
+} FunctionType;
+
+FunctionType* function_type_new(List* parameterTypes, List* returnTypes);
+void function_type_add_parameter(FunctionType** functionType, Type* parameter);
+void function_type_add_return(FunctionType** functionType, Type* returnType);
+void function_type_to_string(FunctionType** functionType);
+void function_type_free(FunctionType** functionType);
 
 #define NEW_INT_TYPE()                                                         \
     type_new(INT_TYPE,                                                         \
@@ -192,6 +204,51 @@ void array_type_free(ArrayType** arrayType);
         size_t n_dimensions = sizeof(dimensions) / sizeof(dimensions[0]);      \
         for (size_t i = 0; i < n_dimensions; i++) {                            \
             ARRAY_TYPE_ADD_DIMENSION((array_type), dimensions[i]);             \
+        }                                                                      \
+    } while(0)
+
+#define NEW_FUNCTION_TYPE()                                                    \
+    type_new(FUNC_TYPE,                                                        \
+        function_type_new(                                                     \
+            (list_new((void (*)(void **)) type_free)),                         \
+            (list_new((void (*)(void **)) type_free))),                        \
+        (void (*)(void**)) function_type_to_string,                            \
+        (void (*)(void**)) function_type_free)
+
+#define NEW_FUNCTION_TYPE_WITH_PARAMS(parameters)                              \
+    type_new(FUNC_TYPE,                                                        \
+        function_type_new(                                                     \
+            (parameters), (list_new((void (*)(void **)) type_free))),          \
+        (void (*)(void**)) function_type_to_string,                            \
+        (void (*)(void**)) function_type_free)
+
+#define NEW_FUNCTION_TYPE_WITH_PARAMS_AND_RETURNS(parameters, returns)         \
+    type_new(FUNC_TYPE,                                                        \
+        function_type_new((parameters), (returns)),                            \
+        (void (*)(void**)) function_type_to_string,                            \
+        (void (*)(void**)) function_type_free)
+
+#define FUNCTION_TYPE_ADD_PARAM(func_type, param)                              \
+    function_type_add_parameter((FunctionType**) (&(func_type)->type), param)
+
+#define FUNCTION_TYPE_ADD_PARAMS(func_type, ...)                               \
+    do {                                                                       \
+        Type* params[] = { __VA_ARGS__ };                                      \
+        size_t n_params = sizeof(params) / sizeof(params[0]);                  \
+        for (size_t i = 0; i < n_params; i++) {                                \
+            FUNCTION_TYPE_ADD_PARAM((func_type), params[i]);                   \
+        }                                                                      \
+    } while(0)
+
+#define FUNCTION_TYPE_ADD_RETURN(func_type, retrn)                             \
+    function_type_add_return((FunctionType**) (&(func_type)->type), retrn)
+
+#define FUNCTION_TYPE_ADD_RETURNS(func_type, ...)                              \
+    do {                                                                       \
+        Type* returns[] = { __VA_ARGS__ };                                     \
+        size_t n_returns = sizeof(returns) / sizeof(returns[0]);               \
+        for (size_t i = 0; i < n_returns; i++) {                               \
+            FUNCTION_TYPE_ADD_RETURN((func_type), returns[i]);                 \
         }                                                                      \
     } while(0)
 
