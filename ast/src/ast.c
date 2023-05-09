@@ -1278,6 +1278,51 @@ void function_expr_free(FunctionExpr** functionExpr) {
     safe_free((void**) functionExpr);
 }
 
+ConditionalExpr* conditional_expr_new(Expr* condition, Expr* isTrue, Expr* isFalse) {
+    ConditionalExpr* expr = NULL;
+    expr = safe_malloc(sizeof(ConditionalExpr), NULL);
+    if (expr == NULL) {
+        expr_free(&condition);
+        expr_free(&isTrue);
+        expr_free(&isFalse);
+        return NULL;
+    }
+
+    *expr = (ConditionalExpr) {
+        .condition = condition,
+        .isTrue = isTrue,
+        .isFalse = isFalse
+    };
+
+    return expr;
+}
+
+void conditional_expr_to_string(ConditionalExpr** conditionalExpr) {
+    if (conditionalExpr == NULL || *conditionalExpr == NULL)
+        return;
+
+    expr_to_string(&(*conditionalExpr)->condition);
+
+    printf(" ? ");
+
+    expr_to_string(&(*conditionalExpr)->isTrue);
+
+    printf(" : ");
+
+    expr_to_string(&(*conditionalExpr)->isFalse);
+}
+
+void conditional_expr_free(ConditionalExpr** conditionalExpr) {
+    if (conditionalExpr == NULL || *conditionalExpr == NULL)
+        return;
+
+    expr_free(&(*conditionalExpr)->condition);
+    expr_free(&(*conditionalExpr)->isTrue);
+    expr_free(&(*conditionalExpr)->isFalse);
+
+    safe_free((void**) conditionalExpr);
+}
+
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {
     LiteralExpr* expr = NULL;
     expr = safe_malloc(sizeof(LiteralExpr), NULL);

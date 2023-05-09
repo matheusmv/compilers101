@@ -59,6 +59,10 @@ func sumIntArr(arr: []int, cb: func(int): int): int {
     return result;
 }
 
+func isEven(num: int): bool {
+    return num % 2 == 0 ? true : false;
+}
+
 func main() {
     const john: User = User{id: getId(), username: "", password: "", email: "", address: struct{
         street: string

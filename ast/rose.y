@@ -107,7 +107,6 @@ void yyerror(const char*);
     struct Token* token_t;
 
     struct Type* type_t;
-    struct NamedType* named_type_t;
 
     struct List* list_t;
 
@@ -146,7 +145,7 @@ void yyerror(const char*);
                 RelationalExpression EqualityExpression AndExpression XorExpression OrExpression
                 LogicalAndExpression LogicalOrExpression ConditionalExpression AssignmentExpression
 
-%nonassoc ":" ";" "," OP_PIPE
+%nonassoc ":" ";" ","
 
 %right "=" "+=" "-=" "*=" "/=" "%=" "&=" "|=" "^=" "<<=" ">>="
 
@@ -487,7 +486,7 @@ FunctionReturnDeclaration
             list_insert_last(&list, $1);
             $$ = list;
         }
-    | FunctionReturnDeclaration "|" TypeDeclaration %prec OP_PIPE
+    | FunctionReturnDeclaration "|" TypeDeclaration
         {
             list_insert_last(&$1, $3);
             $$ = $1;
@@ -775,8 +774,7 @@ ConditionalExpression
         }
     | LogicalOrExpression "?" Expression ":" ConditionalExpression
         {
-            // TODO: implement ternary operator in AST
-            $$ = NULL;
+            $$ = NEW_CONDITIONAL_EXPR($1, $3, $5);
         }
     ;
 

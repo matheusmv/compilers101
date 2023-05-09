@@ -37,6 +37,7 @@ typedef enum ExprType {
     STRUCT_INLINE_EXPR,
     ARRAY_INIT_EXPR,
     FUNC_EXPR,
+    CONDITIONAL_EXPR,
     LITERAL_EXPR
 } ExprType;
 
@@ -334,6 +335,17 @@ void function_expr_add_parameter(FunctionExpr** functionExpr, Decl* parameter);
 void function_expr_add_return_type(FunctionExpr** functionExpr, Type* type);
 void function_expr_to_string(FunctionExpr** functionExpr);
 void function_expr_free(FunctionExpr** functionExpr);
+
+
+typedef struct ConditionalExpr {
+    Expr* condition;
+    Expr* isTrue;
+    Expr* isFalse;
+} ConditionalExpr;
+
+ConditionalExpr* conditional_expr_new(Expr* condition, Expr* isTrue, Expr* isFalse);
+void conditional_expr_to_string(ConditionalExpr** conditionalExpr);
+void conditional_expr_free(ConditionalExpr** conditionalExpr);
 
 
 typedef struct LiteralExpr {
@@ -707,6 +719,12 @@ void literal_expr_free(LiteralExpr** literalExpr);
             FUNCTION_EXPR_ADD_RETURN_TYPE((func), types[i]);                   \
         }                                                                      \
     } while(0)
+
+#define NEW_CONDITIONAL_EXPR(cond, if_true, if_false)                          \
+    expr_new(CONDITIONAL_EXPR,                                                 \
+        conditional_expr_new((cond), (if_true), (if_false)),                   \
+        (void (*)(void **))conditional_expr_to_string,                         \
+        (void (*)(void **))conditional_expr_free)
 
 #define NEW_LITERAL_EXPR(value)                                                \
     expr_new(LITERAL_EXPR, (value),                                            \

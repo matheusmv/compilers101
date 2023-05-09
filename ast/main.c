@@ -360,5 +360,16 @@ int main(void) {
         NEW_TOKEN(TOKEN_IDENT, "funcTest", 1), funcTypeTest, funcExprTest);
     DECL_PRINT_AND_FREE(letDeclWithFuncExpr);
 
+    Expr* condExprTest = NEW_CONDITIONAL_EXPR(
+        NEW_BINARY_EXPR(
+            NEW_INT_LITERAL(1),
+            NEW_TOKEN(TOKEN_LEQ, "<=", 1),
+            NEW_INT_LITERAL(10)
+        ),
+        NEW_BOOL_LITERAL(true),
+        NEW_BOOL_LITERAL(false)
+    );
+    EXPR_PRINT_AND_FREE(condExprTest);
+
     return EXIT_SUCCESS;
 }
