@@ -95,6 +95,21 @@ func main() {
         []User{User{}, User{}, User{}}
     };
 
+    let testArr = []func(int): int | nil {
+        func(num: int): int | nil {
+            return add(num, 1);
+        },
+        func(num: int): int | nil {
+            return sub(num, 1);
+        },
+        func(num: int): int | nil {
+            return mul(num, 1);
+        },
+        func(num: int): int | nil {
+            return div(num, 1);
+        }
+    };
+
     mapIntArr(numbers, func(num: int): int {
         return num * 2;
     });

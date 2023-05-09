@@ -1170,18 +1170,24 @@ void array_init_expr_to_string(ArrayInitExpr** arrayInit) {
 
     type_to_string(&(*arrayInit)->type);
 
-    printf("{ ");
+    printf("{");
 
     List* elements = (*arrayInit)->elements;
-    list_foreach(element, elements) {
-        expr_to_string((Expr**) &element->value);
+    if (!list_is_empty(&elements)) {
+        printf(" ");
 
-        if (element->next != NULL) {
-            printf(", ");
+        list_foreach(element, elements) {
+            expr_to_string((Expr**) &element->value);
+
+            if (element->next != NULL) {
+                printf(", ");
+            }
         }
+
+        printf(" ");
     }
 
-    printf(" }");
+    printf("}");
 }
 
 void array_init_expr_free(ArrayInitExpr** arrayInit) {
