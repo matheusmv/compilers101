@@ -135,7 +135,7 @@ void yyerror(const char*);
                 ConstDeclaration LetDeclaration CommentDeclaration Declaration
 
 %nterm <stmt_t> ExpressionStatement BlockStatement ForStatement WhileStatement IfStatement
-                ContinueStatement BreakStatement ReturnStatement FunctionBody
+                ElseStatement ContinueStatement BreakStatement ReturnStatement FunctionBody
 
 %nterm <expr_t> Expression StructArgumentsExpession StructInitializationExpression
                 Literal Identifier GroupExpression ArrayInitializationExpression
@@ -162,9 +162,6 @@ void yyerror(const char*);
 %left "*" "/" "%"
 %nonassoc UNARY "~" "!"
 %left "++" "--"
-
-%nonassoc "then"
-%nonassoc "else"
 
 %define parse.error verbose
 
@@ -667,13 +664,24 @@ ContinueStatement
     ;
 
 IfStatement
-    : "if" "(" Expression ")" BlockStatement %prec "then"
+    : "if" "(" Expression ")" BlockStatement ElseStatement
         {
-            $$ = NEW_IF_STMT($3, $5, NULL);
+            $$ = NEW_IF_STMT($3, $5, $6);
         }
-    | "if" "(" Expression ")" BlockStatement "else" BlockStatement
+    ;
+
+ElseStatement
+    : %empty
         {
-            $$ = NEW_IF_STMT($3, $5, $7);
+            $$ = NULL;
+        }
+    | "else" IfStatement
+        {
+            $$ = $2;
+        }
+    | "else" BlockStatement
+        {
+            $$ = $2;
         }
     ;
 

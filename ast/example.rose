@@ -163,3 +163,35 @@ func div(a: int, b: int): int | nil {
 func rem(a: int, b: int): int {
     return a % b;
 }
+
+let i: int = 10;
+
+if (i % 2 == 0) {
+    print("%2");
+    if (a && b) {
+        print("a && b");
+    } else {
+        print("not a && b");
+    }
+} else if (i % 3 == 0) {
+    print("%3");
+    if (c && d) {
+        print("c && d");
+    } else {
+        print("not c && d");
+    }
+} else if (i % 4 == 0) {
+    print("%4");
+    if (e && f) {
+        print("e && f");
+    } else {
+        print("not e && f");
+    }
+} else {
+    print("?");
+    if (g && h) {
+        print("g && h");
+    } else {
+        print("not g && h");
+    }
+}
