@@ -38,6 +38,7 @@ typedef enum ExprType {
     ARRAY_INIT_EXPR,
     FUNC_EXPR,
     CONDITIONAL_EXPR,
+    MEMBER_EXPR,
     LITERAL_EXPR
 } ExprType;
 
@@ -346,6 +347,17 @@ typedef struct ConditionalExpr {
 ConditionalExpr* conditional_expr_new(Expr* condition, Expr* isTrue, Expr* isFalse);
 void conditional_expr_to_string(ConditionalExpr** conditionalExpr);
 void conditional_expr_free(ConditionalExpr** conditionalExpr);
+
+
+typedef struct MemberExpr {
+    Expr* object;
+    List* members; /* List of (Expr*) */
+} MemberExpr;
+
+MemberExpr* member_expr_new(Expr* object, List* members);
+void member_expr_add_member(MemberExpr** memberExpr, Expr* member);
+void member_expr_to_string(MemberExpr** memberExpr);
+void member_expr_free(MemberExpr** memberExpr);
 
 
 typedef struct LiteralExpr {
@@ -725,6 +737,30 @@ void literal_expr_free(LiteralExpr** literalExpr);
         conditional_expr_new((cond), (if_true), (if_false)),                   \
         (void (*)(void **))conditional_expr_to_string,                         \
         (void (*)(void **))conditional_expr_free)
+
+#define NEW_MEMBER_EXPR(object)                                                \
+    expr_new(MEMBER_EXPR, member_expr_new(                                     \
+            (object),                                                          \
+            (list_new((void (*)(void **)) expr_free))),                        \
+        (void (*)(void **))member_expr_to_string,                              \
+        (void (*)(void **))member_expr_free)
+
+#define NEW_MEMBER_EXPR_WITH_MEMBER_LIST(object, member_list)                  \
+    expr_new(MEMBER_EXPR, member_expr_new((object), (member_list)),            \
+        (void (*)(void **))member_expr_to_string,                              \
+        (void (*)(void **))member_expr_free)
+
+#define MEMBER_EXPR_ADD_MEMBER(member_expr, new_member)                        \
+    member_expr_add_member((MemberExpr**) (&(member_expr)->expr), (new_member))
+
+#define MEMBER_EXPR_ADD_MEMBERS(member_expr, ...)                              \
+    do {                                                                       \
+        Expr* members[] = { __VA_ARGS__ };                                     \
+        size_t n_members = sizeof(members) / sizeof(members[0]);               \
+        for (size_t i = 0; i < n_members; i++) {                               \
+            MEMBER_EXPR_ADD_MEMBER((member_expr), members[i]);                 \
+        }                                                                      \
+    } while(0)
 
 #define NEW_LITERAL_EXPR(value)                                                \
     expr_new(LITERAL_EXPR, (value),                                            \

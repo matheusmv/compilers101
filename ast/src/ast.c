@@ -7,6 +7,7 @@
 #include "token.h"
 #include "types.h"
 #include "smem.h"
+#include "utils.h"
 
 
 Decl* decl_new(DeclType type, void* decl, void (*to_string)(void**), void (*destroy)(void**)) {
@@ -1321,6 +1322,57 @@ void conditional_expr_free(ConditionalExpr** conditionalExpr) {
     expr_free(&(*conditionalExpr)->isFalse);
 
     safe_free((void**) conditionalExpr);
+}
+
+MemberExpr* member_expr_new(Expr* object, List* members) {
+    MemberExpr* expr = NULL;
+    expr = safe_malloc(sizeof(MemberExpr), NULL);
+    if (expr == NULL) {
+        expr_free(&object);
+        list_free(&members);
+        return NULL;
+    }
+
+    *expr = (MemberExpr) {
+        .object = object,
+        .members = members
+    };
+
+    return expr;
+}
+
+void member_expr_add_member(MemberExpr** memberExpr, Expr* member) {
+    if (memberExpr == NULL || *memberExpr == NULL || member == NULL)
+        return;
+
+    list_insert_last(&(*memberExpr)->members, member);
+}
+
+void member_expr_to_string(MemberExpr** memberExpr) {
+    if (memberExpr == NULL || *memberExpr == NULL)
+        return;
+
+    expr_to_string(&(*memberExpr)->object);
+
+    printf(".");
+
+    list_foreach(member, (*memberExpr)->members) {
+        expr_to_string((Expr**) &member->value);
+
+        if (member->next != NULL) {
+            printf(".");
+        }
+    }
+}
+
+void member_expr_free(MemberExpr** memberExpr) {
+    if (memberExpr == NULL || *memberExpr == NULL)
+        return;
+
+    expr_free(&(*memberExpr)->object);
+    list_free(&(*memberExpr)->members);
+
+    safe_free((void**) memberExpr);
 }
 
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {

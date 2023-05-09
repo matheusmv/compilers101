@@ -129,7 +129,7 @@ void yyerror(const char*);
 %nterm <list_t> Declarations ArrayArguments FunctionParameterTypeList FunctionReturnTypeList
                 StructArguments StructInitializationListExpression CallExpressionArguments
                 StructFieldsDeclaration FunctionParametersDeclaration FunctionReturnDeclaration
-                StructNamedTypesDeclaration ArrayDimensionList
+                StructNamedTypesDeclaration ArrayDimensionList MemberAccessList
 
 %nterm <decl_t> Statement StructDeclaration FunctionDeclaration IdentifierDeclaration
                 ConstDeclaration LetDeclaration CommentDeclaration Declaration
@@ -162,6 +162,9 @@ void yyerror(const char*);
 %left "*" "/" "%"
 %nonassoc UNARY "~" "!"
 %left "++" "--"
+
+%left '.'
+%left '('
 
 %define parse.error verbose
 
@@ -205,11 +208,11 @@ Declaration
         {
             $$ = $1;
         }
-    | LetDeclaration OptionalSemicolon
+    | LetDeclaration Semicolon
         {
             $$ = $1;
         }
-    | ConstDeclaration OptionalSemicolon
+    | ConstDeclaration Semicolon
         {
             $$ = $1;
         }
@@ -223,7 +226,7 @@ Declaration
         }
     ;
 
-OptionalSemicolon
+Semicolon
     : ";"
     ;
 
@@ -627,7 +630,7 @@ Statement
         {
             $$ = NEW_STMT_DECL($1);
         }
-    | ExpressionStatement OptionalSemicolon
+    | ExpressionStatement Semicolon
         {
             $$ = NEW_STMT_DECL($1);
         }
@@ -641,14 +644,14 @@ BlockStatement
     ;
 
 ReturnStatement
-    : "return" Expression OptionalSemicolon
+    : "return" Expression Semicolon
         {
             $$ = NEW_RETURN_STMT($2);
         }
     ;
 
 BreakStatement
-    : "break" OptionalSemicolon
+    : "break" Semicolon
         {
             // TODO: add break stmt to AST
             $$ = NULL;
@@ -656,7 +659,7 @@ BreakStatement
     ;
 
 ContinueStatement
-    : "continue" OptionalSemicolon
+    : "continue" Semicolon
         {
             // TODO: add continue stmt to AST
             $$ = NULL;
@@ -1085,10 +1088,27 @@ CallExpressionArguments
     ;
 
 MemberExpression
-    : PostfixExpression "." Identifier
+    : PostfixExpression "." MemberAccessList
         {
-            // TODO: add member expression to AST
-            $$ = NULL;
+            $$ = NEW_MEMBER_EXPR_WITH_MEMBER_LIST($1, $3);
+        }
+    ;
+
+MemberAccessList
+    : %empty
+        {
+            $$ = list_new((void (*)(void**)) expr_free);
+        }
+    | Identifier
+        {
+            List* list = list_new((void (*)(void**)) expr_free);
+            list_insert_last(&list, $1);
+            $$ = list;
+        }
+    | MemberAccessList "." Identifier
+        {
+            list_insert_last(&$1, $3);
+            $$ = $1;
         }
     ;
 

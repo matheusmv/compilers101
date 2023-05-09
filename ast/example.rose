@@ -63,6 +63,14 @@ func isEven(num: int): bool {
     return num % 2 == 0 ? true : false;
 }
 
+func logUserDetails(user: User) {
+  print(user.id);
+  print(user.username);
+  print(user.email);
+  print(user.address.street);
+  print(user.address.zip);
+}
+
 func main() {
     const john: User = User{id: getId(), username: "", password: "", email: "", address: struct{
         street: string

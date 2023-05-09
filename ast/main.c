@@ -371,5 +371,12 @@ int main(void) {
     );
     EXPR_PRINT_AND_FREE(condExprTest);
 
+    Expr* memberExprTest = NEW_MEMBER_EXPR(NEW_IDENT_LITERAL("user"));
+    MEMBER_EXPR_ADD_MEMBERS(memberExprTest,
+        NEW_IDENT_LITERAL("address"),
+        NEW_IDENT_LITERAL("zip")
+    );
+    EXPR_PRINT_AND_FREE(memberExprTest);
+
     return EXIT_SUCCESS;
 }
