@@ -161,8 +161,8 @@ COLON     ":"
 {SEMICOLON}     { return_token(SEMICOLON); }
 {COLON}         { return_token(COLON);     }
 
-{SL_COMMENT}    { return_token(SL_COMMENT); }
-{ML_COMMENT}    { return_token(ML_COMMENT); }
+{SL_COMMENT}    { /* */ }
+{ML_COMMENT}    { /* */ }
 
 {IDENT}         { yylval.str_value   = str_dup(yytext); return_token(IDENT);  }
 {INT}           { yylval.int_value   = atoi(yytext);    return_token(INT);    }

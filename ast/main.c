@@ -378,5 +378,21 @@ int main(void) {
     );
     EXPR_PRINT_AND_FREE(memberExprTest);
 
+    Expr* arrayMemberExprTest = NEW_ARRAY_MEMBER_EXPR(NEW_IDENT_LITERAL("numbers"));
+    ARRAY_MEMBER_EXPR_ACCESS_INDEXES(arrayMemberExprTest,
+        NEW_INT_LITERAL(0),
+        NEW_INT_LITERAL(3),
+    );
+    EXPR_PRINT_AND_FREE(arrayMemberExprTest);
+
+    Expr* castExprTest = NEW_CAST_EXPR(NEW_IDENT_LITERAL("number"), NEW_FLOAT_TYPE());
+    EXPR_PRINT_AND_FREE(castExprTest);
+
+    Stmt* breakTest = NEW_BREAK_STMT();
+    STMT_PRINT_AND_FREE(breakTest);
+
+    Stmt* continueTest = NEW_CONTINUE_STMT();
+    STMT_PRINT_AND_FREE(continueTest);
+
     return EXIT_SUCCESS;
 }

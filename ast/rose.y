@@ -115,7 +115,7 @@ void yyerror(const char*);
     struct Expr* expr_t;
 }
 
-%token <str_value> ILLEGAL SL_COMMENT ML_COMMENT IDENT STRING
+%token <str_value> ILLEGAL IDENT STRING
 %token <int_value> INT
 %token <float_value> FLOAT
 %token <char_value> CHAR
@@ -130,9 +130,10 @@ void yyerror(const char*);
                 StructArguments StructInitializationListExpression CallExpressionArguments
                 StructFieldsDeclaration FunctionParametersDeclaration FunctionReturnDeclaration
                 StructNamedTypesDeclaration ArrayDimensionList MemberAccessList
+                ArrayIndexAccessList
 
 %nterm <decl_t> Statement StructDeclaration FunctionDeclaration IdentifierDeclaration
-                ConstDeclaration LetDeclaration CommentDeclaration Declaration
+                ConstDeclaration LetDeclaration Declaration ForInitializer
 
 %nterm <stmt_t> ExpressionStatement BlockStatement ForStatement WhileStatement IfStatement
                 ElseStatement ContinueStatement BreakStatement ReturnStatement FunctionBody
@@ -144,6 +145,7 @@ void yyerror(const char*);
                 UnaryExpression MultiplicativeExpression AdditiveExpression ShiftExpression
                 RelationalExpression EqualityExpression AndExpression XorExpression OrExpression
                 LogicalAndExpression LogicalOrExpression ConditionalExpression AssignmentExpression
+                ForCondition ForIncrement
 
 %nonassoc ":" ";" ","
 
@@ -162,9 +164,6 @@ void yyerror(const char*);
 %left "*" "/" "%"
 %nonassoc UNARY "~" "!"
 %left "++" "--"
-
-%left '.'
-%left '('
 
 %define parse.error verbose
 
@@ -204,10 +203,6 @@ Declaration
         {
             $$ = $1;
         }
-    | CommentDeclaration
-        {
-            $$ = $1;
-        }
     | LetDeclaration Semicolon
         {
             $$ = $1;
@@ -228,17 +223,6 @@ Declaration
 
 Semicolon
     : ";"
-    ;
-
-CommentDeclaration
-    : SL_COMMENT
-        {
-            $$ = NULL;
-        }
-    | ML_COMMENT
-        {
-            $$ = NULL;
-        }
     ;
 
 LetDeclaration
@@ -653,16 +637,14 @@ ReturnStatement
 BreakStatement
     : "break" Semicolon
         {
-            // TODO: add break stmt to AST
-            $$ = NULL;
+            $$ = NEW_BREAK_STMT();
         }
     ;
 
 ContinueStatement
     : "continue" Semicolon
         {
-            // TODO: add continue stmt to AST
-            $$ = NULL;
+            $$ = NEW_CONTINUE_STMT();
         }
     ;
 
@@ -696,13 +678,48 @@ WhileStatement
     ;
 
 ForStatement
-    : "for" "(" ";" ";" ")" BlockStatement
-        {
-            $$ = NEW_FOR_STMT(NULL, NULL, NULL, $6);
-        }
-    | "for" "(" LetDeclaration ";" Expression ";" Expression ")" BlockStatement
+    : "for" "(" ForInitializer  ";" ForCondition ";" ForIncrement ")" BlockStatement
         {
             $$ = NEW_FOR_STMT($3, $5, $7, $9);
+        }
+    ;
+
+ForInitializer
+    : %empty
+        {
+            $$ = NULL;
+        }
+    | LetDeclaration
+        {
+            $$ = $1;
+        }
+    | Expression
+        {
+            $$ = NEW_STMT_DECL(
+                NEW_EXPR_STMT($1)
+            );
+        }
+    ;
+
+ForCondition
+    : %empty
+        {
+            $$ = NULL;
+        }
+    | Expression
+        {
+            $$ = $1;
+        }
+    ;
+
+ForIncrement
+    : %empty
+        {
+            $$ = NULL;
+        }
+    | Expression
+        {
+            $$ = $1;
         }
     ;
 
@@ -1055,10 +1072,23 @@ PostfixOperator
     ;
 
 ArrayMemberExpression
-    : PostfixExpression "[" Expression "]"
+    : PostfixExpression ArrayIndexAccessList
         {
-            // TODO: add array member expression in AST
-            $$ = NULL;
+            $$ = NEW_ARRAY_MEMBER_EXPR_WITH_ACCESS_LEVEL_LIST($1, $2);
+        }
+    ;
+
+ArrayIndexAccessList
+    : "[" Expression "]"
+        {
+            List* list = list_new((void (*)(void**)) expr_free);
+            list_insert_last(&list, $2);
+            $$ = list;
+        }
+    | ArrayIndexAccessList "[" Expression "]"
+        {
+            list_insert_last(&$1, $3);
+            $$ = $1;
         }
     ;
 
@@ -1072,7 +1102,7 @@ CallExpression
 CallExpressionArguments
     : %empty
         {
-            $$ = list_new((void (*)(void**)) expr_free);;
+            $$ = list_new((void (*)(void**)) expr_free);
         }
     | Expression
         {
@@ -1115,8 +1145,7 @@ MemberAccessList
 CastExpression
     : PostfixExpression "." "(" TypeDeclaration ")"
         {
-            // TODO: add cast expression to AST
-            $$ = NULL;
+            $$ = NEW_CAST_EXPR($1, $4);
         }
     ;
 

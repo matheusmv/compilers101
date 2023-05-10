@@ -73,7 +73,7 @@ void bool_literal_to_string(BoolLiteral**);
 void bool_literal_free(BoolLiteral**);
 
 typedef struct VoidLiteral {
-    void* value;
+    void* _;
 } VoidLiteral;
 
 VoidLiteral* void_literal_new(void);
@@ -81,7 +81,7 @@ void void_literal_to_string(VoidLiteral**);
 void void_literal_free(VoidLiteral**);
 
 typedef struct NilLiteral {
-    void* value;
+    void* _;
 } NilLiteral;
 
 NilLiteral* nil_literal_new(void);

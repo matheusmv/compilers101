@@ -9,43 +9,33 @@ struct User {
     }
 }
 
-struct List {
+struct Node {
     data: User
-    next: ListNode
+    next: Node
 }
 
-func print() {
-    let not: struct{} = struct{}{};
-    print("ok");
-    call()(a, b);
+struct List {
+    size: int
+    head: Node
 }
 
-func print(): void {
-    print("ok");
-}
-
-func print(msg: string) {
-    print(msg);
-}
-
-func sort(list: List): List | error {
-    let t: User = User{ list: list, name1: 0};
-    return mergeSort(list);
-}
-
-func makeUser(id: int, username: string, password: string, email: string, address: struct { street: string zip: string }): User | nil {
+func makeUser(id: int, username: string, password: string, email: string, street: string, zip: string): User {
     return User{
         id: id,
         username: username,
         password: password,
         email: email,
-        address: address
+        address: struct { street: string zip: string }{
+            street: street,
+            zip: zip
+        }
     };
 }
 
 func showArr(arr: []int) {
-    for (let i = 0; i < size(arr); i++) {
-        print(arr);
+    let i = 0;
+    for (; i < size(arr); i++) {
+        print(arr[i]);
     }
 }
 
@@ -80,6 +70,8 @@ func main() {
         zip: ""
     }};
 
+    getUser().getRole().name;
+
     let two: int = 2;
     let PI: float = 3.1415;
     let newLine: char = '\n';
@@ -100,6 +92,12 @@ func main() {
     const numbers: []int = []int{};
     const numbers = [5]int{1, 2, 3, 4, 5};
     const numbers = []int{};
+
+    const one: int = numbers[0];
+    const one: int = numbers[0][1];
+    const one: int = numbers[0][0][1];
+    const one: int = numbers[0].value;
+    const one: int = numbers[getIdex()];
 
     const userTable: [][]User = [][]User{
         []User{User{}, User{}, User{}},
@@ -133,9 +131,11 @@ func main() {
     let i: int = 10;
     while (i > 0) {
         print(i);
+
         i--;
     }
 
+    // fibonacci recursivo
     let fib: func(int): int = func(num: int): int {
         if (num <= 1) {
             return num;
@@ -144,7 +144,12 @@ func main() {
         return fib(num - 1) + fib(num - 2);
     };
 
-    print(fib(10));
+    /*
+     * converte o input (string) para (int)
+     */
+    let userInput: int = input("num: ").(int);
+
+    print(fib(userInput).(string));
 }
 
 func add(a: int, b: int): int {
@@ -170,36 +175,4 @@ func div(a: int, b: int): int | nil {
 
 func rem(a: int, b: int): int {
     return a % b;
-}
-
-let i: int = 10;
-
-if (i % 2 == 0) {
-    print("%2");
-    if (a && b) {
-        print("a && b");
-    } else {
-        print("not a && b");
-    }
-} else if (i % 3 == 0) {
-    print("%3");
-    if (c && d) {
-        print("c && d");
-    } else {
-        print("not c && d");
-    }
-} else if (i % 4 == 0) {
-    print("%4");
-    if (e && f) {
-        print("e && f");
-    } else {
-        print("not e && f");
-    }
-} else {
-    print("?");
-    if (g && h) {
-        print("g && h");
-    } else {
-        print("not g && h");
-    }
 }

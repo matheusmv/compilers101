@@ -559,6 +559,54 @@ void return_stmt_free(ReturnStmt** returnStmt) {
     safe_free((void**) returnStmt);
 }
 
+BreakStmt* break_stmt_new(void) {
+    BreakStmt* stmt = NULL;
+    stmt = safe_malloc(sizeof(BreakStmt), NULL);
+    if (stmt == NULL) {
+        return NULL;
+    }
+
+    return stmt;
+}
+
+void break_stmt_to_string(BreakStmt** breakStmt) {
+    if (breakStmt == NULL || *breakStmt == NULL)
+        return;
+
+    printf("break");
+}
+
+void break_stmt_free(BreakStmt** breakStmt) {
+    if (breakStmt == NULL || *breakStmt == NULL)
+        return;
+
+    safe_free((void**) breakStmt);
+}
+
+ContinueStmt* continue_stmt_new(void) {
+    ContinueStmt* stmt = NULL;
+    stmt = safe_malloc(sizeof(ContinueStmt), NULL);
+    if (stmt == NULL) {
+        return NULL;
+    }
+
+    return stmt;
+}
+
+void continue_stmt_to_string(ContinueStmt** continueStmt) {
+    if (continueStmt == NULL || *continueStmt == NULL)
+        return;
+
+    printf("continue");
+}
+
+void continue_stmt_free(ContinueStmt** continueStmt) {
+    if (continueStmt == NULL || *continueStmt == NULL)
+        return;
+
+    safe_free((void**) continueStmt);
+}
+
 IfStmt* if_stmt_new(Expr* condition, Stmt* thenBranch, Stmt* elseBranch) {
     IfStmt* stmt = NULL;
     stmt = safe_malloc(sizeof(IfStmt), NULL);
@@ -1373,6 +1421,93 @@ void member_expr_free(MemberExpr** memberExpr) {
     list_free(&(*memberExpr)->members);
 
     safe_free((void**) memberExpr);
+}
+
+ArrayMemberExpr* array_member_expr_new(Expr* object, List* levelOfAccess) {
+    ArrayMemberExpr* expr = NULL;
+    expr = safe_malloc(sizeof(ArrayMemberExpr), NULL);
+    if (expr == NULL) {
+        expr_free(&object);
+        list_free(&levelOfAccess);
+        return NULL;
+    }
+
+    *expr = (ArrayMemberExpr) {
+        .object = object,
+        .levelOfAccess = levelOfAccess
+    };
+
+    return expr;
+}
+
+void array_member_expr_add_index_access(ArrayMemberExpr** arrayMemberExpr, Expr* level) {
+    if (arrayMemberExpr == NULL || *arrayMemberExpr == NULL || level == NULL)
+        return;
+
+    list_insert_last(&(*arrayMemberExpr)->levelOfAccess, level);
+}
+
+void array_member_expr_to_string(ArrayMemberExpr** arrayMemberExpr) {
+    if (arrayMemberExpr == NULL || *arrayMemberExpr == NULL)
+        return;
+
+    expr_to_string(&(*arrayMemberExpr)->object);
+
+    list_foreach(level, (*arrayMemberExpr)->levelOfAccess) {
+        printf("[");
+        expr_to_string((Expr**) &level->value);
+        printf("]");
+    }
+}
+
+void array_member_expr_free(ArrayMemberExpr** arrayMemberExpr) {
+    if (arrayMemberExpr == NULL || *arrayMemberExpr == NULL)
+        return;
+
+    expr_free(&(*arrayMemberExpr)->object);
+    list_free(&(*arrayMemberExpr)->levelOfAccess);
+
+    safe_free((void**) arrayMemberExpr);
+}
+
+CastExpr* cast_expr_new(Expr* target, Type* type) {
+    CastExpr* expr = NULL;
+    expr = safe_malloc(sizeof(CastExpr), NULL);
+    if (expr == NULL) {
+        expr_free(&target);
+        type_free(&type);
+        return NULL;
+    }
+
+    *expr = (CastExpr) {
+        .target = target,
+        .type = type
+    };
+
+    return expr;
+}
+
+void cast_expr_to_string(CastExpr** castExpr) {
+    if (castExpr == NULL || *castExpr == NULL)
+        return;
+
+    expr_to_string(&(*castExpr)->target);
+
+    printf(".(");
+
+    type_to_string(&(*castExpr)->type);
+
+    printf(")");
+}
+
+void cast_expr_free(CastExpr** castExpr) {
+    if (castExpr == NULL || *castExpr == NULL)
+        return;
+
+    expr_free(&(*castExpr)->target);
+    type_free(&(*castExpr)->type);
+
+    safe_free((void**) castExpr);
 }
 
 LiteralExpr* literal_expr_new(LiteralType type, void* value, void (*to_string)(void**), void (*destroy)(void**)) {

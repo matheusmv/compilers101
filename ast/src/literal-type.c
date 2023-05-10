@@ -173,8 +173,6 @@ VoidLiteral* void_literal_new(void) {
         return NULL;
     }
 
-    type->value = NULL;
-
     return type;
 }
 
@@ -198,8 +196,6 @@ NilLiteral* nil_literal_new(void) {
     if (type == NULL) {
         return NULL;
     }
-
-    type->value = NULL;
 
     return type;
 }

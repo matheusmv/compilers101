@@ -19,6 +19,8 @@ typedef enum StmtType {
     BLOCK_STMT,
     EXPRESSION_STMT,
     RETURN_STMT,
+    BREAK_STMT,
+    CONTINUE_STMT,
     IF_STMT,
     WHILE_STMT,
     FOR_STMT
@@ -39,6 +41,8 @@ typedef enum ExprType {
     FUNC_EXPR,
     CONDITIONAL_EXPR,
     MEMBER_EXPR,
+    ARRAY_MEMBER_EXPR,
+    CAST_EXPR,
     LITERAL_EXPR
 } ExprType;
 
@@ -174,6 +178,24 @@ typedef struct ReturnStmt {
 ReturnStmt* return_stmt_new(Expr* expression);
 void return_stmt_to_string(ReturnStmt** returnStmt);
 void return_stmt_free(ReturnStmt** returnStmt);
+
+
+typedef struct BreakStmt {
+    void* _;
+} BreakStmt;
+
+BreakStmt* break_stmt_new(void);
+void break_stmt_to_string(BreakStmt** breakStmt);
+void break_stmt_free(BreakStmt** breakStmt);
+
+
+typedef struct ContinueStmt {
+    void* _;
+} ContinueStmt;
+
+ContinueStmt* continue_stmt_new(void);
+void continue_stmt_to_string(ContinueStmt** continueStmt);
+void continue_stmt_free(ContinueStmt** continueStmt);
 
 
 typedef struct IfStmt {
@@ -360,6 +382,27 @@ void member_expr_to_string(MemberExpr** memberExpr);
 void member_expr_free(MemberExpr** memberExpr);
 
 
+typedef struct ArrayMemberExpr {
+    Expr* object;
+    List* levelOfAccess; /* List of (Expr*) */
+} ArrayMemberExpr;
+
+ArrayMemberExpr* array_member_expr_new(Expr* object, List* levelOfAccess);
+void array_member_expr_add_index_access(ArrayMemberExpr** arrayMemberExpr, Expr* level);
+void array_member_expr_to_string(ArrayMemberExpr** arrayMemberExpr);
+void array_member_expr_free(ArrayMemberExpr** arrayMemberExpr);
+
+
+typedef struct CastExpr {
+    Expr* target;
+    Type* type;
+} CastExpr;
+
+CastExpr* cast_expr_new(Expr* target, Type* type);
+void cast_expr_to_string(CastExpr** castExpr);
+void cast_expr_free(CastExpr** castExpr);
+
+
 typedef struct LiteralExpr {
     LiteralType type;
     void* value; /* Ident | Int | Float | Char | String | Bool | Void | Nil */
@@ -518,6 +561,16 @@ void literal_expr_free(LiteralExpr** literalExpr);
     stmt_new(RETURN_STMT, return_stmt_new((expr)),                             \
         (void (*)(void **))return_stmt_to_string,                              \
         (void (*)(void **))return_stmt_free)
+
+#define NEW_BREAK_STMT()                                                       \
+    stmt_new(BREAK_STMT, break_stmt_new(),                                     \
+        (void (*)(void **))break_stmt_to_string,                               \
+        (void (*)(void **))break_stmt_free)
+
+#define NEW_CONTINUE_STMT()                                                    \
+    stmt_new(CONTINUE_STMT, continue_stmt_new(),                               \
+        (void (*)(void **))continue_stmt_to_string,                            \
+        (void (*)(void **))continue_stmt_free)
 
 #define NEW_IF_STMT(cond_expr, then_block, else_block)                         \
     stmt_new(IF_STMT, if_stmt_new((cond_expr), (then_block), (else_block)),    \
@@ -761,6 +814,37 @@ void literal_expr_free(LiteralExpr** literalExpr);
             MEMBER_EXPR_ADD_MEMBER((member_expr), members[i]);                 \
         }                                                                      \
     } while(0)
+
+#define NEW_ARRAY_MEMBER_EXPR(object)                                          \
+    expr_new(ARRAY_MEMBER_EXPR, array_member_expr_new(                         \
+            (object),                                                          \
+            (list_new((void (*)(void **)) expr_free))),                        \
+        (void (*)(void **))array_member_expr_to_string,                        \
+        (void (*)(void **))array_member_expr_free)
+
+#define NEW_ARRAY_MEMBER_EXPR_WITH_ACCESS_LEVEL_LIST(object, access_lvl_list)  \
+    expr_new(ARRAY_MEMBER_EXPR, array_member_expr_new(                         \
+        (object), (access_lvl_list)),                                          \
+        (void (*)(void **))array_member_expr_to_string,                        \
+        (void (*)(void **))array_member_expr_free)
+
+#define ARRAY_MEMBER_EXPR_ACCESS_INDEX(arr_member_expr, new_index)             \
+    array_member_expr_add_index_access(                                        \
+        (ArrayMemberExpr**) (&(arr_member_expr)->expr), (new_index))
+
+#define ARRAY_MEMBER_EXPR_ACCESS_INDEXES(arr_member_expr, ...)                 \
+    do {                                                                       \
+        Expr* indexes[] = { __VA_ARGS__ };                                     \
+        size_t n_indexes = sizeof(indexes) / sizeof(indexes[0]);               \
+        for (size_t i = 0; i < n_indexes; i++) {                               \
+            ARRAY_MEMBER_EXPR_ACCESS_INDEX((arr_member_expr), indexes[i]);     \
+        }                                                                      \
+    } while(0)
+
+#define NEW_CAST_EXPR(target, type)                                            \
+    expr_new(CAST_EXPR, cast_expr_new((target), (type)),                       \
+        (void (*)(void **))cast_expr_to_string,                                \
+        (void (*)(void **))cast_expr_free)
 
 #define NEW_LITERAL_EXPR(value)                                                \
     expr_new(LITERAL_EXPR, (value),                                            \
