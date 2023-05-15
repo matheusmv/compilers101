@@ -124,7 +124,7 @@ void yyerror(const char*);
                 ShiftOperator RelationalOperator EqualityOperator AssignmentOperator
 
 %nterm <type_t> TypeDeclaration StructType PrimitiveType FunctionType ArrayType
-                ArrayDimension ValidArrayType
+                ArrayDimension ValidArrayType NamedType
 
 %nterm <list_t> Declarations ArrayArguments FunctionParameterTypeList FunctionReturnTypeList
                 StructArguments StructInitializationListExpression CallExpressionArguments
@@ -493,16 +493,25 @@ StructNamedTypesDeclaration
         {
             $$ = list_new((void (*)(void**)) type_free);
         }
-    | IdentifierDeclaration
+    | NamedType
         {
             List* list = list_new((void (*)(void**)) type_free);
             list_insert_last(&list, $1);
             $$ = list;
         }
-    | StructNamedTypesDeclaration IdentifierDeclaration
+    | StructNamedTypesDeclaration NamedType
         {
             list_insert_last(&$1, $2);
             $$ = $1;
+        }
+    ;
+
+NamedType
+    : IDENT ":" TypeDeclaration
+        {
+            Type* type = NEW_NAMED_TYPE($1, $3);
+            safe_free((void**) &$1);
+            $$ = type;
         }
     ;
 

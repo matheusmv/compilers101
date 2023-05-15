@@ -26,10 +26,11 @@ int main(int argc, char* argv[]) {
     fclose(src);
 
     extern bool success;
-    if (success) {
-        printf("Parsing Successful\n");
-        return EXIT_SUCCESS;
+    if (!success) {
+        return EXIT_FAILURE;
     }
 
-    return EXIT_FAILURE;
+    printf("Parsing Successful\n");
+
+    return EXIT_SUCCESS;
 }
