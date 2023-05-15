@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 
-static void invoke_error_callback_if_not_null(error_callback cb, char* message) {
+static void invoke_error_callback_if_not_null(error_callback cb, const char* message) {
     if (cb != NULL) {
         cb(message);
     }

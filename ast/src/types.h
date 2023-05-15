@@ -7,6 +7,7 @@
 
 
 typedef enum TypeID {
+    _atomic_start,
     INT_TYPE,
     FLOAT_TYPE,
     CHAR_TYPE,
@@ -14,33 +15,42 @@ typedef enum TypeID {
     BOOL_TYPE,
     VOID_TYPE,
     NIL_TYPE,
+    _atomic_end,
+
+    CUSTOM_TYPE,
+
+    NAMED_TYPE,
     STRUCT_TYPE,
     ARRAY_DIMENSION_TYPE,
     ARRAY_TYPE,
-    NAMED_TYPE,
-    FUNC_TYPE,
-    CUSTOM_TYPE
+    FUNC_TYPE
 } TypeID;
 
 typedef struct Type {
     TypeID typeId;
     void* type;
+    bool (*equals)(void**, void**);
     void (*to_string)(void**);
     void (*destroy)(void**);
 } Type;
 
-Type* type_new(TypeID typeID, void* type, void (*to_string)(void**), void (*destroy)(void**));
+Type* type_new(TypeID typeID, void* type,
+    bool (*equals)(void**, void**),
+    void (*to_string)(void**),
+    void (*destroy)(void**));
+bool type_equals(Type** self, Type** other);
 void type_to_string(Type** type);
 void type_free(Type** type);
 
-typedef struct CommonType {
+typedef struct AtomicType {
     size_t size;
     char* name;
-} CommonType;
+} AtomicType;
 
-CommonType* common_type_new(size_t size, char* name);
-void common_type_to_string(CommonType** commonType);
-void common_type_free(CommonType** commonType);
+AtomicType* atomic_type_new(size_t size, char* name);
+bool atomic_type_equals(AtomicType** self, Type** other);
+void atomic_type_to_string(AtomicType** atomicType);
+void atomic_type_free(AtomicType** atomicType);
 
 typedef struct NamedType {
     char* name;
@@ -48,6 +58,7 @@ typedef struct NamedType {
 } NamedType;
 
 NamedType* named_type_new(char* name, Type* type);
+bool named_type_equals(NamedType** self, Type** other);
 void named_type_to_string(NamedType** namedType);
 void named_type_free(NamedType** namedType);
 
@@ -59,6 +70,7 @@ typedef struct StructType {
 
 StructType* struct_type_new(size_t size, char* name, List* fields);
 void struct_type_add_field(StructType** structType, Type* field);
+bool struct_type_equals(StructType** self, Type** other);
 void struct_type_to_string(StructType** structType);
 void struct_type_free(StructType** structType);
 
@@ -67,6 +79,7 @@ typedef struct ArrayDimension {
 } ArrayDimension;
 
 ArrayDimension* array_dimension_new(size_t size);
+bool array_dimension_equals(ArrayDimension** self, Type** other);
 void array_dimension_to_string(ArrayDimension** arrayDimension);
 void array_dimension_free(ArrayDimension** arrayDimension);
 
@@ -77,6 +90,7 @@ typedef struct ArrayType {
 
 ArrayType* array_type_new(List* dimensions, Type* type);
 void array_type_add_dimension(ArrayType** arrayType, Type* dimension);
+bool array_type_equals(ArrayType** self, Type** other);
 void array_type_to_string(ArrayType** arrayType);
 void array_type_free(ArrayType** arrayType);
 
@@ -88,54 +102,70 @@ typedef struct FunctionType {
 FunctionType* function_type_new(List* parameterTypes, List* returnTypes);
 void function_type_add_parameter(FunctionType** functionType, Type* parameter);
 void function_type_add_return(FunctionType** functionType, Type* returnType);
+bool function_type_equals(FunctionType** self, Type** other);
 void function_type_to_string(FunctionType** functionType);
 void function_type_free(FunctionType** functionType);
 
 #define NEW_INT_TYPE()                                                         \
     type_new(INT_TYPE,                                                         \
-        common_type_new(sizeof(int), "int"),                                   \
-        (void (*)(void**)) common_type_to_string,                              \
-        (void (*)(void**)) common_type_free)
+        atomic_type_new(sizeof(int), "int"),                                   \
+        (bool (*)(void**, void**)) atomic_type_equals,                         \
+        (void (*)(void**)) atomic_type_to_string,                              \
+        (void (*)(void**)) atomic_type_free)
 
 #define NEW_FLOAT_TYPE()                                                       \
     type_new(FLOAT_TYPE,                                                       \
-        common_type_new(sizeof(double), "float"),                              \
-        (void (*)(void**)) common_type_to_string,                              \
-        (void (*)(void**)) common_type_free)
+        atomic_type_new(sizeof(double), "float"),                              \
+        (bool (*)(void**, void**)) atomic_type_equals,                         \
+        (void (*)(void**)) atomic_type_to_string,                              \
+        (void (*)(void**)) atomic_type_free)
 
 #define NEW_CHAR_TYPE()                                                        \
     type_new(CHAR_TYPE,                                                        \
-        common_type_new(sizeof(char), "char"),                                 \
-        (void (*)(void**)) common_type_to_string,                              \
-        (void (*)(void**)) common_type_free)
+        atomic_type_new(sizeof(char), "char"),                                 \
+        (bool (*)(void**, void**)) atomic_type_equals,                         \
+        (void (*)(void**)) atomic_type_to_string,                              \
+        (void (*)(void**)) atomic_type_free)
 
 #define NEW_STRING_TYPE()                                                      \
     type_new(STRING_TYPE,                                                      \
-        common_type_new(sizeof(char*), "string"),                              \
-        (void (*)(void**)) common_type_to_string,                              \
-        (void (*)(void**)) common_type_free)
+        atomic_type_new(sizeof(char*), "string"),                              \
+        (bool (*)(void**, void**)) atomic_type_equals,                         \
+        (void (*)(void**)) atomic_type_to_string,                              \
+        (void (*)(void**)) atomic_type_free)
 
 #define NEW_BOOL_TYPE()                                                        \
     type_new(BOOL_TYPE,                                                        \
-        common_type_new(sizeof(bool), "bool"),                                 \
-        (void (*)(void**)) common_type_to_string,                              \
-        (void (*)(void**)) common_type_free)
+        atomic_type_new(sizeof(bool), "bool"),                                 \
+        (bool (*)(void**, void**)) atomic_type_equals,                         \
+        (void (*)(void**)) atomic_type_to_string,                              \
+        (void (*)(void**)) atomic_type_free)
 
 #define NEW_VOID_TYPE()                                                        \
     type_new(VOID_TYPE,                                                        \
-        common_type_new(0, "void"),                                            \
-        (void (*)(void**)) common_type_to_string,                              \
-        (void (*)(void**)) common_type_free)
+        atomic_type_new(0, "void"),                                            \
+        (bool (*)(void**, void**)) atomic_type_equals,                         \
+        (void (*)(void**)) atomic_type_to_string,                              \
+        (void (*)(void**)) atomic_type_free)
 
 #define NEW_NIL_TYPE()                                                         \
     type_new(NIL_TYPE,                                                         \
-        common_type_new(0, "nil"),                                             \
-        (void (*)(void**)) common_type_to_string,                              \
-        (void (*)(void**)) common_type_free)
+        atomic_type_new(0, "nil"),                                             \
+        (bool (*)(void**, void**)) atomic_type_equals,                         \
+        (void (*)(void**)) atomic_type_to_string,                              \
+        (void (*)(void**)) atomic_type_free)
+
+#define NEW_CUSTOM_TYPE(size, name)                                            \
+    type_new(CUSTOM_TYPE,                                                      \
+        atomic_type_new((size), (name)),                                       \
+        (bool (*)(void**, void**)) atomic_type_equals,                         \
+        (void (*)(void**)) atomic_type_to_string,                              \
+        (void (*)(void**)) atomic_type_free)
 
 #define NEW_NAMED_TYPE(name, type)                                             \
     type_new(NAMED_TYPE,                                                       \
         named_type_new((name), (type)),                                        \
+        (bool (*)(void**, void**)) named_type_equals,                          \
         (void (*)(void**)) named_type_to_string,                               \
         (void (*)(void**)) named_type_free)
 
@@ -143,12 +173,14 @@ void function_type_free(FunctionType** functionType);
     type_new(STRUCT_TYPE,                                                      \
         struct_type_new((size), "struct",                                      \
             (list_new((void (*)(void **)) type_free))),                        \
+        (bool (*)(void**, void**)) struct_type_equals,                         \
         (void (*)(void**)) struct_type_to_string,                              \
         (void (*)(void**)) struct_type_free)
 
 #define NEW_STRUCT_TYPE_WITH_FIELDS(size, fields)                              \
     type_new(STRUCT_TYPE,                                                      \
         struct_type_new((size), "struct", (fields)),                           \
+        (bool (*)(void**, void**)) struct_type_equals,                         \
         (void (*)(void**)) struct_type_to_string,                              \
         (void (*)(void**)) struct_type_free)
 
@@ -165,33 +197,31 @@ void function_type_free(FunctionType** functionType);
         }                                                                      \
     } while(0)
 
-#define NEW_CUSTOM_TYPE(size, name)                                            \
-    type_new(CUSTOM_TYPE,                                                      \
-        common_type_new((size), (name)),                                       \
-        (void (*)(void**)) common_type_to_string,                              \
-        (void (*)(void**)) common_type_free)
-
 #define NEW_ARRAY_DIMENSION(size)                                              \
     type_new(ARRAY_DIMENSION_TYPE,                                             \
         array_dimension_new((size)),                                           \
+        (bool (*)(void**, void**)) array_dimension_equals,                     \
         (void (*)(void**)) array_dimension_to_string,                          \
         (void (*)(void**)) array_dimension_free)
 
 #define NEW_ARRAY_UNDEFINED_DIMENSION()                                        \
     type_new(ARRAY_DIMENSION_TYPE,                                             \
         array_dimension_new(0),                                                \
+        (bool (*)(void**, void**)) array_dimension_equals,                     \
         (void (*)(void**)) array_dimension_to_string,                          \
         (void (*)(void**)) array_dimension_free)
 
 #define NEW_ARRAY_TYPE(type)                                                   \
     type_new(ARRAY_TYPE,                                                       \
         array_type_new((list_new((void (*)(void **)) type_free)), (type)),     \
+        (bool (*)(void**, void**)) array_type_equals,                          \
         (void (*)(void**)) array_type_to_string,                               \
         (void (*)(void**)) array_type_free)
 
 #define NEW_ARRAY_TYPE_WITH_DIMENSION(dimension, type)                         \
     type_new(ARRAY_TYPE,                                                       \
         array_type_new((dimension), (type)),                                   \
+        (bool (*)(void**, void**)) array_type_equals,                          \
         (void (*)(void**)) array_type_to_string,                               \
         (void (*)(void**)) array_type_free)
 
@@ -212,6 +242,7 @@ void function_type_free(FunctionType** functionType);
         function_type_new(                                                     \
             (list_new((void (*)(void **)) type_free)),                         \
             (list_new((void (*)(void **)) type_free))),                        \
+        (bool (*)(void**, void**)) function_type_equals,                       \
         (void (*)(void**)) function_type_to_string,                            \
         (void (*)(void**)) function_type_free)
 
@@ -219,12 +250,14 @@ void function_type_free(FunctionType** functionType);
     type_new(FUNC_TYPE,                                                        \
         function_type_new(                                                     \
             (parameters), (list_new((void (*)(void **)) type_free))),          \
+        (bool (*)(void**, void**)) function_type_equals,                       \
         (void (*)(void**)) function_type_to_string,                            \
         (void (*)(void**)) function_type_free)
 
 #define NEW_FUNCTION_TYPE_WITH_PARAMS_AND_RETURNS(parameters, returns)         \
     type_new(FUNC_TYPE,                                                        \
         function_type_new((parameters), (returns)),                            \
+        (bool (*)(void**, void**)) function_type_equals,                       \
         (void (*)(void**)) function_type_to_string,                            \
         (void (*)(void**)) function_type_free)
 

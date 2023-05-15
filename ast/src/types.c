@@ -1,14 +1,34 @@
 #include "types.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "list.h"
 #include "utils.h"
 #include "smem.h"
 
 
-Type* type_new(TypeID typeId, void* type, void (*to_string)(void**), void (*destroy)(void**)) {
+static bool compare_list_of_types(List* a, List* b) {
+    if (list_size(&a) != list_size(&b))
+        return false;
+
+    ListNode* aNode = a->head;
+    ListNode* bNode = b->head;
+    while (aNode != NULL && bNode != NULL) {
+        if (!type_equals((Type**) &aNode->value, (Type**) &bNode->value)) {
+            return false;;
+        }
+
+        aNode = aNode->next;
+        bNode = bNode->next;
+    }
+
+    return true;
+}
+
+Type* type_new(TypeID typeId, void* type, bool (*equals)(void**, void**), void (*to_string)(void**), void (*destroy)(void**)) {
     Type* new_type = NULL;
     new_type = safe_malloc(sizeof(Type), NULL);
     if (new_type == NULL) {
@@ -21,11 +41,22 @@ Type* type_new(TypeID typeId, void* type, void (*to_string)(void**), void (*dest
     *new_type = (Type) {
         .typeId = typeId,
         .type = type,
+        .equals = equals,
         .to_string = to_string,
         .destroy = destroy
     };
 
     return new_type;
+}
+
+bool type_equals(Type** self, Type** other) {
+    if (self == NULL || *self == NULL || other == NULL || *other == NULL)
+        return false;
+
+    if ((*self)->equals != NULL)
+        return (*self)->equals(&(*self)->type, (void**) other);
+
+    return false;
 }
 
 void type_to_string(Type** type) {
@@ -46,14 +77,14 @@ void type_free(Type** type) {
     safe_free((void**) type);
 }
 
-CommonType* common_type_new(size_t size, char* name) {
-    CommonType* type = NULL;
-    type = safe_malloc(sizeof(CommonType), NULL);
+AtomicType* atomic_type_new(size_t size, char* name) {
+    AtomicType* type = NULL;
+    type = safe_malloc(sizeof(AtomicType), NULL);
     if (type == NULL) {
         return NULL;
     }
 
-    *type = (CommonType) {
+    *type = (AtomicType) {
         .size = size,
         .name = str_dup(name)
     };
@@ -61,20 +92,36 @@ CommonType* common_type_new(size_t size, char* name) {
     return type;
 }
 
-void common_type_to_string(CommonType** commonType) {
-    if (commonType == NULL || *commonType == NULL)
-        return;
-
-    printf("%s", (*commonType)->name);
+static bool is_atomic(Type* type) {
+    return _atomic_start < type->typeId && type->typeId < _atomic_end;
 }
 
-void common_type_free(CommonType** commonType) {
-    if (commonType == NULL || *commonType == NULL)
+bool atomic_type_equals(AtomicType** self, Type** other) {
+    if (self == NULL || *self == NULL || other == NULL || *other == NULL)
+        return false;
+
+    if (!is_atomic(*other) && (*other)->typeId != CUSTOM_TYPE)
+        return false;
+
+    const AtomicType* otherAtomicType = (AtomicType*) (*other)->type;
+
+    return strcmp((*self)->name, otherAtomicType->name) == 0;
+}
+
+void atomic_type_to_string(AtomicType** atomicType) {
+    if (atomicType == NULL || *atomicType == NULL)
         return;
 
-    safe_free((void**) &(*commonType)->name);
+    printf("%s", (*atomicType)->name);
+}
 
-    safe_free((void**) commonType);
+void atomic_type_free(AtomicType** atomicType) {
+    if (atomicType == NULL || *atomicType == NULL)
+        return;
+
+    safe_free((void**) &(*atomicType)->name);
+
+    safe_free((void**) atomicType);
 }
 
 NamedType* named_type_new(char* name, Type* type) {
@@ -91,6 +138,21 @@ NamedType* named_type_new(char* name, Type* type) {
     };
 
     return new_type;
+}
+
+bool named_type_equals(NamedType** self, Type** other) {
+    if (self == NULL || *self == NULL || other == NULL || *other == NULL)
+        return false;
+
+    if ((*other)->typeId != NAMED_TYPE)
+        return false;
+
+    NamedType* otherNamedType = (NamedType*) (*other)->type;
+
+    bool hasEqualName = strcmp((*self)->name, otherNamedType->name) == 0;
+    bool hasEqualType = type_equals(&(*self)->type, &otherNamedType->type);
+
+    return hasEqualName && hasEqualType;
 }
 
 void named_type_to_string(NamedType** namedType) {
@@ -136,6 +198,18 @@ void struct_type_add_field(StructType** structType, Type* field) {
         return;
 
     list_insert_last(&(*structType)->fields, field);
+}
+
+bool struct_type_equals(StructType** self, Type** other) {
+    if (self == NULL || *self == NULL || other == NULL || *other == NULL)
+        return false;
+
+    if ((*other)->typeId != STRUCT_TYPE)
+        return false;
+
+    StructType* otherStructType = (StructType*) (*other)->type;
+
+    return compare_list_of_types((*self)->fields, otherStructType->fields);
 }
 
 void struct_type_to_string(StructType** structType) {
@@ -185,6 +259,19 @@ ArrayDimension* array_dimension_new(size_t size) {
 
     return type;
 }
+
+bool array_dimension_equals(ArrayDimension** self, Type** other) {
+    if (self == NULL || *self == NULL || other == NULL || *other == NULL)
+        return false;
+
+    if ((*other)->typeId != ARRAY_DIMENSION_TYPE)
+        return false;
+
+    ArrayDimension* otherArrayDimension = (ArrayDimension*) (*other)->type;
+
+    return (*self)->size == otherArrayDimension->size;
+}
+
 void array_dimension_to_string(ArrayDimension** arrayDimension) {
     if (arrayDimension == NULL || *arrayDimension == NULL)
         return;
@@ -225,6 +312,21 @@ void array_type_add_dimension(ArrayType** arrayType, Type* dimension) {
         return;
 
     list_insert_last(&(*arrayType)->dimensions, dimension);
+}
+
+bool array_type_equals(ArrayType** self, Type** other) {
+    if (self == NULL || *self == NULL || other == NULL || *other == NULL)
+        return false;
+
+    if ((*other)->typeId != ARRAY_TYPE)
+        return false;
+
+    ArrayType* otherArrayType = (ArrayType*) (*other)->type;
+
+    if (!type_equals(&(*self)->type, &otherArrayType->type))
+        return false;
+
+    return compare_list_of_types((*self)->dimensions, otherArrayType->dimensions);
 }
 
 void array_type_to_string(ArrayType** arrayType) {
@@ -277,6 +379,37 @@ void function_type_add_return(FunctionType** functionType, Type* returnType) {
         return;
 
     list_insert_last(&(*functionType)->returnTypes, returnType);
+}
+
+bool function_type_equals(FunctionType** self, Type** other) {
+    if (self == NULL || *self == NULL || other == NULL || *other == NULL)
+        return false;
+
+    if ((*other)->typeId != FUNC_TYPE)
+        return false;
+
+    FunctionType* otherFunctionType = (FunctionType*) (*other)->type;
+
+    Type* voidType = NEW_VOID_TYPE();
+
+    bool selfReturnIsVoid = list_size(&(*self)->returnTypes) == 1
+                        && type_equals((Type**) &(*self)->returnTypes->head->value, &voidType);
+    bool otherReturnIsVoid = list_size(&otherFunctionType->returnTypes) == 1
+                        && type_equals((Type**) &otherFunctionType->returnTypes->head->value, &voidType);
+
+    type_free(&voidType);
+
+    bool hasEqualParameters = compare_list_of_types((*self)->parameterTypes, otherFunctionType->parameterTypes);
+
+    if (hasEqualParameters && selfReturnIsVoid && list_size(&otherFunctionType->returnTypes) == 0)
+        return true;
+
+    if (hasEqualParameters && otherReturnIsVoid && list_size(&(*self)->returnTypes) == 0)
+        return true;
+
+    bool hasEqualReturns = compare_list_of_types((*self)->returnTypes, otherFunctionType->returnTypes);
+
+    return hasEqualParameters && hasEqualReturns;
 }
 
 void function_type_to_string(FunctionType** functionType) {
