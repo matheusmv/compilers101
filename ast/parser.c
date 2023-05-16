@@ -4,9 +4,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "src/list.h"
+#include "src/type-checker.h"
+
 extern FILE* yyin;
 
 extern int yyparse(void);
+
+List* declarations = NULL;
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -20,6 +25,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    declarations = list_new((void (*)(void **)) decl_free);
+
     yyin = src;
     yyparse();
 
@@ -27,10 +34,22 @@ int main(int argc, char* argv[]) {
 
     extern bool success;
     if (!success) {
+        list_free(&declarations);
         return EXIT_FAILURE;
     }
 
     printf("Parsing Successful\n");
+
+    TypeChecker* typeChecker = type_checker_init();
+
+    TypeCheckerStatus status = check(typeChecker, declarations);
+    if (status == TYPE_CHECKER_FAILURE) {
+        printf("Type checker error\n");
+    }
+
+    type_checker_free(&typeChecker);
+
+    list_free(&declarations);
 
     return EXIT_SUCCESS;
 }

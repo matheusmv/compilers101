@@ -16,6 +16,8 @@ extern int yylex(void);
 
 void yyerror(const char*);
 
+extern List* declarations;
+
 }
 
 %token
@@ -175,12 +177,7 @@ Program
     : %empty
     | Declarations
         {
-            list_foreach(declaration, $1) {
-                decl_to_string((Decl**) &declaration->value);
-                printf("\n");
-            }
-
-            list_free(&$1);
+            declarations = $1;
         }
     ;
 
@@ -822,7 +819,7 @@ LogicalOrExpression
         }
     | LogicalOrExpression "||" LogicalAndExpression
         {
-            $$ = NEW_BINARY_EXPR(
+            $$ = NEW_LOGICAL_EXPR(
                 $1,
                 NEW_TOKEN(TOKEN_LOR, "||", yylineno),
                 $3
@@ -837,7 +834,7 @@ LogicalAndExpression
         }
     | LogicalAndExpression "&&" OrExpression
         {
-            $$ = NEW_BINARY_EXPR(
+            $$ = NEW_LOGICAL_EXPR(
                 $1,
                 NEW_TOKEN(TOKEN_LAND, "&&", yylineno),
                 $3

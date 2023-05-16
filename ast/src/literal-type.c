@@ -6,9 +6,9 @@
 #include "smem.h"
 
 
-IndentLiteral* ident_literal_new(const char* ident) {
-    IndentLiteral* type = NULL;
-    type = safe_malloc(sizeof(IndentLiteral), NULL);
+IdentLiteral* ident_literal_new(const char* ident) {
+    IdentLiteral* type = NULL;
+    type = safe_malloc(sizeof(IdentLiteral), NULL);
     if (type == NULL) {
         return NULL;
     }
@@ -18,14 +18,14 @@ IndentLiteral* ident_literal_new(const char* ident) {
     return type;
 }
 
-void ident_literal_to_string(IndentLiteral** identType) {
+void ident_literal_to_string(IdentLiteral** identType) {
     if (identType == NULL || *identType == NULL)
         return;
 
     printf("&[%s]", (*identType)->value);
 }
 
-void ident_literal_free(IndentLiteral** identType) {
+void ident_literal_free(IdentLiteral** identType) {
     if (identType == NULL || *identType == NULL)
         return;
 

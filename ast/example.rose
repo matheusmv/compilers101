@@ -1,178 +1,76 @@
-struct User {
-    id: int
-    username: string
-    password: string
-    email: string
-    address: struct {
-        street: string
-        zip: string
+1 + -1;
+-1 - +1;
+!true;
+1 + 2 + ~1;
+
+1++;
+1--;
+
+(1 + 1) > 1;
+(1 + 1) < 1;
+(1 + 1) >= 1;
+(1 + 1) <= 1;
+(1 + 1) == 2;
+
+1 < 10 && 1 > 0;
+true && true;
+false || true;
+
+let a: int = 1;
+let b: float = 1.1;
+let c: char = 'a';
+let d: string = "hello world\n";
+let e: bool = true;
+
+{
+    a = 2;
+    b = 2.2;
+    c = 'b';
+    d = "kjkszpj";
+    e = false;
+}
+
+const const_a: int = 1;
+const const_b: float = 1.1;
+const const_c: char = 'a';
+const const_d: string = "hello world\n";
+const const_e: bool = true;
+
+let a_uinit: int;
+a_uinit = 1;
+
+let b_uinit: string;
+b_uinit = "message";
+
+if (const_a < const_b) {
+    return "const_a < const_b";
+} else if (const_c == 'a') {
+    return "const_c == \'a\'\n";
+} else if (const_d == "hello world\n") {
+    return "const_d == \"hello world\n\"";
+} else if (const_e) {
+    return "const_e == true";
+} else {
+    return "none\n";
+}
+
+let counter: int = 0;
+while (counter < 10) {
+    counter += 1;
+}
+
+while (true) {
+    counter--;
+    if (counter == 0) {
+        break;
     }
 }
 
-struct Node {
-    data: User
-    next: Node
-}
-
-struct List {
-    size: int
-    head: Node
-}
-
-func makeUser(id: int, username: string, password: string, email: string, street: string, zip: string): User {
-    return User{
-        id: id,
-        username: username,
-        password: password,
-        email: email,
-        address: struct { street: string zip: string }{
-            street: street,
-            zip: zip
-        }
-    };
-}
-
-func showArr(arr: []int) {
-    let i = 0;
-    for (; i < size(arr); i++) {
-        print(arr[i]);
-    }
-}
-
-func sumIntArr(arr: []int, cb: func(int): int): int {
-    let result: int = 0;
-
-    for (let i = 0; i < size(arr); i++) {
-        result += cb(arr);
-    }
-
-    return result;
-}
-
-func isEven(num: int): bool {
-    return num % 2 == 0 ? true : false;
-}
-
-func logUserDetails(user: User) {
-  print(user.id);
-  print(user.username);
-  print(user.email);
-  print(user.address.street);
-  print(user.address.zip);
-}
-
-func main() {
-    const john: User = User{id: getId(), username: "", password: "", email: "", address: struct{
-        street: string
-        zip: string
-    }{
-        street: "",
-        zip: ""
-    }};
-
-    getUser().getRole().name;
-
-    let two: int = 2;
-    let PI: float = 3.1415;
-    let newLine: char = '\n';
-    let name: string = "matheus matias\n";
-    let trueVal: bool = true;
-    let falseVal: bool = false;
-
-    const two: int = 2;
-    const PI: float = 3.1415;
-    const newLine: char = '\n';
-    const name: string = "matheus matias\n";
-    const trueVal: bool = true;
-    const falseVal: bool = false;
-
-    const users: [4]User = [4]User{john, User{}, User{}, User{}};
-
-    const numbers: [5]int = [5]int{1, 2, 3, 4, 5};
-    const numbers: []int = []int{};
-    const numbers = [5]int{1, 2, 3, 4, 5};
-    const numbers = []int{};
-
-    const one: int = numbers[0];
-    const one: int = numbers[0][1];
-    const one: int = numbers[0][0][1];
-    const one: int = numbers[0].value;
-    const one: int = numbers[getIdex()];
-
-    const userTable: [][]User = [][]User{
-        []User{User{}, User{}, User{}},
-        []User{User{}, User{}, User{}},
-        []User{User{}, User{}, User{}}
-    };
-
-    let testArr = []func(int): int | nil {
-        func(num: int): int | nil {
-            return add(num, 1);
-        },
-        func(num: int): int | nil {
-            return sub(num, 1);
-        },
-        func(num: int): int | nil {
-            return mul(num, 1);
-        },
-        func(num: int): int | nil {
-            return div(num, 1);
-        }
-    };
-
-    mapIntArr(numbers, func(num: int): int {
-        return num * 2;
-    });
-
-    for (let i = 0; i < 10; i++) {
-        print(i);
-    }
-
-    let i: int = 10;
-    while (i > 0) {
-        print(i);
-
-        i--;
-    }
-
-    // fibonacci recursivo
-    let fib: func(int): int = func(num: int): int {
-        if (num <= 1) {
-            return num;
-        }
-
-        return fib(num - 1) + fib(num - 2);
-    };
-
-    /*
-     * converte o input (string) para (int)
-     */
-    let userInput: int = input("num: ").(int);
-
-    print(fib(userInput).(string));
-}
+const numbers: []int = []int{0, 1, 2, 3};
+numbers[0] = 10;
 
 func add(a: int, b: int): int {
     return a + b;
 }
 
-func sub(a: int, b: int): int {
-    return a - b;
-}
-
-func mul(a: int, b: int): int {
-    return a * b;
-}
-
-func div(a: int, b: int): int | nil {
-    if (b == 0) {
-        print("Error: division by zero");
-        return nil;
-    }
-
-    return a / b;
-}
-
-func rem(a: int, b: int): int {
-    return a % b;
-}
+let result: int = add(1, 2);

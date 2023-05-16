@@ -21,11 +21,11 @@ typedef enum LiteralType {
 
 typedef struct IdentLiteral {
     char* value;
-} IndentLiteral;
+} IdentLiteral;
 
-IndentLiteral* ident_literal_new(const char*);
-void ident_literal_to_string(IndentLiteral**);
-void ident_literal_free(IndentLiteral**);
+IdentLiteral* ident_literal_new(const char*);
+void ident_literal_to_string(IdentLiteral**);
+void ident_literal_free(IdentLiteral**);
 
 
 typedef struct IntLiteral {
