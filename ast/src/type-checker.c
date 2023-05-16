@@ -605,7 +605,48 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
 
         return arrayType;
     }
-    case FUNC_EXPR: break;
+    case FUNC_EXPR: {
+        FunctionExpr* funcExpr = (FunctionExpr*) expression->expr;
+
+        List* paramTypes = list_new(NULL);
+        list_foreach(param, funcExpr->parameters) {
+            list_insert_last(&paramTypes, check_decl(typeChecker, param->value));
+        }
+
+        List* retrnTypes = list_new(NULL);
+        list_foreach(retrn, funcExpr->returnTypes) {
+            Type* type = (Type*) retrn->value;
+            list_insert_last(&retrnTypes, type);
+        }
+
+        Type* funcType = NEW_FUNCTION_TYPE_WITH_PARAMS_AND_RETURNS(paramTypes, retrnTypes);
+
+        Context* previous = typeChecker->env;
+        typeChecker->env = context_enclosed_new(previous, MAP_NEW(32, entry_cmp, NULL, NULL));
+
+        typeChecker->hasCurrentFunctionReturned = false;
+        typeChecker->currentFunctionReturnType = retrnTypes;
+
+        list_foreach(param, funcExpr->parameters) {
+            Decl* decl = (Decl*) param->value;
+            FieldDecl* field = (FieldDecl*) decl->decl;
+
+            Type* paramType = check_decl(typeChecker, decl);
+
+            context_define(typeChecker->env, field->name->literal, paramType);
+        }
+
+        check_stmt(typeChecker, funcExpr->body);
+
+        context_free(&typeChecker->env);
+
+        typeChecker->env = previous;
+
+        typeChecker->hasCurrentFunctionReturned = false;
+        typeChecker->currentFunctionReturnType = NULL;
+
+        return funcType;
+    }
     case CONDITIONAL_EXPR: break;
     case MEMBER_EXPR: break;
     case ARRAY_MEMBER_EXPR: {
@@ -676,6 +717,14 @@ static Expr* get_zero_value(Type* type) {
 static Type* lookup(TypeChecker* typeChecker, Expr* ident, Expr* name) {
     Type* identType = check_expr(typeChecker, ident);
     switch (identType->typeId) {
+    case STRING_TYPE: {
+        Type* indexType = check_expr(typeChecker, name);
+        if (!equals(indexType, NEW_INT_TYPE())) {
+            return NULL;
+        }
+
+        return NEW_CHAR_TYPE();
+    }
     case ARRAY_TYPE: {
         ArrayType* arrayType = (ArrayType*) identType->type;
 
@@ -687,7 +736,7 @@ static Type* lookup(TypeChecker* typeChecker, Expr* ident, Expr* name) {
         return arrayType->type;
     }
     default:
-        fprintf(stderr, "can only lookup arrays");
+        fprintf(stderr, "can only lookup strings, arrays\n");
         return NULL;
     }
 }

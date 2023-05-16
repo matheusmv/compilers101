@@ -69,8 +69,21 @@ while (true) {
 const numbers: []int = []int{0, 1, 2, 3};
 numbers[0] = 10;
 
+const username: string = "john doe";
+username[4] = '-';
+
 func add(a: int, b: int): int {
     return a + b;
 }
 
 let result: int = add(1, 2);
+
+const sub = func(a: int, b: int): int {
+    return a - b;
+};
+
+func execOperation(left: int, right: int, cb: func(int, int): int): int {
+    return cb(left, right);
+}
+
+execOperation(2, 5, sub);
