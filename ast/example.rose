@@ -111,3 +111,33 @@ let fib = func(num: int): int {
 
     return fib(num - 1) + fib(num - 2);
 };
+
+func getCalcFunc(option: string): nil | func(int, int): int {
+    const add = func(a: int, b: int): int {
+        return a + b;
+    };
+
+    const sub = func(a: int, b: int): int {
+        return a - b;
+    };
+
+    const mul = func(a: int, b: int): int {
+        return a * b;
+    };
+
+    const div = func(a: int, b: int): int {
+        return a / b;
+    };
+
+    if (option == "add") {
+        return add;
+    } else if (option == "sub") {
+        return sub;
+    } else if (option == "mul") {
+        return mul;
+    } else if (option == "div") {
+        return div;
+    } else {
+        return nil;
+    }
+}

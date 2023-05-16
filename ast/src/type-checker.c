@@ -30,7 +30,7 @@ static Type* check_literal(TypeChecker* typeChecker, LiteralExpr* literalExpr);
 static Expr* get_zero_value(Type* type);
 static Type* lookup(TypeChecker* typeChecker, Expr* ident, Expr* name);
 
-TypeChecker* type_checker_init(void) {
+static TypeChecker* type_checker_init(void) {
     TypeChecker* type_checker = NULL;
     type_checker = safe_malloc(sizeof(TypeChecker), NULL);
     if (type_checker == NULL) {
@@ -41,13 +41,14 @@ TypeChecker* type_checker_init(void) {
         .env = context_new(MAP_NEW(32, entry_cmp, NULL, NULL)),
         .currentFunctionReturnType = NULL,
         .hasCurrentFunctionReturned = false,
-        .hasFunctionExprTypeToDefine = false
+        .hasFunctionTypeToDefine = false,
+        .currentStatus = TYPE_CHECKER_SUCCESS
     };
 
     return type_checker;
 }
 
-void type_checker_free(TypeChecker** typeChecker) {
+static void type_checker_free(TypeChecker** typeChecker) {
     if (typeChecker == NULL || *typeChecker == NULL)
         return;
 
@@ -56,25 +57,20 @@ void type_checker_free(TypeChecker** typeChecker) {
     safe_free((void**) typeChecker);
 }
 
-TypeCheckerStatus check(TypeChecker* typeChecker, List* declarations) {
+TypeCheckerStatus check(List* declarations) {
+    TypeChecker* typeChecker = type_checker_init();
+
     Type* result = NULL;
+
     list_foreach(declaration, declarations) {
         result = check_decl(typeChecker, declaration->value);
     }
 
-    return result == NULL ? TYPE_CHECKER_FAILURE : TYPE_CHECKER_SUCCESS;
-}
+    TypeCheckerStatus status = typeChecker->currentStatus;
 
-static Type* get_decl_type(Decl* decl) {
-    return NULL;
-}
+    type_checker_free(&typeChecker);
 
-static Type* get_stmt_type(Stmt* stmt) {
-    return NULL;
-}
-
-static Type* get_expr_type(Expr* expr) {
-    return NULL;
+    return status;
 }
 
 static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
@@ -86,6 +82,7 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
         Type* initializerType = NULL;
 
         if (declaredType == NULL && letDecl->expression == NULL) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid LetDecl: impossible do define value\n\t");
             decl_to_string(&declaration);
             printf("?\n");
@@ -102,6 +99,7 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
         if (declaredType != NULL) {
             bool ok = equals(declaredType, initializerType);
             if (!ok) {
+                typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "incompatible type in LetDecl.");
                 fprintf(stderr, "\n\trequired: ");
                 type_to_string(&declaredType);
@@ -113,7 +111,7 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
             }
         }
 
-        if (typeChecker->hasFunctionExprTypeToDefine) {
+        if (typeChecker->hasFunctionTypeToDefine) {
             context_define(typeChecker->env, letDecl->name->literal, initializerType);
             check_expr(typeChecker, letDecl->expression);
         } else {
@@ -129,6 +127,7 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
         Type* initializerType = NULL;
 
         if (declaredType == NULL && constDecl->expression == NULL) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid ConstDecl: impossible do define value\n\t");
             decl_to_string(&declaration);
             printf("?\n");
@@ -143,6 +142,7 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
         initializerType = check_expr(typeChecker, constDecl->expression);
 
         if (declaredType == NULL && initializerType == NULL) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid ConstDecl: undefined type\n\t");
             decl_to_string(&declaration);
             printf("\n");
@@ -152,6 +152,7 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
         if (declaredType != NULL) {
             bool ok = equals(declaredType, initializerType);
             if (!ok) {
+                typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "incompatible type in ConstDecl.");
                 fprintf(stderr, "\n\trequired: ");
                 type_to_string(&declaredType);
@@ -163,7 +164,7 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
             }
         }
 
-        if (typeChecker->hasFunctionExprTypeToDefine) {
+        if (typeChecker->hasFunctionTypeToDefine) {
             context_define(typeChecker->env, constDecl->name->literal, initializerType);
             check_expr(typeChecker, constDecl->expression);
         } else {
@@ -198,6 +199,9 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
         typeChecker->env = context_enclosed_new(previous, MAP_NEW(32, entry_cmp, NULL, NULL));
 
         typeChecker->hasCurrentFunctionReturned = false;
+
+        List* previousFuncType = typeChecker->currentFunctionReturnType;
+
         typeChecker->currentFunctionReturnType = retrnTypes;
 
         list_foreach(param, funcDecl->parameters) {
@@ -215,6 +219,8 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
 
         typeChecker->env = previous;
 
+        typeChecker->currentFunctionReturnType = previousFuncType;
+
         return funcType;
     }
     case STRUCT_DECL: break;
@@ -223,6 +229,7 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
         return check_stmt(typeChecker, stmtDecl->stmt);
     }
     default:
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
         fprintf(stderr, "unexpected declaration type\n");
     }
 
@@ -255,6 +262,7 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
         {
             list_foreach(retrnType, typeChecker->currentFunctionReturnType) {
                 if (equals(retrnType->value, NEW_VOID_TYPE())) {
+                    typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                     fprintf(stderr, "not expecting any return value\n");
                     return NULL;
                 }
@@ -274,6 +282,7 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
             }
 
             if (!matchAnyReturn) {
+                typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid FunctionReturn:");
                 fprintf(stderr, "\n\trequired: ");
                 list_foreach(retrnType, typeChecker->currentFunctionReturnType) {
@@ -301,6 +310,7 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
 
         Type* conditionType = check_expr(typeChecker, ifStmt->condition);
         if (!equals(conditionType, NEW_BOOL_TYPE())) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid IfStmt: incompatible condition type");
             fprintf(stderr, "\n\trequired: bool\n\t");
             fprintf(stderr, "got: ");
@@ -324,6 +334,7 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
 
         Type* conditionType = check_expr(typeChecker, whileStmt->condition);
         if (!equals(conditionType, NEW_BOOL_TYPE())) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid IfStmt: incompatible condition type");
             fprintf(stderr, "\n\trequired: bool\n\t");
             fprintf(stderr, "got: ");
@@ -344,6 +355,7 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
         return check_expr(typeChecker, exprStmt->expression);
     }
     default:
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
         fprintf(stderr, "unexpected statement type\n");
     }
 
@@ -402,6 +414,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             Type* permitedTypes[] = { NEW_INT_TYPE() };
             leftIsOk = expect_expr(leftType, 1, permitedTypes);
             if (leftIsOk && !equals(leftType, rightType)) {
+                typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid BinaryExpr: left type must be equals to right type\n\t");
                 expr_to_string(&expression);
                 printf("\n");
@@ -411,6 +424,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         }
 
         if (!leftIsOk) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "unexpected left type in BinaryExpr\n\t");
             expr_to_string(&expression);
             printf("\n");
@@ -431,6 +445,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
                 return NEW_FLOAT_TYPE();
             }
         } else if (!equals(leftType, rightType)) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid BinaryExpr: left type must be equals to right type\n\t");
             expr_to_string(&expression);
             printf("\n");
@@ -461,6 +476,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         Type* varType = check_expr(typeChecker, assignExpr->identifier);
 
         if (!equals(valueType, varType)) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid AssignExpr: incompatible types");
             fprintf(stderr, "\n\trequired: ");
             type_to_string(&varType);
@@ -480,6 +496,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
 
         Type* calleType = check_expr(typeChecker, callExpr->callee);
         if (calleType == NULL) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid CallExpr: function not defined.\n\t");
             fprintf(stderr, "---> ");
             expr_to_string(&expression);
@@ -488,6 +505,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         }
 
         if (calleType->typeId != FUNC_TYPE) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             expr_to_string(&callExpr->callee);
             fprintf(stderr, ": not a function.\n");
             return NULL;
@@ -499,11 +517,13 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         size_t nParam = list_size(&funcType->parameterTypes);
 
         if (nArgs > nParam) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid CallExpr: to many arguments");
             fprintf(stderr, "\n\trequired: %ld\n", nParam);
             fprintf(stderr, "\tgot: %ld\n", nArgs);
             return NULL;
         } else if (nArgs < nParam) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid CallExpr: insufficient number of arguments");
             fprintf(stderr, "\n\trequired: %ld\n", nParam);
             fprintf(stderr, "\tgot: %ld\n", nArgs);
@@ -516,6 +536,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             Type* expectedType = list_get_at(&funcType->parameterTypes, index);
 
             if (!equals(argType, expectedType)) {
+                typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid CallExpr: argument has invalid type.");
                 fprintf(stderr, "\n\trequired: ");
                 type_to_string(&expectedType);
@@ -539,6 +560,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
 
         Type* permitedTypes[] = { NEW_BOOL_TYPE() };
         if (!expect_expr(leftType, 1, permitedTypes)) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid LogicalExpr: invalid left type\n\t");
             expr_to_string(&expression);
             printf("\n");
@@ -546,6 +568,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         }
 
         if (!expect_expr(rightType, 1, permitedTypes)) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid LogicalExpr: invalid right type\n\t");
             expr_to_string(&expression);
             printf("\n");
@@ -564,6 +587,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         case TOKEN_SUB: {
             Type* permitedTypes[] = { NEW_INT_TYPE(), NEW_FLOAT_TYPE() };
             if (!expect_expr(rightType, 2, permitedTypes)) {
+                typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid UnaryExpr: invalid right type\n\t");
                 expr_to_string(&expression);
                 printf("\n");
@@ -574,6 +598,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         case TOKEN_NOT: {
             Type* permitedTypes[] = { NEW_BOOL_TYPE() };
             if (!expect_expr(rightType, 1, permitedTypes)) {
+                typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid UnaryExpr: invalid right type\n\t");
                 expr_to_string(&expression);
                 printf("\n");
@@ -584,6 +609,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         case TOKEN_TILDE: {
             Type* permitedTypes[] = { NEW_INT_TYPE() };
             if (!expect_expr(rightType, 1, permitedTypes)) {
+                typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid UnaryExpr: invalid right type\n\t");
                 expr_to_string(&expression);
                 printf("\n");
@@ -602,6 +628,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
 
         Type* permitedTypes[] = { NEW_INT_TYPE(), NEW_FLOAT_TYPE() };
         if (!expect_expr(leftType, 2, permitedTypes)) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid UpdatedExpr: invalid left type\n\t");
             expr_to_string(&expression);
             printf("\n");
@@ -621,6 +648,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         list_foreach(element, arrayInitExpr->elements) {
             Type* elementType = check_expr(typeChecker, element->value);
             if (!equals(firstElementType, elementType)) {
+                typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid ArrayInitExpr: elements have diferent types");
                 fprintf(stderr, "\n\tgot: ");
                 type_to_string(&elementType);
@@ -660,15 +688,19 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
 
         Type* funcType = NEW_FUNCTION_TYPE_WITH_PARAMS_AND_RETURNS(paramTypes, retrnTypes);
 
-        if (!typeChecker->hasFunctionExprTypeToDefine) {
-            typeChecker->hasFunctionExprTypeToDefine = true;
+        if (!typeChecker->hasFunctionTypeToDefine) {
+            typeChecker->hasFunctionTypeToDefine = true;
             return funcType;
         }
 
         Context* previous = typeChecker->env;
         typeChecker->env = context_enclosed_new(previous, MAP_NEW(32, entry_cmp, NULL, NULL));
 
+        typeChecker->hasFunctionTypeToDefine = false;
         typeChecker->hasCurrentFunctionReturned = false;
+
+        List* previousFuncType = typeChecker->currentFunctionReturnType;
+
         typeChecker->currentFunctionReturnType = retrnTypes;
 
         list_foreach(param, funcExpr->parameters) {
@@ -685,7 +717,8 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         context_free(&typeChecker->env);
 
         typeChecker->env = previous;
-        typeChecker->hasFunctionExprTypeToDefine = false;
+
+        typeChecker->currentFunctionReturnType = previousFuncType;
 
         return funcType;
     }
@@ -707,6 +740,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         return check_literal(typeChecker, literalExpr);
     }
     default:
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
         fprintf(stderr, "unexpected expression type\n");
     }
 
@@ -734,6 +768,7 @@ static Type* check_literal(TypeChecker* typeChecker, LiteralExpr* literalExpr) {
     case NIL_LITERAL:
         return NEW_NIL_TYPE();
     default:
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
         fprintf(stderr, "unexpected literal type");
         return NULL;
     }
@@ -762,6 +797,7 @@ static Type* lookup(TypeChecker* typeChecker, Expr* ident, Expr* name) {
     case STRING_TYPE: {
         Type* indexType = check_expr(typeChecker, name);
         if (!equals(indexType, NEW_INT_TYPE())) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             return NULL;
         }
 
@@ -772,12 +808,14 @@ static Type* lookup(TypeChecker* typeChecker, Expr* ident, Expr* name) {
 
         Type* indexType = check_expr(typeChecker, name);
         if (!equals(indexType, NEW_INT_TYPE())) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             return NULL;
         }
 
         return arrayType->type;
     }
     default:
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
         fprintf(stderr, "can only lookup strings, arrays\n");
         return NULL;
     }

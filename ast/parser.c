@@ -41,16 +41,12 @@ int main(int argc, char* argv[]) {
 
     printf("Parsing Successful\n");
 
-    TypeChecker* typeChecker = type_checker_init();
-
-    TypeCheckerStatus status = check(typeChecker, declarations);
+    TypeCheckerStatus status = check(declarations);
     if (status == TYPE_CHECKER_FAILURE) {
         printf("Type checker error\n");
         list_free(&declarations);
         return EXIT_FAILURE;
     }
-
-    type_checker_free(&typeChecker);
 
     list_foreach(declaration, declarations) {
         decl_to_string((Decl**) &declaration->value);
