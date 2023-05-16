@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "src/ast.h"
 #include "src/list.h"
 #include "src/type-checker.h"
 
@@ -45,9 +46,16 @@ int main(int argc, char* argv[]) {
     TypeCheckerStatus status = check(typeChecker, declarations);
     if (status == TYPE_CHECKER_FAILURE) {
         printf("Type checker error\n");
+        list_free(&declarations);
+        return EXIT_FAILURE;
     }
 
     type_checker_free(&typeChecker);
+
+    list_foreach(declaration, declarations) {
+        decl_to_string((Decl**) &declaration->value);
+        printf("\n");
+    }
 
     list_free(&declarations);
 

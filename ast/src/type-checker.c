@@ -38,7 +38,7 @@ TypeChecker* type_checker_init(void) {
     }
 
     *type_checker = (TypeChecker) {
-        .env = context_new(MAP_NEW(32, entry_cmp, NULL, type_free)),
+        .env = context_new(MAP_NEW(32, entry_cmp, NULL, NULL)),
         .currentFunctionReturnType = NULL,
         .hasCurrentFunctionReturned = false
     };

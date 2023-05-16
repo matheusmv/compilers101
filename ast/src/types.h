@@ -26,6 +26,8 @@ typedef enum TypeID {
     FUNC_TYPE
 } TypeID;
 
+// TODO: need copy_func
+
 typedef struct Type {
     TypeID typeId;
     void* type;
