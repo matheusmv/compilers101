@@ -86,4 +86,12 @@ func execOperation(left: int, right: int, cb: func(int, int): int): int {
     return cb(left, right);
 }
 
-execOperation(2, 5, sub);
+let opResult: int = execOperation(2, 5, sub);
+
+func mul(a: int, b: int): int {
+    return a * b;
+}
+
+const mulResult: int = func(a: int, b: int, cb: func(int, int): int): int {
+    return cb(a, b);
+}(4, 4, mul);

@@ -254,23 +254,31 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
         }
 
         Type* returnType =  check_expr(typeChecker, returnStmt->expression);
+
         if (!list_is_empty(&typeChecker->currentFunctionReturnType)) {
+            bool matchAnyReturn = false;
+
             list_foreach(retrnType, typeChecker->currentFunctionReturnType) {
-                if (!equals(retrnType->value, returnType)) {
-                    fprintf(stderr, "invalid FunctionReturn:");
-                    fprintf(stderr, "\n\trequired: ");
-                    list_foreach(retrnType, typeChecker->currentFunctionReturnType) {
-                        type_to_string((Type**) &retrnType->value);
-                        if (retrnType->next != NULL) {
-                            printf(" | ");
-                        }
-                    }
-                    printf("\n");
-                    fprintf(stderr, "\tgot: ");
-                    type_to_string(&returnType);
-                    printf("\n");
-                    return NULL;
+                if (equals(retrnType->value, returnType)) {
+                    matchAnyReturn = true;
+                    break;
                 }
+            }
+
+            if (!matchAnyReturn) {
+                fprintf(stderr, "invalid FunctionReturn:");
+                fprintf(stderr, "\n\trequired: ");
+                list_foreach(retrnType, typeChecker->currentFunctionReturnType) {
+                    type_to_string((Type**) &retrnType->value);
+                    if (retrnType->next != NULL) {
+                        printf(" | ");
+                    }
+                }
+                printf("\n");
+                fprintf(stderr, "\tgot: ");
+                type_to_string(&returnType);
+                printf("\n");
+                return NULL;
             }
         }
 
@@ -470,6 +478,21 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         }
 
         FunctionType* funcType = calleType->type;
+
+        size_t nArgs = list_size(&callExpr->arguments);
+        size_t nParam = list_size(&funcType->parameterTypes);
+
+        if (nArgs > nParam) {
+            fprintf(stderr, "invalid CallExpr: to many arguments");
+            fprintf(stderr, "\n\trequired: %ld\n", nParam);
+            fprintf(stderr, "\tgot: %ld\n", nArgs);
+            return NULL;
+        } else if (nArgs < nParam) {
+            fprintf(stderr, "invalid CallExpr: insufficient number of arguments");
+            fprintf(stderr, "\n\trequired: %ld\n", nParam);
+            fprintf(stderr, "\tgot: %ld\n", nArgs);
+            return NULL;
+        }
 
         size_t index = 0;
         list_foreach(arg, callExpr->arguments) {
