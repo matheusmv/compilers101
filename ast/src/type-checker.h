@@ -15,6 +15,7 @@ typedef struct TypeChecker {
     Context* env;
     List* currentFunctionReturnType;
     bool hasCurrentFunctionReturned;
+    bool hasFunctionExprTypeToDefine;
 } TypeChecker;
 
 TypeChecker* type_checker_init(void);

@@ -40,7 +40,8 @@ TypeChecker* type_checker_init(void) {
     *type_checker = (TypeChecker) {
         .env = context_new(MAP_NEW(32, entry_cmp, NULL, NULL)),
         .currentFunctionReturnType = NULL,
-        .hasCurrentFunctionReturned = false
+        .hasCurrentFunctionReturned = false,
+        .hasFunctionExprTypeToDefine = false
     };
 
     return type_checker;
@@ -112,7 +113,12 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
             }
         }
 
-        context_define(typeChecker->env, letDecl->name->literal, initializerType);
+        if (typeChecker->hasFunctionExprTypeToDefine) {
+            context_define(typeChecker->env, letDecl->name->literal, initializerType);
+            check_expr(typeChecker, letDecl->expression);
+        } else {
+            context_define(typeChecker->env, letDecl->name->literal, initializerType);
+        }
 
         return context_get(typeChecker->env, letDecl->name->literal);
     }
@@ -157,7 +163,12 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
             }
         }
 
-        context_define(typeChecker->env, constDecl->name->literal, initializerType);
+        if (typeChecker->hasFunctionExprTypeToDefine) {
+            context_define(typeChecker->env, constDecl->name->literal, initializerType);
+            check_expr(typeChecker, constDecl->expression);
+        } else {
+            context_define(typeChecker->env, constDecl->name->literal, initializerType);
+        }
 
         return context_get(typeChecker->env, constDecl->name->literal);
     }
@@ -203,9 +214,6 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
         context_free(&typeChecker->env);
 
         typeChecker->env = previous;
-
-        typeChecker->hasCurrentFunctionReturned = false;
-        typeChecker->currentFunctionReturnType = NULL;
 
         return funcType;
     }
@@ -471,6 +479,14 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         CallExpr* callExpr = (CallExpr*) expression->expr;
 
         Type* calleType = check_expr(typeChecker, callExpr->callee);
+        if (calleType == NULL) {
+            fprintf(stderr, "invalid CallExpr: function not defined.\n\t");
+            fprintf(stderr, "---> ");
+            expr_to_string(&expression);
+            printf("\n");
+            return NULL;
+        }
+
         if (calleType->typeId != FUNC_TYPE) {
             expr_to_string(&callExpr->callee);
             fprintf(stderr, ": not a function.\n");
@@ -644,6 +660,11 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
 
         Type* funcType = NEW_FUNCTION_TYPE_WITH_PARAMS_AND_RETURNS(paramTypes, retrnTypes);
 
+        if (!typeChecker->hasFunctionExprTypeToDefine) {
+            typeChecker->hasFunctionExprTypeToDefine = true;
+            return funcType;
+        }
+
         Context* previous = typeChecker->env;
         typeChecker->env = context_enclosed_new(previous, MAP_NEW(32, entry_cmp, NULL, NULL));
 
@@ -664,9 +685,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         context_free(&typeChecker->env);
 
         typeChecker->env = previous;
-
-        typeChecker->hasCurrentFunctionReturned = false;
-        typeChecker->currentFunctionReturnType = NULL;
+        typeChecker->hasFunctionExprTypeToDefine = false;
 
         return funcType;
     }

@@ -95,3 +95,19 @@ func mul(a: int, b: int): int {
 const mulResult: int = func(a: int, b: int, cb: func(int, int): int): int {
     return cb(a, b);
 }(4, 4, mul);
+
+func fibonacci(num: int): int {
+    if (num <= 1) {
+        return num;
+    }
+
+    return fibonacci(num - 1) + fibonacci(num - 2);
+}
+
+let fib = func(num: int): int {
+    if (num <= 1) {
+        return num;
+    }
+
+    return fib(num - 1) + fib(num - 2);
+};
