@@ -23,6 +23,11 @@ static bool equals(Type* self, Type* other) {
     return type_equals(&self, &other);
 }
 
+static bool cmp_namedType_fieldName(const Type** namedType, char** fieldName) {
+    NamedType* nt = (NamedType*) (*namedType)->type;
+    return strcmp(nt->name, *fieldName) == 0;
+}
+
 static Type* check_decl(TypeChecker* typeChecker, Decl* declaration);
 static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement);
 static Type* check_expr(TypeChecker* typeChecker, Expr* expression);
@@ -83,7 +88,7 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
 
         if (declaredType == NULL && letDecl->expression == NULL) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            fprintf(stderr, "invalid LetDecl: impossible do define value\n\t");
+            fprintf(stderr, "invalid LetDecl:\n\t");
             decl_to_string(&declaration);
             printf("?\n");
             return NULL;
@@ -97,7 +102,16 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
         initializerType = check_expr(typeChecker, letDecl->expression);
 
         if (declaredType != NULL) {
-            bool ok = equals(declaredType, initializerType);
+            bool ok = false;
+
+            if (declaredType->typeId == CUSTOM_TYPE) {
+                AtomicType* atomicType = (AtomicType*) declaredType->type;
+                Type* customTypeDetails = context_get(typeChecker->env, atomicType->name);
+                ok = equals(customTypeDetails, initializerType);
+            } else {
+                ok = equals(declaredType, initializerType);
+            }
+
             if (!ok) {
                 typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "incompatible type in LetDecl.");
@@ -128,7 +142,7 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
 
         if (declaredType == NULL && constDecl->expression == NULL) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            fprintf(stderr, "invalid ConstDecl: impossible do define value\n\t");
+            fprintf(stderr, "invalid ConstDecl:\n\t");
             decl_to_string(&declaration);
             printf("?\n");
             return NULL;
@@ -150,7 +164,16 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
         }
 
         if (declaredType != NULL) {
-            bool ok = equals(declaredType, initializerType);
+            bool ok = false;
+
+            if (declaredType->typeId == CUSTOM_TYPE) {
+                AtomicType* atomicType = (AtomicType*) declaredType->type;
+                Type* customTypeDetails = context_get(typeChecker->env, atomicType->name);
+                ok = equals(customTypeDetails, initializerType);
+            } else {
+                ok = equals(declaredType, initializerType);
+            }
+
             if (!ok) {
                 typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "incompatible type in ConstDecl.");
@@ -223,7 +246,22 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
 
         return funcType;
     }
-    case STRUCT_DECL: break;
+    case STRUCT_DECL: {
+        StructDecl* structDecl = (StructDecl*) declaration->decl;
+
+        List* listOfFieldTypes = list_new((void (*)(void **)) NULL);
+        list_foreach(field, structDecl->fields) {
+            Type* fieldType = check_decl(typeChecker, field->value);
+
+            list_insert_last(&listOfFieldTypes, fieldType);
+        }
+
+        Type* structType = NEW_STRUCT_TYPE_WITH_FIELDS(0, listOfFieldTypes);
+
+        context_define(typeChecker->env, structDecl->name->literal, structType);
+
+        return context_get(typeChecker->env, structDecl->name->literal);
+    }
     case STMT_DECL: {
         StmtDecl* stmtDecl = (StmtDecl*) declaration->decl;
         return check_stmt(typeChecker, stmtDecl->stmt);
@@ -637,9 +675,84 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
 
         return leftType;
     }
-    case FIELD_INIT_EXPR: break;
-    case STRUCT_INIT_EXPR: break;
-    case STRUCT_INLINE_EXPR: break;
+    case FIELD_INIT_EXPR: {
+        FieldInitExpr* fieldInitExpr = (FieldInitExpr*) expression->expr;
+
+        return check_expr(typeChecker, fieldInitExpr->value);
+    }
+    case STRUCT_INIT_EXPR: {
+        StructInitExpr* structInitExpr = (StructInitExpr*) expression->expr;
+
+        Type* structType = context_get(typeChecker->env, structInitExpr->name->literal);
+        if (structType == NULL) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+            fprintf(stderr, "invalid StructInitExpr: undefined struct.\n\t");
+            expr_to_string(&expression);
+            printf("\n");
+            return NULL;
+        }
+        
+        // TODO: typecheck here
+        // TODO: get zero value from omitted fields
+
+        list_foreach(field, structInitExpr->fields) {
+            check_expr(typeChecker, field->value);
+        }
+
+        return structType;
+    }
+    case STRUCT_INLINE_EXPR: {
+        StructInlineExpr* structInlineExpr = (StructInlineExpr*) expression->expr;
+        StructType* inlineStructTypeDefinition = (StructType*) ((Type*) structInlineExpr->type)->type;
+
+        // TODO: get zero value from omitted fields
+
+        list_foreach(initExpr, structInlineExpr->fields) {
+            FieldInitExpr* fieldInitExpr = (FieldInitExpr*) ((Expr*) initExpr->value)->expr;
+            Type* namedType = NULL;
+
+            list_find_first(
+                &inlineStructTypeDefinition->fields,
+                (bool (*)(const void **, void **)) cmp_namedType_fieldName,
+                (void**) &fieldInitExpr->name->literal,
+                (void**) &namedType
+            );
+
+            if (namedType == NULL) {
+                typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+                fprintf(stderr, "invalid StructInlineExpr: undeclared field\n\t");
+                expr_to_string((Expr**) &initExpr->value);
+                printf("\n");
+                fprintf(stderr, "\tin: ");
+                expr_to_string(&expression);
+                printf("\n");
+                return NULL;
+            } else {
+                Type* requiredType = ((NamedType*) namedType->type)->type;
+                Type* fieldInitExprType = check_expr(typeChecker, fieldInitExpr->value);
+
+                if (!equals(requiredType, fieldInitExprType)) {
+                    typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+                    fprintf(stderr, "invalid StructInlineExpr: type not match\n\t");
+                    fprintf(stderr, "required: ");
+                    type_to_string(&namedType);
+                    printf("\n");
+                    fprintf(stderr, "\tgot: ");
+                    field_init_expr_to_string(&fieldInitExpr);
+                    printf(" (");
+                    type_to_string(&fieldInitExprType);
+                    printf(")");
+                    printf("\n");
+                    fprintf(stderr, "\tin: ");
+                    expr_to_string(&expression);
+                    printf("\n");
+                    return NULL;
+                }
+            }
+        }
+
+        return structInlineExpr->type;
+    }
     case ARRAY_INIT_EXPR: {
         ArrayInitExpr* arrayInitExpr = (ArrayInitExpr*) expression->expr;
 

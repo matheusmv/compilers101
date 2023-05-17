@@ -141,3 +141,28 @@ func getCalcFunc(option: string): nil | func(int, int): int {
         return nil;
     }
 }
+
+struct User {
+    id: int
+    username: string
+    password: string
+    email: string
+    address: struct {
+        street: string
+        zip: string
+    }
+}
+
+const john: User = User{
+    id: 1,
+    username: "john",
+    password: "12345",
+    email: "john@email.com",
+    address: struct{
+        street: string
+        zip: string
+    }{
+        street: "street name",
+        zip: "111222"
+    }
+};

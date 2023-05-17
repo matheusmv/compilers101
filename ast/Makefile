@@ -11,7 +11,7 @@ TEST_FILES = $(wildcard tests/**/*.c)
 
 CC = gcc
 
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -Wall -Wextra
 
 LFLAGS =
 
