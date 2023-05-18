@@ -26,8 +26,6 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    declarations = list_new((void (*)(void **)) decl_free);
-
     yyin = src;
     yyparse();
 

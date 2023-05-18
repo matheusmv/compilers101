@@ -363,7 +363,7 @@ StructDecl* struct_decl_new(Token* name, List* fields) {
     return decl;
 }
 
-void struct_decl_add_field(StructDecl** structDecl, Decl* field) {
+void struct_decl_add_field(StructDecl** structDecl, Type* field) {
     if (structDecl == NULL || *structDecl == NULL || field == NULL)
         return;
 
@@ -390,7 +390,7 @@ void struct_decl_to_string(StructDecl** structDecl) {
         list_foreach(field, fields) {
             printf("\t");
 
-            stmt_to_string((Stmt**) &field->value);
+            type_to_string((Type**) &field->value);
 
             if (field->next != NULL) {
                 printf("\n");

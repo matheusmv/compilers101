@@ -513,24 +513,13 @@ NamedType
     ;
 
 StructFieldsDeclaration
-    : IdentifierDeclaration
-        {
-            List* list = list_new((void (*)(void**)) decl_free);
-            list_insert_last(&list, $1);
-            $$ = list;
-        }
-    | StructFieldsDeclaration IdentifierDeclaration
-        {
-            list_insert_last(&$1, $2);
-            $$ = $1;
-        }
-    | TypeDeclaration
+    : NamedType
         {
             List* list = list_new((void (*)(void**)) type_free);
             list_insert_last(&list, $1);
             $$ = list;
         }
-    | StructFieldsDeclaration TypeDeclaration
+    | StructFieldsDeclaration NamedType
         {
             list_insert_last(&$1, $2);
             $$ = $1;
@@ -1192,8 +1181,9 @@ GroupExpression
 Identifier
     : IDENT
         {
-            $$ = NEW_IDENT_LITERAL($1);
+            Expr* expr = NEW_IDENT_LITERAL($1);
             safe_free((void**) &$1);
+            $$ = expr;
         }
     ;
 
@@ -1212,8 +1202,9 @@ Literal
         }
     | STRING
         {
-            $$ = NEW_STRING_LITERAL($1);
+            Expr* expr = NEW_STRING_LITERAL($1);
             safe_free((void**) &$1);
+            $$ = expr;
         }
     | TRUE
         {

@@ -239,11 +239,11 @@ int main(void) {
         NEW_NAMED_TYPE("zip", NEW_STRING_TYPE()),
     );
     STRUCT_DECL_ADD_FIELDS(testStructDecl,
-        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_STRING, "id", 1), NEW_INT_TYPE()),
-        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_STRING, "username", 1), NEW_STRING_TYPE()),
-        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_STRING, "password", 1), NEW_STRING_TYPE()),
-        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_STRING, "email", 1), NEW_STRING_TYPE()),
-        NEW_FIELD_DECL(NEW_TOKEN(TOKEN_STRING, "address", 1), testCustomType)
+        NEW_NAMED_TYPE("id", NEW_INT_TYPE()),
+        NEW_NAMED_TYPE("username", NEW_STRING_TYPE()),
+        NEW_NAMED_TYPE("password", NEW_STRING_TYPE()),
+        NEW_NAMED_TYPE("email", NEW_STRING_TYPE()),
+        NEW_NAMED_TYPE("address", testCustomType)
     );
     DECL_PRINT_AND_FREE(testStructDecl);
 

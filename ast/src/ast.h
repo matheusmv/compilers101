@@ -134,11 +134,11 @@ void function_decl_free(FunctionDecl** functionDecl);
 
 typedef struct StructDecl {
     Token* name;
-    List* fields; /* List of (FieldDecl*) */
+    List* fields; /* List of (NamedType*) */
 } StructDecl;
 
 StructDecl* struct_decl_new(Token* name, List* fields);
-void struct_decl_add_field(StructDecl** structDecl, Decl* field);
+void struct_decl_add_field(StructDecl** structDecl, Type* field);
 void struct_decl_to_string(StructDecl** structDecl);
 void struct_decl_free(StructDecl** structDecl);
 
@@ -494,7 +494,7 @@ void literal_expr_free(LiteralExpr** literalExpr);
 #define NEW_STRUCT_DECL(name)                                                  \
     decl_new(STRUCT_DECL,                                                      \
         struct_decl_new((name),                                                \
-            (list_new((void (*)(void **)) decl_free))),                        \
+            (list_new((void (*)(void **)) type_free))),                        \
         (void (*)(void **))struct_decl_to_string,                              \
         (void (*)(void **))struct_decl_free)
 
@@ -511,10 +511,10 @@ void literal_expr_free(LiteralExpr** literalExpr);
 
 #define STRUCT_DECL_ADD_FIELDS(struct_decl, ...)                               \
     do {                                                                       \
-        Decl* decls[] = { __VA_ARGS__ };                                       \
-        size_t n_decls = sizeof(decls) / sizeof(decls[0]);                     \
-        for (size_t i = 0; i < n_decls; i++) {                                 \
-            STRUCT_DECL_ADD_FIELD((struct_decl), decls[i]);                    \
+        Type* fields[] = { __VA_ARGS__ };                                      \
+        size_t n_fields = sizeof(fields) / sizeof(fields[0]);                  \
+        for (size_t i = 0; i < n_fields; i++) {                                \
+            STRUCT_DECL_ADD_FIELD((struct_decl), fields[i]);                   \
         }                                                                      \
     } while(0)
 

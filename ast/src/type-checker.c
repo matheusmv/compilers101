@@ -104,10 +104,13 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
         if (declaredType != NULL) {
             bool ok = false;
 
-            if (declaredType->typeId == CUSTOM_TYPE) {
-                AtomicType* atomicType = (AtomicType*) declaredType->type;
-                Type* customTypeDetails = context_get(typeChecker->env, atomicType->name);
-                ok = equals(customTypeDetails, initializerType);
+            if (declaredType->typeId == CUSTOM_TYPE && initializerType != NULL && initializerType->typeId != CUSTOM_TYPE) {
+                Type* declaredTypeDetails = context_get(typeChecker->env, ((AtomicType*) declaredType->type)->name);
+                ok = equals(declaredTypeDetails, initializerType);
+            } else if (declaredType->typeId == CUSTOM_TYPE && initializerType != NULL && initializerType->typeId == CUSTOM_TYPE) {
+                Type* declaredTypeDetails = context_get(typeChecker->env, ((AtomicType*) declaredType->type)->name);
+                Type* initializerTypeDetails = context_get(typeChecker->env, ((AtomicType*) initializerType->type)->name);
+                ok = equals(declaredTypeDetails, initializerTypeDetails);
             } else {
                 ok = equals(declaredType, initializerType);
             }
@@ -166,10 +169,13 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
         if (declaredType != NULL) {
             bool ok = false;
 
-            if (declaredType->typeId == CUSTOM_TYPE) {
-                AtomicType* atomicType = (AtomicType*) declaredType->type;
-                Type* customTypeDetails = context_get(typeChecker->env, atomicType->name);
-                ok = equals(customTypeDetails, initializerType);
+            if (declaredType->typeId == CUSTOM_TYPE && initializerType != NULL && initializerType->typeId != CUSTOM_TYPE) {
+                Type* declaredTypeDetails = context_get(typeChecker->env, ((AtomicType*) declaredType->type)->name);
+                ok = equals(declaredTypeDetails, initializerType);
+            } else if (declaredType->typeId == CUSTOM_TYPE && initializerType != NULL && initializerType->typeId == CUSTOM_TYPE) {
+                Type* declaredTypeDetails = context_get(typeChecker->env, ((AtomicType*) declaredType->type)->name);
+                Type* initializerTypeDetails = context_get(typeChecker->env, ((AtomicType*) initializerType->type)->name);
+                ok = equals(declaredTypeDetails, initializerTypeDetails);
             } else {
                 ok = equals(declaredType, initializerType);
             }
@@ -251,9 +257,7 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
 
         List* listOfFieldTypes = list_new((void (*)(void **)) NULL);
         list_foreach(field, structDecl->fields) {
-            Type* fieldType = check_decl(typeChecker, field->value);
-
-            list_insert_last(&listOfFieldTypes, fieldType);
+            list_insert_last(&listOfFieldTypes, field->value);
         }
 
         Type* structType = NEW_STRUCT_TYPE_WITH_FIELDS(0, listOfFieldTypes);
@@ -313,7 +317,12 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
             bool matchAnyReturn = false;
 
             list_foreach(retrnType, typeChecker->currentFunctionReturnType) {
-                if (equals(retrnType->value, returnType)) {
+                Type* funcReturn = (Type*) retrnType->value;
+                if (funcReturn->typeId == CUSTOM_TYPE) {
+                    funcReturn = context_get(typeChecker->env, ((AtomicType*) funcReturn->type)->name);
+                }
+
+                if (equals(funcReturn, returnType)) {
                     matchAnyReturn = true;
                     break;
                 }
@@ -691,12 +700,53 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             printf("\n");
             return NULL;
         }
-        
-        // TODO: typecheck here
+
+        StructType* requiredStructType = (StructType*) structType->type;
+
         // TODO: get zero value from omitted fields
 
         list_foreach(field, structInitExpr->fields) {
-            check_expr(typeChecker, field->value);
+            FieldInitExpr* fieldInitExpr = (FieldInitExpr*) ((Expr*) field->value)->expr;
+            Type* namedType = NULL;
+
+            list_find_first(
+                &requiredStructType->fields,
+                (bool (*)(const void **, void **)) cmp_namedType_fieldName,
+                (void**) &fieldInitExpr->name->literal,
+                (void**) &namedType
+            );
+
+            if (namedType == NULL) {
+                typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+                fprintf(stderr, "invalid StructInitExpr: undeclared field\n\t");
+                expr_to_string((Expr**) &field->value);
+                printf("\n");
+                fprintf(stderr, "\tin: ");
+                expr_to_string(&expression);
+                printf("\n");
+                return NULL;
+            } else {
+                Type* requiredType = ((NamedType*) namedType->type)->type;
+                Type* fieldType = check_expr(typeChecker, field->value);
+
+                if (!equals(requiredType, fieldType)) {
+                    typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+                    fprintf(stderr, "invalid StructInitExpr: type not match\n\t");
+                    fprintf(stderr, "required: ");
+                    type_to_string(&namedType);
+                    printf("\n");
+                    fprintf(stderr, "\tgot: ");
+                    field_init_expr_to_string(&fieldInitExpr);
+                    printf(" (");
+                    type_to_string(&fieldType);
+                    printf(")");
+                    printf("\n");
+                    fprintf(stderr, "\tin: ");
+                    expr_to_string(&expression);
+                    printf("\n");
+                    return NULL;
+                }
+            }
         }
 
         return structType;

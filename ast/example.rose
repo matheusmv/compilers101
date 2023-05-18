@@ -166,3 +166,21 @@ const john: User = User{
         zip: "111222"
     }
 };
+
+func makeUser(id: int, username: string, password: string, email: string, street: string, zip: string): User {
+    return User{
+        id: id,
+        username: username,
+        password: password,
+        email: email,
+        address: struct{
+            street: string
+            zip: string
+        }{
+            street: street,
+            zip: zip
+        }
+    };
+}
+
+const ana: User = makeUser(1, "ana123", "12345", "ana@email.com", "street 2", "111222333");
