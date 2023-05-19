@@ -38,7 +38,7 @@ static void init_type_lookup(void) {
 
 static void free_type_lookup(void) {
     for (size_t i = _atomic_start + 1; i < _atomic_end; i++) {
-        type_free((Type**) &type_lookup[i]);
+        type_free(&type_lookup[i]);
     }
 }
 
@@ -447,13 +447,30 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
     return NULL;
 }
 
-static bool expect_expr(Type* exprType, size_t n_elements, ...) {
+static bool expect_expr_type(Type* exprType, size_t n_elements, ...) {
     va_list args;
 
     va_start(args, n_elements);
 
     for (size_t i = 0; i < n_elements; i++) {
         if (equals(exprType, get_type_for(va_arg(args, TypeID)))) {
+            va_end(args);
+            return true;
+        }
+    }
+
+    va_end(args);
+
+    return false;
+}
+
+static bool expect_type_id(TypeID type, size_t n_elements, ...) {
+    va_list args;
+
+    va_start(args, n_elements);
+
+    for (size_t i = 0; i < n_elements; i++) {
+        if (type == va_arg(args, TypeID)) {
             va_end(args);
             return true;
         }
@@ -476,7 +493,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
 
         switch (binaryExpr->op->type) {
         case TOKEN_ADD: {
-            leftIsOk = expect_expr(leftType, 4, INT_TYPE, FLOAT_TYPE, CHAR_TYPE, STRING_TYPE);
+            leftIsOk = expect_expr_type(leftType, 4, INT_TYPE, FLOAT_TYPE, CHAR_TYPE, STRING_TYPE);
             break;
         }
         case TOKEN_SUB:
@@ -487,12 +504,16 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         case TOKEN_GTR:
         case TOKEN_LEQ:
         case TOKEN_GEQ:{
-            leftIsOk = expect_expr(leftType, 2, INT_TYPE, FLOAT_TYPE);
+            leftIsOk = expect_expr_type(leftType, 2, INT_TYPE, FLOAT_TYPE);
             break;
         }
         case TOKEN_EQL:
         case TOKEN_NEQ: {
-            leftIsOk = expect_expr(leftType, 6, INT_TYPE, FLOAT_TYPE, CHAR_TYPE, STRING_TYPE, BOOL_TYPE, NIL_TYPE);
+            if (leftType != NULL && expect_type_id(leftType->typeId, 4, CUSTOM_TYPE, STRUCT_TYPE, ARRAY_TYPE, FUNC_TYPE)) {
+                leftIsOk = true;
+            } else {
+                leftIsOk = expect_expr_type(leftType, 6, INT_TYPE, FLOAT_TYPE, CHAR_TYPE, STRING_TYPE, BOOL_TYPE, NIL_TYPE);
+            }
             break;
         }
         case TOKEN_AND:
@@ -500,7 +521,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         case TOKEN_XOR:
         case TOKEN_SHL:
         case TOKEN_SHR: {
-            leftIsOk = expect_expr(leftType, 1, INT_TYPE);
+            leftIsOk = expect_expr_type(leftType, 1, INT_TYPE);
             if (leftIsOk && !equals(leftType, rightType)) {
                 typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid BinaryExpr: left type must be equals to right type\n\t");
@@ -514,6 +535,12 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         if (!leftIsOk) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "unexpected left type in BinaryExpr\n\t");
+            type_to_string(&leftType);
+            printf(" ");
+            token_to_string(&binaryExpr->op);
+            printf(" ");
+            type_to_string(&rightType);
+            printf("\n\t");
             expr_to_string(&expression);
             printf("\n");
             return NULL;
@@ -538,9 +565,25 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             default:
                 return get_type_for(FLOAT_TYPE);
             }
+        } else if (
+            (
+                expect_type_id(leftType->typeId, 5, STRING_TYPE, CUSTOM_TYPE, STRUCT_TYPE, ARRAY_TYPE, FUNC_TYPE) &&
+                equals(rightType, get_type_for(NIL_TYPE))
+            ) || (
+                expect_type_id(rightType->typeId, 5, STRING_TYPE, CUSTOM_TYPE, STRUCT_TYPE, ARRAY_TYPE, FUNC_TYPE) &&
+                equals(leftType, get_type_for(NIL_TYPE))
+            )
+        ) {
+            return get_type_for(BOOL_TYPE);
         } else if (!equals(leftType, rightType)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid BinaryExpr: left type must be equals to right type\n\t");
+            type_to_string(&leftType);
+            printf(" ");
+            token_to_string(&binaryExpr->op);
+            printf(" ");
+            type_to_string(&rightType);
+            printf("\n\t");
             expr_to_string(&expression);
             printf("\n");
             return NULL;
@@ -652,7 +695,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         Type* leftType = check_expr(typeChecker, logicalExpr->left);
         Type* rightType = check_expr(typeChecker, logicalExpr->right);
 
-        if (!expect_expr(leftType, 1, BOOL_TYPE)) {
+        if (!expect_expr_type(leftType, 1, BOOL_TYPE)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid LogicalExpr: invalid left type\n\t");
             expr_to_string(&expression);
@@ -660,7 +703,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             return NULL;
         }
 
-        if (!expect_expr(rightType, 1, BOOL_TYPE)) {
+        if (!expect_expr_type(rightType, 1, BOOL_TYPE)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid LogicalExpr: invalid right type\n\t");
             expr_to_string(&expression);
@@ -678,7 +721,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         switch (unaryExpr->op->type) {
         case TOKEN_ADD:
         case TOKEN_SUB: {
-            if (!expect_expr(rightType, 2, INT_TYPE, FLOAT_TYPE)) {
+            if (!expect_expr_type(rightType, 2, INT_TYPE, FLOAT_TYPE)) {
                 typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid UnaryExpr: invalid right type\n\t");
                 expr_to_string(&expression);
@@ -688,7 +731,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             break;
         }
         case TOKEN_NOT: {
-            if (!expect_expr(rightType, 1, BOOL_TYPE)) {
+            if (!expect_expr_type(rightType, 1, BOOL_TYPE)) {
                 typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid UnaryExpr: invalid right type\n\t");
                 expr_to_string(&expression);
@@ -698,7 +741,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             break;
         }
         case TOKEN_TILDE: {
-            if (!expect_expr(rightType, 1, INT_TYPE)) {
+            if (!expect_expr_type(rightType, 1, INT_TYPE)) {
                 typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid UnaryExpr: invalid right type\n\t");
                 expr_to_string(&expression);
@@ -716,7 +759,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
 
         Type* leftType = check_expr(typeChecker, updateExpr->expression);
 
-        if (!expect_expr(leftType, 2, INT_TYPE, FLOAT_TYPE)) {
+        if (!expect_expr_type(leftType, 2, INT_TYPE, FLOAT_TYPE)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid UpdatedExpr: invalid left type\n\t");
             expr_to_string(&expression);
