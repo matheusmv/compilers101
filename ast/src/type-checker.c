@@ -1,5 +1,6 @@
 #include "type-checker.h"
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -14,6 +15,39 @@
 #include "token.h"
 #include "types.h"
 
+
+static Type* type_lookup[] = {
+    [INT_TYPE]    = NULL,
+    [FLOAT_TYPE]  = NULL,
+    [CHAR_TYPE]   = NULL,
+    [STRING_TYPE] = NULL,
+    [BOOL_TYPE]   = NULL,
+    [VOID_TYPE]   = NULL,
+    [NIL_TYPE]    = NULL
+};
+
+static void init_type_lookup(void) {
+    type_lookup[INT_TYPE] = NEW_INT_TYPE();
+    type_lookup[FLOAT_TYPE] = NEW_FLOAT_TYPE();
+    type_lookup[CHAR_TYPE] = NEW_CHAR_TYPE();
+    type_lookup[STRING_TYPE] = NEW_STRING_TYPE();
+    type_lookup[BOOL_TYPE] = NEW_BOOL_TYPE();
+    type_lookup[VOID_TYPE] = NEW_VOID_TYPE();
+    type_lookup[NIL_TYPE] = NEW_NIL_TYPE();
+}
+
+static void free_type_lookup(void) {
+    for (size_t i = _atomic_start + 1; i < _atomic_end; i++) {
+        type_free((Type**) &type_lookup[i]);
+    }
+}
+
+static Type* get_type_for(TypeID typeId) {
+    if (_atomic_start < typeId && typeId < _atomic_end)
+        return type_lookup[typeId];
+
+    return NULL;
+}
 
 static bool entry_cmp(const MapEntry** entry, char** key) {
     return strcmp((*entry)->key, *key) == 0;
@@ -63,6 +97,8 @@ static void type_checker_free(TypeChecker** typeChecker) {
 }
 
 TypeCheckerStatus check(List* declarations) {
+    init_type_lookup();
+
     TypeChecker* typeChecker = type_checker_init();
 
     Type* result = NULL;
@@ -74,6 +110,8 @@ TypeCheckerStatus check(List* declarations) {
     TypeCheckerStatus status = typeChecker->currentStatus;
 
     type_checker_free(&typeChecker);
+
+    free_type_lookup();
 
     return status;
 }
@@ -303,7 +341,7 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
             && list_size(&typeChecker->currentFunctionReturnType) == 1)
         {
             list_foreach(retrnType, typeChecker->currentFunctionReturnType) {
-                if (equals(retrnType->value, NEW_VOID_TYPE())) {
+                if (equals(retrnType->value, get_type_for(VOID_TYPE))) {
                     typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                     fprintf(stderr, "not expecting any return value\n");
                     return NULL;
@@ -356,7 +394,7 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
         IfStmt* ifStmt = (IfStmt*) statement->stmt;
 
         Type* conditionType = check_expr(typeChecker, ifStmt->condition);
-        if (!equals(conditionType, NEW_BOOL_TYPE())) {
+        if (!equals(conditionType, get_type_for(BOOL_TYPE))) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid IfStmt: incompatible condition type");
             fprintf(stderr, "\n\trequired: bool\n\t");
@@ -374,13 +412,13 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
             check_stmt(typeChecker, ifStmt->elseBranch);
         }
 
-        return NEW_VOID_TYPE();
+        return get_type_for(VOID_TYPE);
     }
     case WHILE_STMT: {
         WhileStmt* whileStmt = (WhileStmt*) statement->stmt;
 
         Type* conditionType = check_expr(typeChecker, whileStmt->condition);
-        if (!equals(conditionType, NEW_BOOL_TYPE())) {
+        if (!equals(conditionType, get_type_for(BOOL_TYPE))) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid IfStmt: incompatible condition type");
             fprintf(stderr, "\n\trequired: bool\n\t");
@@ -394,7 +432,7 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
 
         check_stmt(typeChecker, whileStmt->body);
 
-        return NEW_VOID_TYPE();
+        return get_type_for(VOID_TYPE);
     }
     case FOR_STMT: break;
     case EXPRESSION_STMT: {
@@ -409,12 +447,19 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
     return NULL;
 }
 
-static bool expect_expr(Type* exprType, size_t n_elements, Type** elements) {
+static bool expect_expr(Type* exprType, size_t n_elements, ...) {
+    va_list args;
+
+    va_start(args, n_elements);
+
     for (size_t i = 0; i < n_elements; i++) {
-        if (equals(exprType, elements[i])) {
+        if (equals(exprType, get_type_for(va_arg(args, TypeID)))) {
+            va_end(args);
             return true;
         }
     }
+
+    va_end(args);
 
     return false;
 }
@@ -431,8 +476,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
 
         switch (binaryExpr->op->type) {
         case TOKEN_ADD: {
-            Type* permitedTypes[] = { NEW_INT_TYPE(), NEW_FLOAT_TYPE(), NEW_STRING_TYPE(), NEW_CHAR_TYPE() };
-            leftIsOk = expect_expr(leftType, 3, permitedTypes);
+            leftIsOk = expect_expr(leftType, 4, INT_TYPE, FLOAT_TYPE, CHAR_TYPE, STRING_TYPE);
             break;
         }
         case TOKEN_SUB:
@@ -443,14 +487,12 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         case TOKEN_GTR:
         case TOKEN_LEQ:
         case TOKEN_GEQ:{
-            Type* permitedTypes[] = { NEW_INT_TYPE(), NEW_FLOAT_TYPE() };
-            leftIsOk = expect_expr(leftType, 2, permitedTypes);
+            leftIsOk = expect_expr(leftType, 2, INT_TYPE, FLOAT_TYPE);
             break;
         }
         case TOKEN_EQL:
         case TOKEN_NEQ: {
-            Type* permitedTypes[] = { NEW_INT_TYPE(), NEW_FLOAT_TYPE(), NEW_STRING_TYPE(), NEW_CHAR_TYPE(), NEW_BOOL_TYPE() };
-            leftIsOk = expect_expr(leftType, 5, permitedTypes);
+            leftIsOk = expect_expr(leftType, 6, INT_TYPE, FLOAT_TYPE, CHAR_TYPE, STRING_TYPE, BOOL_TYPE, NIL_TYPE);
             break;
         }
         case TOKEN_AND:
@@ -458,8 +500,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         case TOKEN_XOR:
         case TOKEN_SHL:
         case TOKEN_SHR: {
-            Type* permitedTypes[] = { NEW_INT_TYPE() };
-            leftIsOk = expect_expr(leftType, 1, permitedTypes);
+            leftIsOk = expect_expr(leftType, 1, INT_TYPE);
             if (leftIsOk && !equals(leftType, rightType)) {
                 typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid BinaryExpr: left type must be equals to right type\n\t");
@@ -478,8 +519,14 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             return NULL;
         }
 
-        if (equals(leftType, NEW_INT_TYPE()) && equals(rightType, NEW_FLOAT_TYPE())
-        || equals(leftType, NEW_FLOAT_TYPE()) && equals(rightType, NEW_INT_TYPE())) {
+        if ((
+                equals(leftType, get_type_for(INT_TYPE)) &&
+                equals(rightType, get_type_for(FLOAT_TYPE))
+            ) || (
+                equals(leftType, get_type_for(FLOAT_TYPE)) &&
+                equals(rightType, get_type_for(INT_TYPE))
+            )
+        ) {
             switch (binaryExpr->op->type) {
             case TOKEN_LSS:
             case TOKEN_GTR:
@@ -487,9 +534,9 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             case TOKEN_GEQ:
             case TOKEN_EQL:
             case TOKEN_NEQ:
-                return NEW_BOOL_TYPE();
+                return get_type_for(BOOL_TYPE);
             default:
-                return NEW_FLOAT_TYPE();
+                return get_type_for(FLOAT_TYPE);
             }
         } else if (!equals(leftType, rightType)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
@@ -506,9 +553,9 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         case TOKEN_GEQ:
         case TOKEN_EQL:
         case TOKEN_NEQ:
-            return NEW_BOOL_TYPE();
+            return get_type_for(BOOL_TYPE);
         default:
-            return NEW_INT_TYPE();
+            return get_type_for(INT_TYPE);
         }
     }
     case GROUP_EXPR: {
@@ -605,8 +652,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         Type* leftType = check_expr(typeChecker, logicalExpr->left);
         Type* rightType = check_expr(typeChecker, logicalExpr->right);
 
-        Type* permitedTypes[] = { NEW_BOOL_TYPE() };
-        if (!expect_expr(leftType, 1, permitedTypes)) {
+        if (!expect_expr(leftType, 1, BOOL_TYPE)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid LogicalExpr: invalid left type\n\t");
             expr_to_string(&expression);
@@ -614,7 +660,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             return NULL;
         }
 
-        if (!expect_expr(rightType, 1, permitedTypes)) {
+        if (!expect_expr(rightType, 1, BOOL_TYPE)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid LogicalExpr: invalid right type\n\t");
             expr_to_string(&expression);
@@ -632,8 +678,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         switch (unaryExpr->op->type) {
         case TOKEN_ADD:
         case TOKEN_SUB: {
-            Type* permitedTypes[] = { NEW_INT_TYPE(), NEW_FLOAT_TYPE() };
-            if (!expect_expr(rightType, 2, permitedTypes)) {
+            if (!expect_expr(rightType, 2, INT_TYPE, FLOAT_TYPE)) {
                 typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid UnaryExpr: invalid right type\n\t");
                 expr_to_string(&expression);
@@ -643,8 +688,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             break;
         }
         case TOKEN_NOT: {
-            Type* permitedTypes[] = { NEW_BOOL_TYPE() };
-            if (!expect_expr(rightType, 1, permitedTypes)) {
+            if (!expect_expr(rightType, 1, BOOL_TYPE)) {
                 typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid UnaryExpr: invalid right type\n\t");
                 expr_to_string(&expression);
@@ -654,8 +698,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             break;
         }
         case TOKEN_TILDE: {
-            Type* permitedTypes[] = { NEW_INT_TYPE() };
-            if (!expect_expr(rightType, 1, permitedTypes)) {
+            if (!expect_expr(rightType, 1, INT_TYPE)) {
                 typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
                 fprintf(stderr, "invalid UnaryExpr: invalid right type\n\t");
                 expr_to_string(&expression);
@@ -673,8 +716,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
 
         Type* leftType = check_expr(typeChecker, updateExpr->expression);
 
-        Type* permitedTypes[] = { NEW_INT_TYPE(), NEW_FLOAT_TYPE() };
-        if (!expect_expr(leftType, 2, permitedTypes)) {
+        if (!expect_expr(leftType, 2, INT_TYPE, FLOAT_TYPE)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             fprintf(stderr, "invalid UpdatedExpr: invalid left type\n\t");
             expr_to_string(&expression);
@@ -921,19 +963,19 @@ static Type* check_literal(TypeChecker* typeChecker, LiteralExpr* literalExpr) {
         return context_get(typeChecker->env, identLiteral->value);
     }
     case INT_LITERAL:
-        return NEW_INT_TYPE();
+        return get_type_for(INT_TYPE);
     case FLOAT_LITERAL:
-        return NEW_FLOAT_TYPE();
+        return get_type_for(FLOAT_TYPE);
     case CHAR_LITERAL:
-        return NEW_CHAR_TYPE();
+        return get_type_for(CHAR_TYPE);
     case STRING_LITERAL:
-        return NEW_STRING_TYPE();
+        return get_type_for(STRING_TYPE);
     case BOOL_LITERAL:
-        return NEW_BOOL_TYPE();
+        return get_type_for(BOOL_TYPE);
     case VOID_LITERAL:
-        return NEW_VOID_TYPE();
+        return get_type_for(VOID_TYPE);
     case NIL_LITERAL:
-        return NEW_NIL_TYPE();
+        return get_type_for(NIL_TYPE);
     default:
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
         fprintf(stderr, "unexpected literal type");
@@ -1010,18 +1052,18 @@ static Type* lookup(TypeChecker* typeChecker, Expr* ident, Expr* name) {
     switch (identType->typeId) {
     case STRING_TYPE: {
         Type* indexType = check_expr(typeChecker, name);
-        if (!equals(indexType, NEW_INT_TYPE())) {
+        if (!equals(indexType, get_type_for(INT_TYPE))) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             return NULL;
         }
 
-        return NEW_CHAR_TYPE();
+        return get_type_for(CHAR_TYPE);
     }
     case ARRAY_TYPE: {
         ArrayType* arrayType = (ArrayType*) identType->type;
 
         Type* indexType = check_expr(typeChecker, name);
-        if (!equals(indexType, NEW_INT_TYPE())) {
+        if (!equals(indexType, get_type_for(INT_TYPE))) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             return NULL;
         }
