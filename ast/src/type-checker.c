@@ -886,7 +886,11 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         return funcType;
     }
     case CONDITIONAL_EXPR: break;
-    case MEMBER_EXPR: break;
+    case MEMBER_EXPR: {
+        MemberExpr* memberExpr = (MemberExpr*) expression->expr;
+
+        return lookup(typeChecker, memberExpr->object, expression);
+    }
     case ARRAY_MEMBER_EXPR: {
         ArrayMemberExpr* arrayMemberExpr = (ArrayMemberExpr*) expression->expr;
         Type* memberType = NULL;
@@ -954,6 +958,53 @@ static Expr* get_zero_value(Type* type) {
     }
 }
 
+static Type* do_struct_lookup(TypeChecker* typeChecker, StructType* type, Expr* expression) {
+    if (expression->type != MEMBER_EXPR) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Invalid member access: \n\t");
+        expr_to_string(&expression);
+        printf("\n");
+        return NULL;
+    }
+
+    StructType* structType = type;
+    List* memberAccessList = ((MemberExpr*) ((Expr*) expression->expr))->members;
+
+    Type* currentMemberType = NULL;
+
+    list_foreach(member, memberAccessList) {
+        StringLiteral* memberName = ((LiteralExpr*) ((Expr*) member->value)->expr)->value;
+        Type* structFieldType = NULL;
+
+        list_find_first(
+            &structType->fields,
+            (bool (*)(const void **, void **)) cmp_namedType_fieldName,
+            (void**) &memberName->value,
+            (void**) &structFieldType
+        );
+
+        if (structFieldType == NULL) {
+            currentMemberType = NULL; // remove previous assignment
+            break;
+        }
+
+        currentMemberType = ((NamedType*) structFieldType->type)->type;
+
+        if (currentMemberType != NULL && currentMemberType->typeId == CUSTOM_TYPE) {
+            currentMemberType = context_get(typeChecker->env, ((AtomicType*) currentMemberType->type)->name);
+            if (currentMemberType == NULL)
+                break;
+        }
+
+        // enable search in inner structs
+        if (currentMemberType != NULL && currentMemberType->typeId == STRUCT_TYPE) {
+            structType = currentMemberType->type;
+        }
+    }
+
+    return currentMemberType;
+}
+
 static Type* lookup(TypeChecker* typeChecker, Expr* ident, Expr* name) {
     Type* identType = check_expr(typeChecker, ident);
     switch (identType->typeId) {
@@ -977,9 +1028,57 @@ static Type* lookup(TypeChecker* typeChecker, Expr* ident, Expr* name) {
 
         return arrayType->type;
     }
+    case STRUCT_TYPE: {
+        StructType* structType = (StructType*) identType->type;
+
+        Type* currentMemberType = do_struct_lookup(typeChecker, structType, name);
+
+        if (currentMemberType == NULL) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+            printf("Invalid member access: ");
+            expr_to_string(&name);
+            printf("\n\t");
+            printf("in: ");
+            type_to_string(&identType);
+            printf("\n");
+            return NULL;
+        }
+
+        return currentMemberType;
+    }
+    case CUSTOM_TYPE: {
+        Type* isStruct = context_get(typeChecker->env, ((AtomicType*) identType->type)->name);
+        if (isStruct != NULL && isStruct->typeId != STRUCT_TYPE) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+            printf("unrecognized type: ");
+            type_to_string(&isStruct);
+            printf("\n\t");
+            printf("in: ");
+            expr_to_string(&name);
+            printf("\n");
+            return NULL;
+        }
+
+        StructType* structType = (StructType*) isStruct->type;
+
+        Type* currentMemberType = do_struct_lookup(typeChecker, structType, name);
+
+        if (currentMemberType == NULL) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+            printf("Invalid member access: ");
+            expr_to_string(&name);
+            printf("\n\t");
+            printf("in: ");
+            type_to_string(&isStruct);
+            printf("\n");
+            return NULL;
+        }
+
+        return currentMemberType;
+    }
     default:
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        fprintf(stderr, "can only lookup strings, arrays\n");
+        fprintf(stderr, "can only lookup strings, arrays, structs\n");
         return NULL;
     }
 }

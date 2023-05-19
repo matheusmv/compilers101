@@ -142,6 +142,10 @@ func getCalcFunc(option: string): nil | func(int, int): int {
     }
 }
 
+struct Photo {
+    url: string
+}
+
 struct User {
     id: int
     username: string
@@ -151,6 +155,7 @@ struct User {
         street: string
         zip: string
     }
+    photo: Photo
 }
 
 const john: User = User{
@@ -184,3 +189,20 @@ func makeUser(id: int, username: string, password: string, email: string, street
 }
 
 const ana: User = makeUser(1, "ana123", "12345", "ana@email.com", "street 2", "111222333");
+ana.photo.url = "[https]://fake-image.com";
+
+const anaStreet: string = ana.address.street;
+const anaPhoto: string = ana.photo.url;
+
+func getUserAddress(user: User): struct {street: string zip: string} {
+    return user.address;
+}
+
+const anaAddress = getUserAddress(ana);
+const anaZip = anaAddress.zip;
+
+func getUserPhoto(user: User): Photo {
+    return user.photo;
+}
+
+const anaPhotoUrl: string = getUserPhoto(ana).url;
