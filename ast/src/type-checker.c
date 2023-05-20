@@ -350,9 +350,12 @@ static Type* check_let_decl(TypeChecker* typeChecker, LetDecl* letDecl) {
 
     Type* declaredType = letDecl->type;
 
-    if (equals(declaredType, get_type_of(NIL_TYPE))) {
+    bool invalidTypeInDecl = equals(declaredType, get_type_of(NIL_TYPE)) ||
+        equals(declaredType, get_type_of(VOID_TYPE));
+
+    if (invalidTypeInDecl) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid LetDecl: a declaration with type nil is not allowed\n\t");
+        printf("Invalid LetDecl: declaration with type not allowed\n\t");
         let_decl_to_string(&letDecl);
         printf("\n");
         return NULL;
@@ -441,9 +444,12 @@ static Type* check_const_decl(TypeChecker* typeChecker, ConstDecl* constDecl) {
 
     Type* declaredType = constDecl->type;
 
-    if (equals(declaredType, get_type_of(NIL_TYPE))) {
+    bool invalidTypeInDecl = equals(declaredType, get_type_of(NIL_TYPE)) ||
+        equals(declaredType, get_type_of(VOID_TYPE));
+
+    if (invalidTypeInDecl) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid ConstDecl: a declaration with type nil is not allowed\n\t");
+        printf("Invalid ConstDecl: declaration with type not allowed\n\t");
         const_decl_to_string(&constDecl);
         printf("\n");
         return NULL;
