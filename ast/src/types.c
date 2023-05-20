@@ -28,7 +28,12 @@ static bool compare_list_of_types(List* a, List* b) {
     return true;
 }
 
-Type* type_new(TypeID typeId, void* type, bool (*equals)(void**, void**), void (*to_string)(void**), void (*destroy)(void**)) {
+Type* type_new(TypeID typeId, void* type,
+    void* (*copy)(const void**),
+    bool (*equals)(void**, void**),
+    void (*to_string)(void**),
+    void (*destroy)(void**))
+{
     Type* new_type = NULL;
     new_type = safe_malloc(sizeof(Type), NULL);
     if (new_type == NULL) {
@@ -41,12 +46,32 @@ Type* type_new(TypeID typeId, void* type, bool (*equals)(void**, void**), void (
     *new_type = (Type) {
         .typeId = typeId,
         .type = type,
+        .copy = copy,
         .equals = equals,
         .to_string = to_string,
         .destroy = destroy
     };
 
     return new_type;
+}
+
+Type* type_copy(const Type** self) {
+    if (self == NULL || *self == NULL)
+        return NULL;
+
+    if ((*self)->copy != NULL) {
+        void* self_copy = (*self)->copy((const void**) &(*self)->type);
+        return type_new(
+            (*self)->typeId,
+            self_copy,
+            (*self)->copy,
+            (*self)->equals,
+            (*self)->to_string,
+            (*self)->destroy
+        );
+    }
+
+    return NULL;
 }
 
 bool type_equals(Type** self, Type** other) {
@@ -90,6 +115,13 @@ AtomicType* atomic_type_new(size_t size, char* name) {
     };
 
     return type;
+}
+
+AtomicType* atomic_type_copy(const AtomicType** self) {
+    if (self == NULL || *self == NULL)
+        return NULL;
+
+    return atomic_type_new((*self)->size, (*self)->name);
 }
 
 static bool is_atomic(Type* type) {
@@ -138,6 +170,13 @@ NamedType* named_type_new(char* name, Type* type) {
     };
 
     return new_type;
+}
+
+NamedType* named_type_copy(const NamedType** self) {
+    if (self == NULL || *self == NULL)
+        return NULL;
+
+    return named_type_new((*self)->name, type_copy((const Type**) &(*self)->type));
 }
 
 bool named_type_equals(NamedType** self, Type** other) {
@@ -200,6 +239,18 @@ void struct_type_add_field(StructType** structType, Type* field) {
     list_insert_last(&(*structType)->fields, field);
 }
 
+StructType* struct_type_copy(const StructType** self) {
+    if (self == NULL || *self == NULL)
+        return NULL;
+
+    List* copyOfFields = list_new((void (*)(void **)) type_free);
+    list_foreach(field, (*self)->fields) {
+        list_insert_last(&copyOfFields, type_copy((const Type**) &field->value));
+    }
+
+    return struct_type_new((*self)->size, (*self)->name, copyOfFields);
+}
+
 bool struct_type_equals(StructType** self, Type** other) {
     if (self == NULL || *self == NULL || other == NULL || *other == NULL)
         return false;
@@ -260,6 +311,13 @@ ArrayDimension* array_dimension_new(size_t size) {
     return type;
 }
 
+ArrayDimension* array_dimension_copy(const ArrayDimension** self) {
+    if (self == NULL || *self == NULL)
+        return NULL;
+
+    return array_dimension_new((*self)->size);
+}
+
 bool array_dimension_equals(ArrayDimension** self, Type** other) {
     if (self == NULL || *self == NULL || other == NULL || *other == NULL)
         return false;
@@ -312,6 +370,18 @@ void array_type_add_dimension(ArrayType** arrayType, Type* dimension) {
         return;
 
     list_insert_last(&(*arrayType)->dimensions, dimension);
+}
+
+ArrayType* array_type_copy(const ArrayType** self) {
+    if (self == NULL || *self == NULL)
+        return NULL;
+
+    List* copyOfDimensions = list_new((void (*)(void **)) type_free);
+    list_foreach(dimension, (*self)->dimensions) {
+        list_insert_last(&copyOfDimensions, type_copy((const Type**) &dimension->value));
+    }
+
+    return array_type_new(copyOfDimensions, type_copy((const Type**) &(*self)->type));
 }
 
 bool array_type_equals(ArrayType** self, Type** other) {
@@ -372,6 +442,18 @@ void function_type_add_parameter(FunctionType** functionType, Type* parameter) {
         return;
 
     list_insert_last(&(*functionType)->parameterTypes, parameter);
+}
+
+FunctionType* function_type_copy(const FunctionType** self) {
+    if (self == NULL || *self == NULL)
+        return NULL;
+
+    List* copyOfParameters = list_new((void (*)(void **)) type_free);
+    list_foreach(parameter, (*self)->parameterTypes) {
+        list_insert_last(&copyOfParameters, type_copy((const Type**) &parameter->value));
+    }
+
+    return function_type_new(copyOfParameters, type_copy((const Type**) &(*self)->returnType));
 }
 
 bool function_type_equals(FunctionType** self, Type** other) {

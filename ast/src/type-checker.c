@@ -15,6 +15,9 @@
 #include "token.h"
 #include "types.h"
 
+static Type* copy(Type* self) {
+    return type_copy((const Type**) &self);
+}
 
 static bool equals(Type* self, Type* other) {
     return type_equals(&self, &other);
@@ -319,53 +322,85 @@ static Type* check_let_decl(TypeChecker* typeChecker, LetDecl* letDecl) {
     if (typeChecker == NULL || letDecl == NULL)
         return NULL;
 
-    Type* declaredType = letDecl->type;
-    Type* initializerType = NULL;
-
-    if (declaredType == NULL && letDecl->expression == NULL) {
+    if (letDecl->type == NULL && letDecl->expression == NULL) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        fprintf(stderr, "Invalid LetDecl:\n\t");
+        printf("Invalid LetDecl:\n\t");
         let_decl_to_string(&letDecl);
         printf("?\n");
         return NULL;
     }
 
-    if (declaredType != NULL && letDecl->expression == NULL) {
-        letDecl->expression = get_zero_value(declaredType);
-        initializerType = check_expr(typeChecker, letDecl->expression);
+    if (letDecl->expression == NULL) {
+        letDecl->expression = get_zero_value(letDecl->type);
     }
 
-    initializerType = check_expr(typeChecker, letDecl->expression);
+    Type* initializerType = check_expr(typeChecker, letDecl->expression);
 
-    if (declaredType != NULL) {
-        bool ok = false;
-
-        if (declaredType->typeId == CUSTOM_TYPE && initializerType != NULL && initializerType->typeId != CUSTOM_TYPE) {
-            Type* declaredTypeDetails = context_get(typeChecker->env, ((AtomicType*) declaredType->type)->name);
-            ok = equals(declaredTypeDetails, initializerType);
-        } else if (declaredType->typeId == CUSTOM_TYPE && initializerType != NULL && initializerType->typeId == CUSTOM_TYPE) {
-            Type* declaredTypeDetails = context_get(typeChecker->env, ((AtomicType*) declaredType->type)->name);
-            Type* initializerTypeDetails = context_get(typeChecker->env, ((AtomicType*) initializerType->type)->name);
-            ok = equals(declaredTypeDetails, initializerTypeDetails);
-        } else {
-            ok = equals(declaredType, initializerType);
-        }
-
-        if (!ok) {
+    if (letDecl->type == NULL) {
+        if (equals(initializerType, get_type_of(NIL_TYPE))) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf( "Incompatible type in LetDecl.");
-            printf("\n\tRequired: ");
-            type_to_string(&declaredType);
-            printf("\n\tGot: ");
-            type_to_string(&initializerType);
-            printf("\n\tIn: ");
+            printf("Invalid LetDecl: assigning nil to an untyped declaration is not allowed\n\t");
             let_decl_to_string(&letDecl);
             printf("\n");
             return NULL;
         }
+
+        letDecl->type = copy(initializerType);
     }
 
-    context_define(typeChecker->env, letDecl->name->literal, initializerType);
+    Type* declaredType = letDecl->type;
+
+    if (equals(declaredType, get_type_of(NIL_TYPE))) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Invalid LetDecl: a declaration with type nil is not allowed\n\t");
+        let_decl_to_string(&letDecl);
+        printf("\n");
+        return NULL;
+    }
+
+    if (declaredType == NULL || initializerType == NULL) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Could not do type checking on:\n\t");
+        let_decl_to_string(&letDecl);
+        printf("\n");
+        return NULL;
+    }
+
+    bool declaredTypeIsCustomType = declaredType->typeId == CUSTOM_TYPE;
+    bool initializerTypeIsCustomType = initializerType->typeId == CUSTOM_TYPE;
+    bool isAssigningNilToCompositeType = equals(initializerType, get_type_of(NIL_TYPE)) &&
+            expect_type_id(declaredType->typeId, 4, CUSTOM_TYPE, STRUCT_TYPE, ARRAY_TYPE, FUNC_TYPE);
+
+    bool typeMatch = false;
+
+    if (!isAssigningNilToCompositeType && declaredTypeIsCustomType && !initializerTypeIsCustomType) {
+        typeMatch = equals(
+            context_get(typeChecker->env, ((AtomicType*) declaredType->type)->name),
+            initializerType
+        );
+    } else if (!isAssigningNilToCompositeType && !declaredTypeIsCustomType && initializerTypeIsCustomType) {
+        typeMatch = equals(
+            declaredType,
+            context_get(typeChecker->env, ((AtomicType*) initializerType->type)->name)
+        );
+    } else {
+        typeMatch = isAssigningNilToCompositeType || equals(declaredType, initializerType);
+    }
+
+    if (!typeMatch) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf( "Incompatible type in LetDecl.");
+        printf("\n\tRequired: ");
+        type_to_string(&declaredType);
+        printf("\n\tGot: ");
+        type_to_string(&initializerType);
+        printf("\n\tIn: ");
+        let_decl_to_string(&letDecl);
+        printf("\n");
+        return NULL;
+    }
+
+    context_define(typeChecker->env, letDecl->name->literal, declaredType);
 
     if (typeChecker->hasFunctionTypeToDefine) {
         check_expr(typeChecker, letDecl->expression);
@@ -378,61 +413,85 @@ static Type* check_const_decl(TypeChecker* typeChecker, ConstDecl* constDecl) {
     if (typeChecker == NULL || constDecl == NULL)
         return NULL;
 
-    Type* declaredType = constDecl->type;
-    Type* initializerType = NULL;
-
-    if (declaredType == NULL && constDecl->expression == NULL) {
+    if (constDecl->type == NULL && constDecl->expression == NULL) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        fprintf(stderr, "Invalid ConstDecl:\n\t");
+        printf("Invalid ConstDecl:\n\t");
         const_decl_to_string(&constDecl);
         printf("?\n");
         return NULL;
     }
 
-    if (declaredType != NULL && constDecl->expression == NULL) {
-        constDecl->expression = get_zero_value(declaredType);
-        initializerType = check_expr(typeChecker, constDecl->expression);
+    if (constDecl->expression == NULL) {
+        constDecl->expression = get_zero_value(constDecl->type);
     }
 
-    initializerType = check_expr(typeChecker, constDecl->expression);
+    Type* initializerType = check_expr(typeChecker, constDecl->expression);
 
-    if (declaredType == NULL && initializerType == NULL) {
+    if (constDecl->type == NULL) {
+        if (equals(initializerType, get_type_of(NIL_TYPE))) {
+            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+            printf("Invalid ConstDecl: assigning nil to an untyped declaration is not allowed\n\t");
+            const_decl_to_string(&constDecl);
+            printf("\n");
+            return NULL;
+        }
+
+        constDecl->type = copy(initializerType);
+    }
+
+    Type* declaredType = constDecl->type;
+
+    if (equals(declaredType, get_type_of(NIL_TYPE))) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        fprintf(stderr, "Invalid ConstDecl: undefined type\n\t");
+        printf("Invalid ConstDecl: a declaration with type nil is not allowed\n\t");
         const_decl_to_string(&constDecl);
         printf("\n");
         return NULL;
     }
 
-    if (declaredType != NULL) {
-        bool ok = false;
-
-        if (declaredType->typeId == CUSTOM_TYPE && initializerType != NULL && initializerType->typeId != CUSTOM_TYPE) {
-            Type* declaredTypeDetails = context_get(typeChecker->env, ((AtomicType*) declaredType->type)->name);
-            ok = equals(declaredTypeDetails, initializerType);
-        } else if (declaredType->typeId == CUSTOM_TYPE && initializerType != NULL && initializerType->typeId == CUSTOM_TYPE) {
-            Type* declaredTypeDetails = context_get(typeChecker->env, ((AtomicType*) declaredType->type)->name);
-            Type* initializerTypeDetails = context_get(typeChecker->env, ((AtomicType*) initializerType->type)->name);
-            ok = equals(declaredTypeDetails, initializerTypeDetails);
-        } else {
-            ok = equals(declaredType, initializerType);
-        }
-
-        if (!ok) {
-            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Incompatible type in ConstDecl.");
-            printf("\n\trequired: ");
-            type_to_string(&declaredType);
-            printf("\n\tGot: ");
-            type_to_string(&initializerType);
-            printf("\n\tIn: ");
-            const_decl_to_string(&constDecl);
-            printf("\n");
-            return NULL;
-        }
+    if (declaredType == NULL || initializerType == NULL) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Could not do type checking on:\n\t");
+        const_decl_to_string(&constDecl);
+        printf("\n");
+        return NULL;
     }
 
-    context_define(typeChecker->env, constDecl->name->literal, initializerType);
+    bool declaredTypeIsCustomType = declaredType->typeId == CUSTOM_TYPE;
+    bool initializerTypeIsCustomType = initializerType->typeId == CUSTOM_TYPE;
+    bool isAssigningNilToCompositeType = equals(initializerType, get_type_of(NIL_TYPE)) &&
+            expect_type_id(declaredType->typeId, 4, CUSTOM_TYPE, STRUCT_TYPE, ARRAY_TYPE, FUNC_TYPE);
+
+    bool typeMatch = false;
+
+    if (!isAssigningNilToCompositeType && declaredTypeIsCustomType && !initializerTypeIsCustomType) {
+        typeMatch = equals(
+            context_get(typeChecker->env, ((AtomicType*) declaredType->type)->name),
+            initializerType
+        );
+    } else if (!isAssigningNilToCompositeType && !declaredTypeIsCustomType && initializerTypeIsCustomType) {
+        typeMatch = equals(
+            declaredType,
+            context_get(typeChecker->env, ((AtomicType*) initializerType->type)->name)
+        );
+    } else {
+        typeMatch = isAssigningNilToCompositeType || equals(declaredType, initializerType);
+    }
+
+    if (!typeMatch) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Incompatible type in ConstDecl.");
+        printf("\n\trequired: ");
+        type_to_string(&declaredType);
+        printf("\n\tGot: ");
+        type_to_string(&initializerType);
+        printf("\n\tIn: ");
+        const_decl_to_string(&constDecl);
+        printf("\n");
+        return NULL;
+    }
+
+    context_define(typeChecker->env, constDecl->name->literal, declaredType);
 
     if (typeChecker->hasFunctionTypeToDefine) {
         check_expr(typeChecker, constDecl->expression);
@@ -1208,6 +1267,7 @@ static Type* do_struct_lookup(TypeChecker* typeChecker, StructType* type, Expr* 
         );
 
         if (structFieldType == NULL) {
+            printf("Struct field does not exist: (%s)\n\t", memberName->value);
             currentMemberType = NULL; // remove previous assignment
             break;
         }
@@ -1266,7 +1326,6 @@ static Type* lookup_object(TypeChecker* typeChecker, Expr* ident, Expr* name) {
             expr_to_string(&name);
             printf("\n\tIn: ");
             type_to_string(&identType);
-            printf("\n");
             return NULL;
         }
 

@@ -218,6 +218,74 @@ void test_function_type_equals(void) {
     type_free(&funcType6);
 }
 
+void test_all_copy_functions(void) {
+    Type* intType1 = NEW_INT_TYPE();
+    Type* intType1Copy = type_copy((const Type**) &intType1);
+
+    assert(type_equals(&intType1, &intType1Copy) == true);
+
+    Type* customType1 = NEW_CUSTOM_TYPE(0, "User");
+    Type* customType1Copy = type_copy((const Type**) &customType1);
+
+    assert(type_equals(&customType1, &customType1Copy) == true);
+
+    Type* namedType1 = NEW_NAMED_TYPE("id", NEW_INT_TYPE());
+    Type* namedType1Copy = type_copy((const Type**) &namedType1);
+
+    assert(type_equals(&namedType1, &namedType1Copy) == true);
+
+    Type* clientStruct = NEW_STRUCT_TYPE(0);
+    Type* addressStruct = NEW_STRUCT_TYPE(0);
+    STRUCT_TYPE_ADD_FIELDS(addressStruct,
+        NEW_NAMED_TYPE("number", NEW_INT_TYPE()),
+        NEW_NAMED_TYPE("street", NEW_STRING_TYPE()),
+        NEW_NAMED_TYPE("zip", NEW_STRING_TYPE()),
+        NEW_NAMED_TYPE("city", NEW_STRING_TYPE())
+    );
+    STRUCT_TYPE_ADD_FIELDS(clientStruct,
+        NEW_NAMED_TYPE("id", NEW_INT_TYPE()),
+        NEW_NAMED_TYPE("username", NEW_STRING_TYPE()),
+        NEW_NAMED_TYPE("password", NEW_STRING_TYPE()),
+        NEW_NAMED_TYPE("email", NEW_STRING_TYPE()),
+        NEW_NAMED_TYPE("address", addressStruct)
+    );
+
+    Type* clientStructCopy = type_copy((const Type**) &clientStruct);
+
+    assert(type_equals(&clientStruct, &clientStructCopy) == true);
+
+    Type* arrayType1 = NEW_ARRAY_TYPE(NEW_STRING_TYPE());
+    ARRAY_TYPE_ADD_DIMENSIONS(arrayType1,
+        NEW_ARRAY_DIMENSION(3),
+        NEW_ARRAY_DIMENSION(3),
+    );
+    Type* arrayType1Copy = type_copy((const Type**) &arrayType1);
+
+    assert(type_equals(&arrayType1, &arrayType1Copy) == true);
+
+    Type* funcType1 = NEW_FUNCTION_TYPE_WITH_RETURN(NEW_NAMED_TYPE("Token", NEW_STRING_TYPE()));
+    FUNCTION_TYPE_ADD_PARAMS(funcType1,
+        NEW_NAMED_TYPE("username", NEW_STRING_TYPE()),
+        NEW_NAMED_TYPE("password", NEW_STRING_TYPE())
+    );
+    Type* funcType1Copy = type_copy((const Type**) &funcType1);
+
+    assert(type_equals(&funcType1, &funcType1Copy) == true);
+
+    type_free(&intType1);
+    type_free(&intType1Copy);
+    type_free(&customType1);
+    type_free(&customType1Copy);
+    type_free(&namedType1);
+    type_free(&namedType1Copy);
+    type_free(&clientStruct);
+    type_free(&clientStructCopy);
+    type_free(&arrayType1);
+    type_free(&arrayType1Copy);
+    type_free(&funcType1);
+    type_free(&funcType1Copy);
+}
+
 void run_type_tests(void) {
     test_atomic_type_equals();
     test_custom_type_equals();
@@ -226,6 +294,7 @@ void run_type_tests(void) {
     test_array_dimension_equals();
     test_array_type_equals();
     test_function_type_equals();
+    test_all_copy_functions();
 
     printf("%s: All tests passed successfully!\n", __FILE__);
 }
