@@ -126,11 +126,11 @@ extern List* declarations;
                 ShiftOperator RelationalOperator EqualityOperator AssignmentOperator
 
 %nterm <type_t> TypeDeclaration StructType PrimitiveType FunctionType ArrayType
-                ArrayDimension ValidArrayType NamedType
+                ArrayDimension ValidArrayType NamedType FunctionReturnType
 
-%nterm <list_t> Declarations ArrayArguments FunctionParameterTypeList FunctionReturnTypeList
-                StructArguments StructInitializationListExpression CallExpressionArguments
-                StructFieldsDeclaration FunctionParametersDeclaration FunctionReturnDeclaration
+%nterm <list_t> Declarations ArrayArguments FunctionParameterTypeList StructArguments
+                StructInitializationListExpression CallExpressionArguments
+                StructFieldsDeclaration FunctionParametersDeclaration
                 StructNamedTypesDeclaration ArrayDimensionList MemberAccessList
                 ArrayIndexAccessList
 
@@ -299,9 +299,9 @@ FunctionDeclaration
             safe_free((void**) &$2);
             $$ = decl;
         }
-    | "func" IDENT "(" FunctionParametersDeclaration ")" ":" FunctionReturnDeclaration FunctionBody
+    | "func" IDENT "(" FunctionParametersDeclaration ")" ":" FunctionReturnType FunctionBody
         {
-            Decl* decl = NEW_FUNCTION_DECL_WITH_PARAMS_AND_RETURNS(
+            Decl* decl = NEW_FUNCTION_DECL_WITH_PARAMS_AND_RETURN(
                 NEW_TOKEN(TOKEN_IDENT, $2, yylineno),
                 $4,
                 $7,
@@ -404,9 +404,9 @@ FunctionType
         {
             $$ = NEW_FUNCTION_TYPE_WITH_PARAMS($3);
         }
-    | "func" "(" FunctionParameterTypeList ")" ":" FunctionReturnTypeList
+    | "func" "(" FunctionParameterTypeList ")" ":" FunctionReturnType
         {
-            $$ = NEW_FUNCTION_TYPE_WITH_PARAMS_AND_RETURNS($3, $6);
+            $$ = NEW_FUNCTION_TYPE_WITH_PARAMS_AND_RETURN($3, $6);
         }
     ;
 
@@ -428,16 +428,9 @@ FunctionParameterTypeList
         }
     ;
 
-FunctionReturnTypeList
+FunctionReturnType
     : TypeDeclaration
         {
-            List* list = list_new((void (*)(void **)) type_free);
-            list_insert_last(&list, $1);
-            $$ = list;
-        }
-    | FunctionReturnTypeList "|" TypeDeclaration
-        {
-            list_insert_last(&$1, $3);
             $$ = $1;
         }
     ;
@@ -454,20 +447,6 @@ FunctionParametersDeclaration
             $$ = list;
         }
     | FunctionParametersDeclaration "," IdentifierDeclaration
-        {
-            list_insert_last(&$1, $3);
-            $$ = $1;
-        }
-    ;
-
-FunctionReturnDeclaration
-    : TypeDeclaration
-        {
-            List* list = list_new((void (*)(void**)) type_free);
-            list_insert_last(&list, $1);
-            $$ = list;
-        }
-    | FunctionReturnDeclaration "|" TypeDeclaration
         {
             list_insert_last(&$1, $3);
             $$ = $1;
@@ -1225,9 +1204,9 @@ FunctionExpression
         {
             $$ = NEW_FUNCTION_EXPR_WITH_PARAMS($3, $5);
         }
-    | "func" "(" FunctionParametersDeclaration ")" ":" FunctionReturnDeclaration FunctionBody
+    | "func" "(" FunctionParametersDeclaration ")" ":" FunctionReturnType FunctionBody
         {
-            $$ = NEW_FUNCTION_EXPR_WITH_PARAMS_AND_RETURNS($3, $6, $7);
+            $$ = NEW_FUNCTION_EXPR_WITH_PARAMS_AND_RETURN($3, $6, $7);
         }
     ;
 

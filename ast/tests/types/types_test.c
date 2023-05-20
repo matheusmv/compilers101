@@ -168,20 +168,14 @@ void test_array_type_equals(void) {
 }
 
 void test_function_type_equals(void) {
-    Type* funcType1 = NEW_FUNCTION_TYPE();
+    Type* funcType1 = NEW_FUNCTION_TYPE_WITH_RETURN(NEW_VOID_TYPE());
     FUNCTION_TYPE_ADD_PARAMS(funcType1,
         NEW_CUSTOM_TYPE(0, "User")
     );
-    FUNCTION_TYPE_ADD_RETURNS(funcType1,
-        NEW_VOID_TYPE()
-    );
 
-    Type* funcType2 = NEW_FUNCTION_TYPE();
+    Type* funcType2 = NEW_FUNCTION_TYPE_WITH_RETURN(NEW_VOID_TYPE());
     FUNCTION_TYPE_ADD_PARAMS(funcType2,
         NEW_CUSTOM_TYPE(0, "User")
-    );
-    FUNCTION_TYPE_ADD_RETURNS(funcType2,
-        NEW_VOID_TYPE()
     );
 
     assert(type_equals(&funcType1, &funcType2) == true);
@@ -193,63 +187,28 @@ void test_function_type_equals(void) {
 
     assert(type_equals(&funcType1, &funcType3) == true);
 
-    Type* funcType4 = NEW_FUNCTION_TYPE();
+    Type* funcType4 = NEW_FUNCTION_TYPE_WITH_RETURN(NEW_VOID_TYPE());
     FUNCTION_TYPE_ADD_PARAMS(funcType4,
         NEW_NAMED_TYPE("username", NEW_STRING_TYPE())
-    );
-    FUNCTION_TYPE_ADD_RETURNS(funcType4,
-        NEW_VOID_TYPE()
     );
 
     assert(type_equals(&funcType1, &funcType4) == false);
     assert(type_equals(&funcType2, &funcType4) == false);
     assert(type_equals(&funcType3, &funcType4) == false);
 
-    Type* funcType5 = NEW_FUNCTION_TYPE();
+    Type* funcType5 = NEW_FUNCTION_TYPE_WITH_RETURN(NEW_NAMED_TYPE("Token", NEW_STRING_TYPE()));
     FUNCTION_TYPE_ADD_PARAMS(funcType5,
         NEW_NAMED_TYPE("username", NEW_STRING_TYPE()),
         NEW_NAMED_TYPE("password", NEW_STRING_TYPE())
     );
-    FUNCTION_TYPE_ADD_RETURNS(funcType5,
-        NEW_NAMED_TYPE("Token", NEW_STRING_TYPE()),
-        NEW_NIL_TYPE()
-    );
 
-    Type* funcType6 = NEW_FUNCTION_TYPE();
+    Type* funcType6 = NEW_FUNCTION_TYPE_WITH_RETURN(NEW_NAMED_TYPE("Token", NEW_STRING_TYPE()));
     FUNCTION_TYPE_ADD_PARAMS(funcType6,
         NEW_NAMED_TYPE("username", NEW_STRING_TYPE()),
         NEW_NAMED_TYPE("password", NEW_STRING_TYPE())
     );
-    FUNCTION_TYPE_ADD_RETURNS(funcType6,
-        NEW_NAMED_TYPE("Token", NEW_STRING_TYPE()),
-        NEW_NIL_TYPE()
-    );
 
     assert(type_equals(&funcType5, &funcType6) == true);
-
-    Type* funcType7 = NEW_FUNCTION_TYPE();
-    FUNCTION_TYPE_ADD_PARAMS(funcType7,
-        NEW_NAMED_TYPE("username", NEW_STRING_TYPE()),
-        NEW_NAMED_TYPE("password", NEW_STRING_TYPE())
-    );
-    FUNCTION_TYPE_ADD_RETURNS(funcType7,
-        NEW_NIL_TYPE(),
-        NEW_NAMED_TYPE("Token", NEW_STRING_TYPE())
-    );
-
-    assert(type_equals(&funcType5, &funcType7) == false);
-
-    Type* funcType8 = NEW_FUNCTION_TYPE();
-    FUNCTION_TYPE_ADD_PARAMS(funcType8,
-        NEW_NAMED_TYPE("password", NEW_STRING_TYPE()),
-        NEW_NAMED_TYPE("username", NEW_STRING_TYPE())
-    );
-    FUNCTION_TYPE_ADD_RETURNS(funcType8,
-        NEW_NAMED_TYPE("Token", NEW_STRING_TYPE()),
-        NEW_NIL_TYPE()
-    );
-
-    assert(type_equals(&funcType5, &funcType8) == false);
 
     type_free(&funcType1);
     type_free(&funcType2);
@@ -257,8 +216,6 @@ void test_function_type_equals(void) {
     type_free(&funcType4);
     type_free(&funcType5);
     type_free(&funcType6);
-    type_free(&funcType7);
-    type_free(&funcType8);
 }
 
 void run_type_tests(void) {

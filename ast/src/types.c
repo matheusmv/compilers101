@@ -350,18 +350,18 @@ void array_type_free(ArrayType** arrayType) {
     safe_free((void**) arrayType);
 }
 
-FunctionType* function_type_new(List* parameterTypes, List* returnTypes) {
+FunctionType* function_type_new(List* parameterTypes, Type* returnType) {
     FunctionType* type = NULL;
     type = safe_malloc(sizeof(FunctionType), NULL);
     if (type == NULL) {
         list_free(&parameterTypes);
-        list_free(&returnTypes);
+        type_free(&returnType);
         return NULL;
     }
 
     *type = (FunctionType) {
         .parameterTypes = parameterTypes,
-        .returnTypes = returnTypes
+        .returnType = returnType
     };
 
     return type;
@@ -372,13 +372,6 @@ void function_type_add_parameter(FunctionType** functionType, Type* parameter) {
         return;
 
     list_insert_last(&(*functionType)->parameterTypes, parameter);
-}
-
-void function_type_add_return(FunctionType** functionType, Type* returnType) {
-    if (functionType == NULL || *functionType == NULL || returnType == NULL)
-        return;
-
-    list_insert_last(&(*functionType)->returnTypes, returnType);
 }
 
 bool function_type_equals(FunctionType** self, Type** other) {
@@ -392,22 +385,21 @@ bool function_type_equals(FunctionType** self, Type** other) {
 
     Type* voidType = NEW_VOID_TYPE();
 
-    bool selfReturnIsVoid = list_size(&(*self)->returnTypes) == 1
-                        && type_equals((Type**) &(*self)->returnTypes->head->value, &voidType);
-    bool otherReturnIsVoid = list_size(&otherFunctionType->returnTypes) == 1
-                        && type_equals((Type**) &otherFunctionType->returnTypes->head->value, &voidType);
+    bool selfReturnIsVoid = (*self)->returnType == NULL
+                        || type_equals(&(*self)->returnType, &voidType);
+
+    bool otherReturnIsVoid = otherFunctionType->returnType == NULL
+                        || type_equals(&otherFunctionType->returnType, &voidType);
 
     type_free(&voidType);
 
     bool hasEqualParameters = compare_list_of_types((*self)->parameterTypes, otherFunctionType->parameterTypes);
 
-    if (hasEqualParameters && selfReturnIsVoid && list_size(&otherFunctionType->returnTypes) == 0)
+    if (hasEqualParameters && selfReturnIsVoid && otherReturnIsVoid)
         return true;
 
-    if (hasEqualParameters && otherReturnIsVoid && list_size(&(*self)->returnTypes) == 0)
-        return true;
-
-    bool hasEqualReturns = compare_list_of_types((*self)->returnTypes, otherFunctionType->returnTypes);
+    bool hasEqualReturns = ((*self)->returnType != NULL && otherFunctionType->returnType != NULL) ||
+        type_equals(&(*self)->returnType, &otherFunctionType->returnType);
 
     return hasEqualParameters && hasEqualReturns;
 }
@@ -428,17 +420,10 @@ void function_type_to_string(FunctionType** functionType) {
 
     printf(")");
 
-    List* returnTypes = (*functionType)->returnTypes;
-    if (!list_is_empty(&returnTypes)) {
+    if ((*functionType)->returnType != NULL) {
         printf(": ");
 
-        list_foreach(retType, returnTypes) {
-            type_to_string((Type**) &retType->value);
-
-            if (retType->next != NULL) {
-                printf(" | ");
-            }
-        }
+        type_to_string(&(*functionType)->returnType);
     }
 }
 
@@ -447,7 +432,7 @@ void function_type_free(FunctionType** functionType) {
         return;
 
     list_free(&(*functionType)->parameterTypes);
-    list_free(&(*functionType)->returnTypes);
+    type_free(&(*functionType)->returnType);
 
     safe_free((void**) functionType);
 }

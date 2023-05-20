@@ -121,13 +121,12 @@ void field_decl_free(FieldDecl** fieldDecl);
 typedef struct FunctionDecl {
     Token* name;
     List* parameters; /* List of (FieldDecl*) */
-    List* returnTypes; /* List of (Type*) */
+    Type* returnType;
     Stmt* body;
 } FunctionDecl;
 
-FunctionDecl* function_decl_new(Token* name, List* parameters, List* returnTypes, Stmt* body);
+FunctionDecl* function_decl_new(Token* name, List* parameters, Type* returnType, Stmt* body);
 void function_decl_add_parameter(FunctionDecl** functionDecl, Decl* parameter);
-void function_decl_add_return_type(FunctionDecl** functionDecl, Type* type);
 void function_decl_to_string(FunctionDecl** functionDecl);
 void function_decl_free(FunctionDecl** functionDecl);
 
@@ -349,13 +348,12 @@ void array_init_expr_free(ArrayInitExpr** arrayInit);
 
 typedef struct FunctionExpr {
     List* parameters; /* List of (FieldDecl*) */
-    List* returnTypes; /* List of (Type*) */
+    Type* returnType;
     Stmt* body;
 } FunctionExpr;
 
-FunctionExpr* function_expr_new(List* parameters, List* returnTypes, Stmt* body);
+FunctionExpr* function_expr_new(List* parameters, Type* returnType, Stmt* body);
 void function_expr_add_parameter(FunctionExpr** functionExpr, Decl* parameter);
-void function_expr_add_return_type(FunctionExpr** functionExpr, Type* type);
 void function_expr_to_string(FunctionExpr** functionExpr);
 void function_expr_free(FunctionExpr** functionExpr);
 
@@ -430,7 +428,7 @@ void literal_expr_free(LiteralExpr** literalExpr);
     decl_new(FUNC_DECL, function_decl_new(                                     \
             (name),                                                            \
             (list_new((void (*)(void **)) decl_free)),                         \
-            (list_new((void (*)(void **)) type_free)),                         \
+            NULL,                                                              \
             (body)),                                                           \
         (void (*)(void **))function_decl_to_string,                            \
         (void (*)(void **))function_decl_free)
@@ -439,25 +437,25 @@ void literal_expr_free(LiteralExpr** literalExpr);
     decl_new(FUNC_DECL, function_decl_new(                                     \
             (name),                                                            \
             (params),                                                          \
-            (list_new((void (*)(void **)) type_free)),                         \
+            NULL,                                                              \
             (body)),                                                           \
         (void (*)(void **))function_decl_to_string,                            \
         (void (*)(void **))function_decl_free)
 
-#define NEW_FUNCTION_DECL_WITH_RETURNS(name, retrns, body)                     \
+#define NEW_FUNCTION_DECL_WITH_RETURN(name, retrn, body)                       \
     decl_new(FUNC_DECL, function_decl_new(                                     \
             (name),                                                            \
             (list_new((void (*)(void **)) decl_free)),                         \
-            (retrns),                                                          \
+            (retrn),                                                           \
             (body)),                                                           \
         (void (*)(void **))function_decl_to_string,                            \
         (void (*)(void **))function_decl_free)
 
-#define NEW_FUNCTION_DECL_WITH_PARAMS_AND_RETURNS(name, params, retrns, body)  \
+#define NEW_FUNCTION_DECL_WITH_PARAMS_AND_RETURN(name, params, retrn, body)    \
     decl_new(FUNC_DECL, function_decl_new(                                     \
             (name),                                                            \
             (params),                                                          \
-            (retrns),                                                          \
+            (retrn),                                                           \
             (body)),                                                           \
         (void (*)(void **))function_decl_to_string,                            \
         (void (*)(void **))function_decl_free)
@@ -471,18 +469,6 @@ void literal_expr_free(LiteralExpr** literalExpr);
         size_t n_decls = sizeof(decls) / sizeof(decls[0]);                     \
         for (size_t i = 0; i < n_decls; i++) {                                 \
             FUNCTION_ADD_PARAM((func), decls[i]);                              \
-        }                                                                      \
-    } while(0)
-
-#define FUNCTION_ADD_RETURN_TYPE(func, type)                                   \
-    function_decl_add_return_type((FunctionDecl**) (&(func)->decl), (type))
-
-#define FUNCTION_ADD_RETURN_TYPES(func, ...)                                   \
-    do {                                                                       \
-        Type* types[] = { __VA_ARGS__ };                                       \
-        size_t n_types = sizeof(types) / sizeof(types[0]);                     \
-        for (size_t i = 0; i < n_types; i++) {                                 \
-            FUNCTION_ADD_RETURN_TYPE((func), types[i]);                        \
         }                                                                      \
     } while(0)
 
@@ -732,7 +718,7 @@ void literal_expr_free(LiteralExpr** literalExpr);
 #define NEW_FUNCTION_EXPR(body)                                                \
     expr_new(FUNC_EXPR, function_expr_new(                                     \
             (list_new((void (*)(void **)) decl_free)),                         \
-            (list_new((void (*)(void **)) type_free)),                         \
+            NULL,                                                              \
             (body)),                                                           \
         (void (*)(void **))function_expr_to_string,                            \
         (void (*)(void **))function_expr_free)
@@ -740,23 +726,23 @@ void literal_expr_free(LiteralExpr** literalExpr);
 #define NEW_FUNCTION_EXPR_WITH_PARAMS(params, body)                            \
     expr_new(FUNC_EXPR, function_expr_new(                                     \
             (params),                                                          \
-            (list_new((void (*)(void **)) type_free)),                         \
+            NULL,                                                              \
             (body)),                                                           \
         (void (*)(void **))function_expr_to_string,                            \
         (void (*)(void **))function_expr_free)
 
-#define NEW_FUNCTION_EXPR_WITH_RETURNS(retrns, body)                           \
+#define NEW_FUNCTION_EXPR_WITH_RETURN(retrn, body)                             \
     expr_new(FUNC_EXPR, function_expr_new(                                     \
             (list_new((void (*)(void **)) decl_free)),                         \
-            (retrns),                                                          \
+            (retrn),                                                           \
             (body)),                                                           \
         (void (*)(void **))function_expr_to_string,                            \
         (void (*)(void **))function_expr_free)
 
-#define NEW_FUNCTION_EXPR_WITH_PARAMS_AND_RETURNS(params, retrns, body)        \
+#define NEW_FUNCTION_EXPR_WITH_PARAMS_AND_RETURN(params, retrn, body)          \
     expr_new(FUNC_EXPR, function_expr_new(                                     \
             (params),                                                          \
-            (retrns),                                                          \
+            (retrn),                                                           \
             (body)),                                                           \
         (void (*)(void **))function_expr_to_string,                            \
         (void (*)(void **))function_expr_free)
@@ -770,18 +756,6 @@ void literal_expr_free(LiteralExpr** literalExpr);
         size_t n_params = sizeof(params) / sizeof(params[0]);                  \
         for (size_t i = 0; i < n_params; i++) {                                \
             FUNCTION_EXPR_ADD_PARAM((func), params[i]);                        \
-        }                                                                      \
-    } while(0)
-
-#define FUNCTION_EXPR_ADD_RETURN_TYPE(func, type)                              \
-    function_expr_add_return_type((FunctionExpr**) (&(func)->expr), (type))
-
-#define FUNCTION_EXPR_ADD_RETURN_TYPES(func, ...)                              \
-    do {                                                                       \
-        Type* types[] = { __VA_ARGS__ };                                       \
-        size_t n_types = sizeof(types) / sizeof(types[0]);                     \
-        for (size_t i = 0; i < n_types; i++) {                                 \
-            FUNCTION_EXPR_ADD_RETURN_TYPE((func), types[i]);                   \
         }                                                                      \
     } while(0)
 

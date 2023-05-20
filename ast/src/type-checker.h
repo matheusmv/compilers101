@@ -13,7 +13,7 @@ typedef enum TypeCheckerStatus {
 
 typedef struct TypeChecker {
     Context* env;
-    List* currentFunctionReturnType;
+    Type* currentFunctionReturnType;
     bool hasCurrentFunctionReturned;
     bool hasFunctionTypeToDefine;
     TypeCheckerStatus currentStatus;

@@ -3,6 +3,11 @@
 !true;
 1 + 2 + ~1;
 
+1 << 1;
+1 >> 1;
+1 | 1;
+1 ^ 1;
+
 1++;
 1--;
 
@@ -41,18 +46,6 @@ a_uinit = 1;
 
 let b_uinit: string;
 b_uinit = "message";
-
-if (const_a < const_b) {
-    return "const_a < const_b";
-} else if (const_c == 'a') {
-    return "const_c == \'a\'\n";
-} else if (const_d == "hello world\n") {
-    return "const_d == \"hello world\n\"";
-} else if (const_e) {
-    return "const_e == true";
-} else {
-    return "none\n";
-}
 
 let counter: int = 0;
 while (counter < 10) {
@@ -112,7 +105,7 @@ let fib = func(num: int): int {
     return fib(num - 1) + fib(num - 2);
 };
 
-func getCalcFunc(option: string): nil | func(int, int): int {
+func getCalcFunc(option: string): func(int, int): int {
     const add = func(a: int, b: int): int {
         return a + b;
     };
@@ -137,8 +130,6 @@ func getCalcFunc(option: string): nil | func(int, int): int {
         return mul;
     } else if (option == "div") {
         return div;
-    } else {
-        return nil;
     }
 }
 
@@ -202,7 +193,7 @@ const anaAddress = getUserAddress(ana);
 const anaZip = anaAddress.zip;
 
 func getUserPhoto(user: User): Photo {
-    return user.photo;
+    return nil;
 }
 
 const anaPhotoUrl: string = getUserPhoto(ana).url;

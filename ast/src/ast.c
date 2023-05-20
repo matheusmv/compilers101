@@ -220,13 +220,13 @@ void const_decl_free(ConstDecl** constDecl) {
     safe_free((void**) constDecl);
 }
 
-FunctionDecl* function_decl_new(Token* name, List* parameters, List* returnTypes, Stmt* body) {
+FunctionDecl* function_decl_new(Token* name, List* parameters, Type* returnType, Stmt* body) {
     FunctionDecl* decl = NULL;
     decl = safe_malloc(sizeof(FunctionDecl), NULL);
     if (decl == NULL) {
         token_free(&name);
         list_free(&parameters);
-        list_free(&returnTypes);
+        type_free(&returnType);
         stmt_free(&body);
         return NULL;
     }
@@ -234,7 +234,7 @@ FunctionDecl* function_decl_new(Token* name, List* parameters, List* returnTypes
     *decl = (FunctionDecl) {
         .name = name,
         .parameters = parameters,
-        .returnTypes = returnTypes,
+        .returnType = returnType,
         .body = body
     };
 
@@ -246,13 +246,6 @@ void function_decl_add_parameter(FunctionDecl** functionDecl, Decl* parameter) {
         return;
 
     list_insert_last(&(*functionDecl)->parameters, parameter);
-}
-
-void function_decl_add_return_type(FunctionDecl** functionDecl, Type* type) {
-    if (functionDecl == NULL || *functionDecl == NULL || type == NULL)
-        return;
-
-    list_insert_last(&(*functionDecl)->returnTypes, type);
 }
 
 void function_decl_to_string(FunctionDecl** functionDecl) {
@@ -278,17 +271,10 @@ void function_decl_to_string(FunctionDecl** functionDecl) {
 
     printf(")");
 
-    List* returnTypes = (*functionDecl)->returnTypes;
-    if (!list_is_empty(&returnTypes)) {
+    if ((*functionDecl)->returnType != NULL) {
         printf(": ");
 
-        list_foreach(type, returnTypes) {
-            type_to_string((Type**) &type->value);
-
-            if (type->next != NULL) {
-                printf(" | ");
-            }
-        }
+        type_to_string(&(*functionDecl)->returnType);
     }
 
     printf(" ");
@@ -302,7 +288,7 @@ void function_decl_free(FunctionDecl** functionDecl) {
 
     token_free(&(*functionDecl)->name);
     list_free(&(*functionDecl)->parameters);
-    list_free(&(*functionDecl)->returnTypes);
+    type_free(&(*functionDecl)->returnType);
     stmt_free(&(*functionDecl)->body);
 
     safe_free((void**) functionDecl);
@@ -1249,19 +1235,19 @@ void array_init_expr_free(ArrayInitExpr** arrayInit) {
     safe_free((void**) arrayInit);
 }
 
-FunctionExpr* function_expr_new(List* parameters, List* returnTypes, Stmt* body) {
+FunctionExpr* function_expr_new(List* parameters, Type* returnType, Stmt* body) {
     FunctionExpr* expr = NULL;
     expr = safe_malloc(sizeof(FunctionExpr), NULL);
     if (expr == NULL) {
         list_free(&parameters);
-        list_free(&returnTypes);
+        type_free(&returnType);
         stmt_free(&body);
         return NULL;
     }
 
     *expr = (FunctionExpr) {
         .parameters = parameters,
-        .returnTypes = returnTypes,
+        .returnType = returnType,
         .body = body
     };
 
@@ -1273,13 +1259,6 @@ void function_expr_add_parameter(FunctionExpr** functionExpr, Decl* parameter) {
         return;
 
     list_insert_last(&(*functionExpr)->parameters, parameter);
-}
-
-void function_expr_add_return_type(FunctionExpr** functionExpr, Type* type) {
-    if (functionExpr == NULL || *functionExpr == NULL || type == NULL)
-        return;
-
-    list_insert_last(&(*functionExpr)->returnTypes, type);
 }
 
 void function_expr_to_string(FunctionExpr** functionExpr) {
@@ -1298,17 +1277,10 @@ void function_expr_to_string(FunctionExpr** functionExpr) {
 
     printf(")");
 
-    List* returnTypes = (*functionExpr)->returnTypes;
-    if (!list_is_empty(&returnTypes)) {
+    if ((*functionExpr)->returnType != NULL) {
         printf(": ");
 
-        list_foreach(type, returnTypes) {
-            type_to_string((Type**) &type->value);
-
-            if (type->next != NULL) {
-                printf(" | ");
-            }
-        }
+        type_to_string(&(*functionExpr)->returnType);
     }
 
     printf(" ");
@@ -1321,7 +1293,7 @@ void function_expr_free(FunctionExpr** functionExpr) {
         return;
 
     list_free(&(*functionExpr)->parameters);
-    list_free(&(*functionExpr)->returnTypes);
+    type_free(&(*functionExpr)->returnType);
     stmt_free(&(*functionExpr)->body);
 
     safe_free((void**) functionExpr);

@@ -151,8 +151,9 @@ int main(void) {
             )
         )
     );
-    Decl* testFunctionDecl = NEW_FUNCTION_DECL(
+    Decl* testFunctionDecl = NEW_FUNCTION_DECL_WITH_RETURN(
         NEW_TOKEN(TOKEN_IDENT, "lerp", 1),
+        NEW_FLOAT_TYPE(),
         testFunctionBody
     );
     FUNCTION_ADD_PARAMS(testFunctionDecl,
@@ -160,7 +161,6 @@ int main(void) {
         NEW_FIELD_DECL(NEW_TOKEN(TOKEN_IDENT, "b", 1), NEW_FLOAT_TYPE()),
         NEW_FIELD_DECL(NEW_TOKEN(TOKEN_IDENT, "t", 1), NEW_FLOAT_TYPE()),
     );
-    FUNCTION_ADD_RETURN_TYPE(testFunctionDecl, NEW_FLOAT_TYPE());
     DECL_PRINT_AND_FREE(testFunctionDecl);
 
     Decl* testLetDecl = NEW_LET_DECL(
@@ -340,20 +340,14 @@ int main(void) {
     );
     EXPR_PRINT_AND_FREE(arrayTest);
 
-    Type* funcTypeTest = NEW_FUNCTION_TYPE();
+    Type* funcTypeTest = NEW_FUNCTION_TYPE_WITH_RETURN(NEW_VOID_TYPE());
     FUNCTION_TYPE_ADD_PARAMS(funcTypeTest,
         NEW_CUSTOM_TYPE(0, "User")
     );
-    FUNCTION_TYPE_ADD_RETURNS(funcTypeTest,
-        NEW_VOID_TYPE()
-    );
 
-    Expr* funcExprTest = NEW_FUNCTION_EXPR(NEW_BLOCK_STMT());
+    Expr* funcExprTest = NEW_FUNCTION_EXPR_WITH_RETURN(NEW_VOID_TYPE(), NEW_BLOCK_STMT());
     FUNCTION_EXPR_ADD_PARAMS(funcExprTest,
         NEW_FIELD_DECL(NEW_TOKEN(TOKEN_IDENT, "user", 1), NEW_CUSTOM_TYPE(0, "User"))
-    );
-    FUNCTION_EXPR_ADD_RETURN_TYPES(funcExprTest,
-        NEW_VOID_TYPE()
     );
 
     Decl* letDeclWithFuncExpr = NEW_LET_DECL(
