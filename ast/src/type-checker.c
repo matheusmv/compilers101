@@ -196,6 +196,7 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
     }
     case EXPRESSION_STMT: {
         ExpressionStmt* exprStmt = (ExpressionStmt*) statement->stmt;
+
         return check_expr(typeChecker, exprStmt->expression);
     }
     default:
@@ -364,11 +365,10 @@ static Type* check_let_decl(TypeChecker* typeChecker, LetDecl* letDecl) {
         }
     }
 
+    context_define(typeChecker->env, letDecl->name->literal, initializerType);
+
     if (typeChecker->hasFunctionTypeToDefine) {
-        context_define(typeChecker->env, letDecl->name->literal, initializerType);
         check_expr(typeChecker, letDecl->expression);
-    } else {
-        context_define(typeChecker->env, letDecl->name->literal, initializerType);
     }
 
     return context_get(typeChecker->env, letDecl->name->literal);
@@ -432,11 +432,10 @@ static Type* check_const_decl(TypeChecker* typeChecker, ConstDecl* constDecl) {
         }
     }
 
+    context_define(typeChecker->env, constDecl->name->literal, initializerType);
+
     if (typeChecker->hasFunctionTypeToDefine) {
-        context_define(typeChecker->env, constDecl->name->literal, initializerType);
         check_expr(typeChecker, constDecl->expression);
-    } else {
-        context_define(typeChecker->env, constDecl->name->literal, initializerType);
     }
 
     return context_get(typeChecker->env, constDecl->name->literal);
