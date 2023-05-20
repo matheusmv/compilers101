@@ -101,7 +101,7 @@ static Type* check_literal_expr(TypeChecker* typeChecker, LiteralExpr* literalEx
 
 static Expr* get_zero_value(Type* type);
 
-static Type* lookup_object(TypeChecker* typeChecker, Expr* ident, Expr* name);
+static Type* lookup_object(TypeChecker* typeChecker, Expr* object, Expr* objectAccess);
 
 static bool expect_expr_type(Type* exprType, size_t n_elements, ...);
 static bool expect_type_id(TypeID type, size_t n_elements, ...);
@@ -280,6 +280,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         MemberExpr* memberExpr = (MemberExpr*) expression->expr;
 
         Type* objectType = check_expr(typeChecker, memberExpr->object);
+
         if (objectType != NULL && !expect_type_id(objectType->typeId, 2, CUSTOM_TYPE, STRUCT_TYPE)) {
             printf("Invalid MemberExpr: cannot access this object\n\t");
             expr_to_string(&memberExpr->object);
@@ -292,7 +293,9 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
             return NULL;
         }
 
-        return lookup_object(typeChecker, memberExpr->object, expression);
+        return objectType != NULL
+            ? lookup_object(typeChecker, memberExpr->object, expression)
+            : NULL;
     }
     case ARRAY_MEMBER_EXPR: {
         ArrayMemberExpr* arrayMemberExpr = (ArrayMemberExpr*) expression->expr;
@@ -867,15 +870,67 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
 
     if (nArgs > nParam) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid CallExpr: to many arguments");
-        printf("\n\tRequired: %ld\n", nParam);
-        printf("\tGot: %ld\n", nArgs);
+
+        printf("Invalid CallExpr: to many arguments ---> ");
+
+        function_type_to_string(&functionType);
+
+        printf("\n\tRequired: %ld (", nParam);
+
+        list_foreach(parameterType, functionType->parameterTypes) {
+            type_to_string((Type**) &parameterType->value);
+        }
+
+        printf(")\n\tGot: %ld (", nArgs);
+
+        list_foreach(argument, callExpr->arguments) {
+            Type* argumentType = check_expr(typeChecker, argument->value);
+
+            type_to_string((Type**) &argumentType);
+            
+            if (argument->next != NULL) {
+                printf(", ");
+            }
+        }
+
+        printf(")\n\tIn: ");
+
+        call_expr_to_string(&callExpr);
+
+        printf("\n");
+
         return NULL;
     } else if (nArgs < nParam) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid CallExpr: insufficient number of arguments");
-        printf("\n\tRequired: %ld\n", nParam);
-        printf("\tGot: %ld\n", nArgs);
+
+        printf("Invalid CallExpr: insufficient number of arguments ---> ");
+
+        function_type_to_string(&functionType);
+
+        printf("\n\tRequired: %ld (", nParam);
+
+        list_foreach(parameterType, functionType->parameterTypes) {
+            type_to_string((Type**) &parameterType->value);
+        }
+
+        printf(")\n\tGot: %ld (", nArgs);
+
+        list_foreach(argument, callExpr->arguments) {
+            Type* argumentType = check_expr(typeChecker, argument->value);
+
+            type_to_string((Type**) &argumentType);
+            
+            if (argument->next != NULL) {
+                printf(", ");
+            }
+        }
+
+        printf(")\n\tIn: ");
+
+        call_expr_to_string(&callExpr);
+
+        printf("\n");
+
         return NULL;
     }
 
@@ -1295,14 +1350,18 @@ static Type* do_struct_lookup(TypeChecker* typeChecker, StructType* type, Expr* 
     return currentMemberType;
 }
 
-static Type* lookup_object(TypeChecker* typeChecker, Expr* ident, Expr* name) {
-    if (typeChecker == NULL || ident == NULL || name == NULL)
+static Type* lookup_object(TypeChecker* typeChecker, Expr* object, Expr* objectAccess) {
+    if (typeChecker == NULL || object == NULL || objectAccess == NULL)
         return NULL;
 
-    Type* identType = check_expr(typeChecker, ident);
+    Type* identType = check_expr(typeChecker, object);
+
+    if (identType == NULL)
+        return NULL;
+
     switch (identType->typeId) {
     case STRING_TYPE: {
-        Type* indexType = check_expr(typeChecker, name);
+        Type* indexType = check_expr(typeChecker, objectAccess);
         if (!equals(indexType, get_type_of(INT_TYPE))) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             return NULL;
@@ -1313,7 +1372,7 @@ static Type* lookup_object(TypeChecker* typeChecker, Expr* ident, Expr* name) {
     case ARRAY_TYPE: {
         ArrayType* arrayType = (ArrayType*) identType->type;
 
-        Type* indexType = check_expr(typeChecker, name);
+        Type* indexType = check_expr(typeChecker, objectAccess);
         if (!equals(indexType, get_type_of(INT_TYPE))) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             return NULL;
@@ -1324,12 +1383,12 @@ static Type* lookup_object(TypeChecker* typeChecker, Expr* ident, Expr* name) {
     case STRUCT_TYPE: {
         StructType* structType = (StructType*) identType->type;
 
-        Type* currentMemberType = do_struct_lookup(typeChecker, structType, name);
+        Type* currentMemberType = do_struct_lookup(typeChecker, structType, objectAccess);
 
         if (currentMemberType == NULL) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             printf("Invalid member access: ");
-            expr_to_string(&name);
+            expr_to_string(&objectAccess);
             printf("\n\tIn: ");
             type_to_string(&identType);
             return NULL;
@@ -1344,19 +1403,19 @@ static Type* lookup_object(TypeChecker* typeChecker, Expr* ident, Expr* name) {
             printf("Unrecognized type: ");
             type_to_string(&isStruct);
             printf("\n\tIn: ");
-            expr_to_string(&name);
+            expr_to_string(&objectAccess);
             printf("\n");
             return NULL;
         }
 
         StructType* structType = (StructType*) isStruct->type;
 
-        Type* currentMemberType = do_struct_lookup(typeChecker, structType, name);
+        Type* currentMemberType = do_struct_lookup(typeChecker, structType, objectAccess);
 
         if (currentMemberType == NULL) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
             printf("Invalid member access: ");
-            expr_to_string(&name);
+            expr_to_string(&objectAccess);
             printf("\n\tIn: ");
             type_to_string(&isStruct);
             printf("\n");
@@ -1369,12 +1428,12 @@ static Type* lookup_object(TypeChecker* typeChecker, Expr* ident, Expr* name) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
 
         printf("Can only lookup strings, arrays, structs\n\t");
-        expr_to_string(&ident);
+        expr_to_string(&object);
         printf(" (");
         type_to_string(&identType);
         printf(")");
         printf("\n\tInvalid access ---> ");
-        expr_to_string(&name);
+        expr_to_string(&objectAccess);
         printf("\n");
 
         return NULL;
