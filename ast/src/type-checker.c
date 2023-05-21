@@ -85,6 +85,7 @@ static Type* check_block_stmt(TypeChecker* typeChecker, BlockStmt* blockStmt);
 static Type* check_return_stmt(TypeChecker* typeChecker, ReturnStmt* returnStmt);
 static Type* check_if_stmt(TypeChecker* typeChecker, IfStmt* ifStmt);
 static Type* check_while_stmt(TypeChecker* typeChecker, WhileStmt* whileStmt);
+static Type* check_for_stmt(TypeChecker* typeChecker, ForStmt* forStmt);
 
 static Type* check_expr(TypeChecker* typeChecker, Expr* expression);
 static Type* check_binary_expr(TypeChecker* typeChecker, BinaryExpr* binaryExpr);
@@ -212,7 +213,9 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
         return check_while_stmt(typeChecker, whileStmt);
     }
     case FOR_STMT: {
-        return NULL;
+        ForStmt* forStmt = (ForStmt*) statement->stmt;
+
+        return check_for_stmt(typeChecker, forStmt);
     }
     case EXPRESSION_STMT: {
         ExpressionStmt* exprStmt = (ExpressionStmt*) statement->stmt;
@@ -734,6 +737,42 @@ static Type* check_while_stmt(TypeChecker* typeChecker, WhileStmt* whileStmt) {
     }
 
     check_stmt(typeChecker, whileStmt->body);
+
+    return NULL;
+}
+
+static Type* check_for_stmt(TypeChecker* typeChecker, ForStmt* forStmt) {
+    if (typeChecker == NULL || forStmt == NULL)
+        return NULL;
+
+    Context* previous = typeChecker->env;
+
+    typeChecker->env = context_enclosed_new(
+        previous,
+        MAP_NEW(32, entry_cmp, NULL, NULL)
+    );
+
+    check_decl(typeChecker, forStmt->initialization);
+
+    Type* conditionType = check_expr(typeChecker, forStmt->condition);
+    if (conditionType != NULL && !equals(conditionType, get_type_of(BOOL_TYPE))) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Invalid ForStmt: condition expression should have type bool\n\t");
+        for_stmt_to_string(&forStmt);
+        printf("\n");
+
+        context_free(&typeChecker->env);
+        typeChecker->env = previous;
+
+        return NULL;
+    }
+
+    check_expr(typeChecker, forStmt->action);
+
+    check_stmt(typeChecker, forStmt->body);
+
+    context_free(&typeChecker->env);
+    typeChecker->env = previous;
 
     return NULL;
 }

@@ -216,3 +216,9 @@ const testConfig = buildConfig("192.168.1.10", true);
 let validIp: string = testConfig.enabled
     ? testConfig.ip
     : buildConfig("192.168.1.10", true).ip;
+
+for (let i = 0; i < 10; i++) {
+    if (i % 2 == 0) {
+        break;
+    }
+}
