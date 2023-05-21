@@ -1,13 +1,11 @@
 #include "ast.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "list.h"
 #include "token.h"
 #include "types.h"
 #include "smem.h"
-#include "utils.h"
 
 
 Decl* decl_new(DeclType type, void* decl, void (*to_string)(void**), void (*destroy)(void**)) {

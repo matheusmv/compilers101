@@ -15,6 +15,7 @@
 #include "token.h"
 #include "types.h"
 
+
 static Type* copy(Type* self) {
     return type_copy((const Type**) &self);
 }
@@ -99,13 +100,17 @@ static Type* check_function_expr(TypeChecker* typeChecker, FunctionExpr* functio
 static Type* check_array_member_expr(TypeChecker* typeChecker, ArrayMemberExpr* arrayMemberExpr);
 static Type* check_literal_expr(TypeChecker* typeChecker, LiteralExpr* literalExpr);
 
-static Expr* get_zero_value(Type* type);
+static Expr* get_zero_value(const Type* type);
 
 static Type* lookup_object(TypeChecker* typeChecker, Expr* object, Expr* objectAccess);
 
 static bool expect_expr_type(Type* exprType, size_t n_elements, ...);
 static bool expect_type_id(TypeID type, size_t n_elements, ...);
 static bool expect_token_type(TokenType type, size_t n_elements, ...);
+
+static bool struct_type_has_fields_with_valid_types(StructType* structType);
+static bool function_has_valid_parameters(TypeChecker* typeChecker, List* parameters);
+static bool struct_has_valid_fields(TypeChecker* typeChecker, List* fields);
 
 TypeCheckerStatus check(List* declarations) {
     init_type_lookup_object();
@@ -126,6 +131,9 @@ TypeCheckerStatus check(List* declarations) {
 }
 
 static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
+    if (typeChecker == NULL || declaration == NULL)
+        return NULL;
+
     switch (declaration->type) {
     case LET_DECL: {
         LetDecl* letDecl = (LetDecl*) declaration->decl;
@@ -167,6 +175,9 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
 }
 
 static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
+    if (typeChecker == NULL || statement == NULL)
+        return NULL;
+
     switch (statement->type) {
     case BLOCK_STMT: {
         BlockStmt* blockStmt = (BlockStmt*) statement->stmt;
@@ -212,6 +223,9 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
 }
 
 static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
+    if (typeChecker == NULL || expression == NULL)
+        return NULL;
+
     switch (expression->type) {
     case BINARY_EXPR: {
         BinaryExpr* binaryExpr = (BinaryExpr*) expression->expr;
@@ -366,7 +380,7 @@ static Type* check_let_decl(TypeChecker* typeChecker, LetDecl* letDecl) {
 
     if (declaredType == NULL || initializerType == NULL) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Could not do type checking on:\n\t");
+        printf("\nCould not do type checking on:\n\t");
         let_decl_to_string(&letDecl);
         printf("\n");
         return NULL;
@@ -460,7 +474,7 @@ static Type* check_const_decl(TypeChecker* typeChecker, ConstDecl* constDecl) {
 
     if (declaredType == NULL || initializerType == NULL) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Could not do type checking on:\n\t");
+        printf("\nCould not do type checking on:\n\t");
         const_decl_to_string(&constDecl);
         printf("\n");
         return NULL;
@@ -513,6 +527,14 @@ static Type* check_function_decl(TypeChecker* typeChecker, FunctionDecl* functio
     if (typeChecker == NULL || functionDecl == NULL)
         return NULL;
 
+    if (!function_has_valid_parameters(typeChecker, functionDecl->parameters)) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Invalid FunctionDecl: the function has parameters with invalid types --> (void) or (nil)\n");
+        function_decl_to_string(&functionDecl);
+        printf("\n");
+        return NULL;
+    }
+
     List* paramTypes = list_new(NULL);
     list_foreach(param, functionDecl->parameters) {
         list_insert_last(&paramTypes, check_decl(typeChecker, param->value));
@@ -556,6 +578,14 @@ static Type* check_function_decl(TypeChecker* typeChecker, FunctionDecl* functio
 static Type* check_struct_decl(TypeChecker* typeChecker, StructDecl* structDecl) {
     if (typeChecker == NULL || structDecl == NULL)
         return NULL;
+
+    if (!struct_has_valid_fields(typeChecker, structDecl->fields)) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Invalid StructDecl: the struct has fields with invalid types --> (void) or (nil)\n");
+        struct_decl_to_string(&structDecl);
+        printf("\n");
+        return NULL;
+    }
 
     List* listOfFieldTypes = list_new((void (*)(void **)) NULL);
     list_foreach(field, structDecl->fields) {
@@ -704,6 +734,14 @@ static Type* check_binary_expr(TypeChecker* typeChecker, BinaryExpr* binaryExpr)
     Type* leftType = check_expr(typeChecker, binaryExpr->left);
     Type* rightType = check_expr(typeChecker, binaryExpr->right);
 
+    if (leftType == NULL || rightType == NULL) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Invalid BinaryExpr: ");
+        binary_expr_to_string(&binaryExpr);
+        printf("\n");
+        return NULL;
+    }
+
     bool leftIsOk = false;
 
     TokenType operation = binaryExpr->op->type;
@@ -726,7 +764,7 @@ static Type* check_binary_expr(TypeChecker* typeChecker, BinaryExpr* binaryExpr)
 
         if (leftIsOk && !equals(leftType, rightType)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("invalid BinaryExpr: left type must be equals to right type\n\t");
+            printf("Invalid BinaryExpr: left type must be equals to right type\n\t");
             binary_expr_to_string(&binaryExpr);
             printf("\n");
             return NULL;
@@ -735,7 +773,7 @@ static Type* check_binary_expr(TypeChecker* typeChecker, BinaryExpr* binaryExpr)
 
     if (!leftIsOk) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        fprintf(stderr, "Unexpected left type in BinaryExpr\n\t");
+        printf("Unexpected left type in BinaryExpr:\n\t");
         type_to_string(&leftType);
         printf(" ");
         token_to_string(&binaryExpr->op);
@@ -846,8 +884,8 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
     if (typeChecker == NULL || callExpr == NULL)
         return NULL;
 
-    Type* calleType = check_expr(typeChecker, callExpr->callee);
-    if (calleType == NULL) {
+    Type* calleeType = check_expr(typeChecker, callExpr->callee);
+    if (calleeType == NULL) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
         printf("Invalid CallExpr: function not defined.");
         printf("\n\t---> ");
@@ -856,14 +894,14 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
         return NULL;
     }
 
-    if (calleType->typeId != FUNC_TYPE) {
+    if (calleeType->typeId != FUNC_TYPE) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
         expr_to_string(&callExpr->callee);
         printf(": not a function.\n");
         return NULL;
     }
 
-    FunctionType* functionType = calleType->type;
+    FunctionType* functionType = calleeType->type;
 
     size_t nArgs = list_size(&callExpr->arguments);
     size_t nParam = list_size(&functionType->parameterTypes);
@@ -879,6 +917,10 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
 
         list_foreach(parameterType, functionType->parameterTypes) {
             type_to_string((Type**) &parameterType->value);
+
+            if (parameterType->next != NULL) {
+                printf(", ");
+            }
         }
 
         printf(")\n\tGot: %ld (", nArgs);
@@ -886,7 +928,7 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
         list_foreach(argument, callExpr->arguments) {
             Type* argumentType = check_expr(typeChecker, argument->value);
 
-            type_to_string((Type**) &argumentType);
+            type_to_string(&argumentType);
             
             if (argument->next != NULL) {
                 printf(", ");
@@ -911,6 +953,10 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
 
         list_foreach(parameterType, functionType->parameterTypes) {
             type_to_string((Type**) &parameterType->value);
+
+            if (parameterType->next != NULL) {
+                printf(", ");
+            }
         }
 
         printf(")\n\tGot: %ld (", nArgs);
@@ -918,7 +964,7 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
         list_foreach(argument, callExpr->arguments) {
             Type* argumentType = check_expr(typeChecker, argument->value);
 
-            type_to_string((Type**) &argumentType);
+            type_to_string(&argumentType);
             
             if (argument->next != NULL) {
                 printf(", ");
@@ -1104,7 +1150,15 @@ static Type* check_struct_inline_expr(TypeChecker* typeChecker, StructInlineExpr
     if (typeChecker == NULL || structInlineExpr == NULL)
         return NULL;
 
-    StructType* inlineStructTypeDefinition = (StructType*) ((Type*) structInlineExpr->type)->type;
+    StructType* inlineStructTypeDefinition = (StructType*) (structInlineExpr->type)->type;
+
+    if (!struct_has_valid_fields(typeChecker, inlineStructTypeDefinition->fields)) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Invalid StructInlineExpr: the struct has fields with invalid types --> (void) or (nil)\n");
+        struct_type_to_string(&inlineStructTypeDefinition);
+        printf("\n");
+        return NULL;
+    }
 
     // TODO: get zero value from omitted fields
 
@@ -1177,7 +1231,7 @@ static Type* check_array_init_expr(TypeChecker* typeChecker, ArrayInitExpr* arra
     Type* arrayType = NEW_ARRAY_TYPE(firstElementType);
 
     list_foreach(dimension, arrayInitExprType->dimensions) {
-        ArrayDimension* dim = (ArrayDimension*) ((Type*) dimension->value)->type;
+        const ArrayDimension* dim = (ArrayDimension*) ((Type*) dimension->value)->type;
 
         ARRAY_TYPE_ADD_DIMENSION(arrayType, NEW_ARRAY_DIMENSION(dim->size));
     }
@@ -1188,6 +1242,14 @@ static Type* check_array_init_expr(TypeChecker* typeChecker, ArrayInitExpr* arra
 static Type* check_function_expr(TypeChecker* typeChecker, FunctionExpr* functionExpr) {
     if (typeChecker == NULL || functionExpr == NULL)
         return NULL;
+
+    if (!function_has_valid_parameters(typeChecker, functionExpr->parameters)) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Invalid FunctionExpr: the function has parameters with invalid types --> (void) or (nil)\n");
+        function_expr_to_string(&functionExpr);
+        printf("\n");
+        return NULL;
+    }
 
     List* paramTypes = list_new(NULL);
     list_foreach(param, functionExpr->parameters) {
@@ -1279,7 +1341,7 @@ static Type* check_literal_expr(TypeChecker* typeChecker, LiteralExpr* literalEx
     }
 }
 
-static Expr* get_zero_value(Type* type) {
+static Expr* get_zero_value(const Type* type) {
     if (type == NULL)
         return NULL;
 
@@ -1397,14 +1459,11 @@ static Type* lookup_object(TypeChecker* typeChecker, Expr* object, Expr* objectA
         return currentMemberType;
     }
     case CUSTOM_TYPE: {
-        Type* isStruct = context_get(typeChecker->env, ((AtomicType*) identType->type)->name);
-        if (isStruct != NULL && isStruct->typeId != STRUCT_TYPE) {
+        char* name = ((AtomicType*) identType->type)->name;
+        Type* isStruct = context_get(typeChecker->env, name);
+        if (isStruct == NULL || isStruct->typeId != STRUCT_TYPE) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Unrecognized type: ");
-            type_to_string(&isStruct);
-            printf("\n\tIn: ");
-            expr_to_string(&objectAccess);
-            printf("\n");
+            printf("Undefined: %s\n", name);
             return NULL;
         }
 
@@ -1431,8 +1490,7 @@ static Type* lookup_object(TypeChecker* typeChecker, Expr* object, Expr* objectA
         expr_to_string(&object);
         printf(" (");
         type_to_string(&identType);
-        printf(")");
-        printf("\n\tInvalid access ---> ");
+        printf(")\n\tInvalid access ---> ");
         expr_to_string(&objectAccess);
         printf("\n");
 
@@ -1512,4 +1570,67 @@ static bool expect_token_type(TokenType type, size_t n_elements, ...) {
     va_end(args);
 
     return false;
+}
+
+static bool struct_type_has_fields_with_valid_types(StructType* structType) {
+    if (structType == NULL)
+        return false;
+
+    list_foreach(field, structType->fields) {
+        NamedType* fieldType = ((Type*) field->value)->type;
+
+        bool fieldIsVoidOrNil = equals(fieldType->type, get_type_of(NIL_TYPE)) ||
+            equals(fieldType->type, get_type_of(VOID_TYPE));
+
+        bool fieldIsStructTypeAndHasInvalidFields = fieldType->type->typeId == STRUCT_TYPE &&
+            !struct_type_has_fields_with_valid_types(fieldType->type->type);
+
+        if (fieldIsVoidOrNil || fieldIsStructTypeAndHasInvalidFields) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static bool function_has_valid_parameters(TypeChecker* typeChecker, List* parameters) {
+    if (typeChecker == NULL || parameters == NULL)
+        return false;
+
+    list_foreach(parameter, parameters) {
+        Type* parameterType = check_decl(typeChecker, parameter->value);
+
+        bool parameterTypeIsVoidOrNil = equals(parameterType, get_type_of(VOID_TYPE)) || 
+            equals(parameterType, get_type_of(NIL_TYPE));
+
+        bool parameterTypeIsStructTypeAndHasInvalidFields = parameterType->typeId == STRUCT_TYPE &&
+            !struct_type_has_fields_with_valid_types(parameterType->type);
+
+        if (parameterTypeIsVoidOrNil || parameterTypeIsStructTypeAndHasInvalidFields) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static bool struct_has_valid_fields(TypeChecker* typeChecker, List* fields) {
+    if (typeChecker == NULL || fields == NULL)
+        return false;
+
+    list_foreach(field, fields) {
+        NamedType* fieldType = ((Type*) field->value)->type;
+
+        bool fieldIsVoidOrNil = equals(fieldType->type, get_type_of(NIL_TYPE)) ||
+            equals(fieldType->type, get_type_of(VOID_TYPE));
+
+        bool fieldIsStructTypeAndHasInvalidFields = fieldType->type->typeId == STRUCT_TYPE &&
+            !struct_type_has_fields_with_valid_types(fieldType->type->type);
+
+        if (fieldIsVoidOrNil || fieldIsStructTypeAndHasInvalidFields) {
+            return false;
+        }
+    }
+
+    return true;
 }

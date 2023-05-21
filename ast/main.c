@@ -287,6 +287,14 @@ int main(void) {
         printf("\n");
     }
 
+    if(context_exists(globalContext, "object")) {
+        printf("*** object is defined in globalContext ***\n");
+    }
+
+    if(context_exists(innerScope, "object")) {
+        printf("*** object is defined in innerScope ***\n");
+    }
+
     context_free(&innerScope);
     context_free(&globalContext);
 

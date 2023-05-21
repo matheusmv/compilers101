@@ -1,7 +1,7 @@
 #include "utils.h"
 
-#include <stdlib.h>
 #include <memory.h>
+
 #include "smem.h"
 
 

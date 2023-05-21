@@ -2,7 +2,6 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "list.h"
@@ -18,7 +17,7 @@ static bool compare_list_of_types(List* a, List* b) {
     ListNode* bNode = b->head;
     while (aNode != NULL && bNode != NULL) {
         if (!type_equals((Type**) &aNode->value, (Type**) &bNode->value)) {
-            return false;;
+            return false;
         }
 
         aNode = aNode->next;
@@ -124,7 +123,7 @@ AtomicType* atomic_type_copy(const AtomicType** self) {
     return atomic_type_new((*self)->size, (*self)->name);
 }
 
-static bool is_atomic(Type* type) {
+static bool is_atomic(const Type* type) {
     return _atomic_start < type->typeId && type->typeId < _atomic_end;
 }
 

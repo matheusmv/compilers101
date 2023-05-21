@@ -197,3 +197,18 @@ func getUserPhoto(user: User): Photo {
 }
 
 const anaPhotoUrl: string = getUserPhoto(ana).url;
+
+func buildConfig(ip: string, enabled: bool): struct{
+    ip: string
+    enabled: bool
+} {
+    struct Config {
+        ip: string
+        enabled: bool
+    }
+
+    return Config{ enabled: enabled, ip: ip };
+}
+
+const ip = buildConfig("192.168.1.1", false).ip;
+const enabled = buildConfig("192.168.1.10", true).enabled;

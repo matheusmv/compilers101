@@ -2,8 +2,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdlib.h>
-
 
 #include "list.h"
 #include "smem.h"

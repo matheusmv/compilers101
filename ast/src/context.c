@@ -1,8 +1,5 @@
 #include "context.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "map.h"
 #include "smem.h"
 
@@ -50,10 +47,16 @@ void context_free(Context** ctx) {
 }
 
 void context_define(Context* ctx, void* name, void* value) {
+    if (ctx == NULL || name == NULL)
+        return;
+
     map_put(ctx->environment, name, value);
 }
 
 void* context_get(Context* ctx, void* name) {
+    if (ctx == NULL || name == NULL)
+        return NULL;
+
     void* value = map_get(ctx->environment, name);
     if (value != NULL) {
         return value;
@@ -66,19 +69,25 @@ void* context_get(Context* ctx, void* name) {
     return NULL;
 }
 
-void context_assign(Context* ctx, void* name, void* value, const char* error_msg) {
-    void* current_value = map_get(ctx->environment, name);
+void context_assign(Context* ctx, void* name, void* value) {
+    if (ctx == NULL || name == NULL)
+        return;
+
+    const void* current_value = map_get(ctx->environment, name);
     if (current_value != NULL) {
         map_put(ctx->environment, name, value);
         return;
     }
 
     if (ctx->enclosing != NULL) {
-        context_assign(ctx->enclosing, name, value, error_msg);
+        context_assign(ctx->enclosing, name, value);
         return;
     }
+}
 
-    if (error_msg != NULL) {
-        fprintf(stderr, "%s\n", error_msg);
-    }
+bool context_exists(Context* ctx, void* name) {
+    if (ctx == NULL || name == NULL)
+        return false;
+
+    return map_get(ctx->environment, name) != NULL;
 }

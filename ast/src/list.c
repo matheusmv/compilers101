@@ -2,9 +2,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 
 #include "smem.h"
 
@@ -261,7 +259,10 @@ static void split_list(ListNode* source, ListNode** front, ListNode** back) {
     *front = source;
     *back = slow->next;
     slow->next = NULL;
-    (*back)->prev = NULL;
+
+    if (*back != NULL) {
+        (*back)->prev = NULL;
+    }
 }
 
 static ListNode* merge(ListNode* left, ListNode* right, int (*cmp)(const void*, const void*)) {
