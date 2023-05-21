@@ -97,6 +97,7 @@ static Type* check_struct_init_expr(TypeChecker* typeChecker, StructInitExpr* st
 static Type* check_struct_inline_expr(TypeChecker* typeChecker, StructInlineExpr* structInlineExpr);
 static Type* check_array_init_expr(TypeChecker* typeChecker, ArrayInitExpr* arrayInitExpr);
 static Type* check_function_expr(TypeChecker* typeChecker, FunctionExpr* functionExpr);
+static Type* check_conditional_expr(TypeChecker* typeChecker, ConditionalExpr* conditionalExpr);
 static Type* check_array_member_expr(TypeChecker* typeChecker, ArrayMemberExpr* arrayMemberExpr);
 static Type* check_literal_expr(TypeChecker* typeChecker, LiteralExpr* literalExpr);
 
@@ -168,7 +169,7 @@ static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
     default:
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
 
-        printf("Unexpected declaration type\n");
+        printf("\nUnexpected declaration type\n");
 
         return NULL;
     }
@@ -216,7 +217,7 @@ static Type* check_stmt(TypeChecker* typeChecker, Stmt* statement) {
     default:
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
 
-        printf("Unexpected statement type\n");
+        printf("\nUnexpected statement type\n");
 
         return NULL;
     }
@@ -288,7 +289,9 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         return check_function_expr(typeChecker, functionExpr);
     }
     case CONDITIONAL_EXPR: {
-        return NULL;
+        ConditionalExpr* conditionalExpr = (ConditionalExpr*) expression->expr;
+
+        return check_conditional_expr(typeChecker, conditionalExpr);
     }
     case MEMBER_EXPR: {
         MemberExpr* memberExpr = (MemberExpr*) expression->expr;
@@ -296,7 +299,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         Type* objectType = check_expr(typeChecker, memberExpr->object);
 
         if (objectType != NULL && !expect_type_id(objectType->typeId, 2, CUSTOM_TYPE, STRUCT_TYPE)) {
-            printf("Invalid MemberExpr: cannot access this object\n\t");
+            printf("\nInvalid MemberExpr: cannot access this object\n\t");
             expr_to_string(&memberExpr->object);
             printf(" (");
             type_to_string(&objectType);
@@ -327,7 +330,7 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
     default:
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
 
-        printf("Unexpected expression type\n");
+        printf("\nUnexpected expression type\n");
 
         return NULL;
     }
@@ -341,7 +344,7 @@ static Type* check_let_decl(TypeChecker* typeChecker, LetDecl* letDecl) {
 
     if (letDecl->type == NULL && letDecl->expression == NULL) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid LetDecl:\n\t");
+        printf("\nInvalid LetDecl:\n\t");
         let_decl_to_string(&letDecl);
         printf("?\n");
         return NULL;
@@ -356,7 +359,7 @@ static Type* check_let_decl(TypeChecker* typeChecker, LetDecl* letDecl) {
     if (letDecl->type == NULL) {
         if (equals(initializerType, get_type_of(NIL_TYPE))) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Invalid LetDecl: assigning nil to an untyped declaration is not allowed\n\t");
+            printf("\nInvalid LetDecl: assigning nil to an untyped declaration is not allowed\n\t");
             let_decl_to_string(&letDecl);
             printf("\n");
             return NULL;
@@ -372,7 +375,7 @@ static Type* check_let_decl(TypeChecker* typeChecker, LetDecl* letDecl) {
 
     if (invalidTypeInDecl) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid LetDecl: declaration with type not allowed\n\t");
+        printf("\nInvalid LetDecl: declaration with type not allowed\n\t");
         let_decl_to_string(&letDecl);
         printf("\n");
         return NULL;
@@ -409,7 +412,7 @@ static Type* check_let_decl(TypeChecker* typeChecker, LetDecl* letDecl) {
 
     if (!typeMatch) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf( "Incompatible type in LetDecl.");
+        printf( "\nIncompatible type in LetDecl.");
         printf("\n\tRequired: ");
         type_to_string(&declaredType);
         printf("\n\tGot: ");
@@ -435,7 +438,7 @@ static Type* check_const_decl(TypeChecker* typeChecker, ConstDecl* constDecl) {
 
     if (constDecl->type == NULL && constDecl->expression == NULL) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid ConstDecl:\n\t");
+        printf("\nInvalid ConstDecl:\n\t");
         const_decl_to_string(&constDecl);
         printf("?\n");
         return NULL;
@@ -450,7 +453,7 @@ static Type* check_const_decl(TypeChecker* typeChecker, ConstDecl* constDecl) {
     if (constDecl->type == NULL) {
         if (equals(initializerType, get_type_of(NIL_TYPE))) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Invalid ConstDecl: assigning nil to an untyped declaration is not allowed\n\t");
+            printf("\nInvalid ConstDecl: assigning nil to an untyped declaration is not allowed\n\t");
             const_decl_to_string(&constDecl);
             printf("\n");
             return NULL;
@@ -466,7 +469,7 @@ static Type* check_const_decl(TypeChecker* typeChecker, ConstDecl* constDecl) {
 
     if (invalidTypeInDecl) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid ConstDecl: declaration with type not allowed\n\t");
+        printf("\nInvalid ConstDecl: declaration with type not allowed\n\t");
         const_decl_to_string(&constDecl);
         printf("\n");
         return NULL;
@@ -503,7 +506,7 @@ static Type* check_const_decl(TypeChecker* typeChecker, ConstDecl* constDecl) {
 
     if (!typeMatch) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Incompatible type in ConstDecl.");
+        printf("\nIncompatible type in ConstDecl.");
         printf("\n\trequired: ");
         type_to_string(&declaredType);
         printf("\n\tGot: ");
@@ -529,7 +532,7 @@ static Type* check_function_decl(TypeChecker* typeChecker, FunctionDecl* functio
 
     if (!function_has_valid_parameters(typeChecker, functionDecl->parameters)) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid FunctionDecl: the function has parameters with invalid types --> (void) or (nil)\n");
+        printf("\nInvalid FunctionDecl: the function has parameters with invalid types --> (void) or (nil)\n");
         function_decl_to_string(&functionDecl);
         printf("\n");
         return NULL;
@@ -581,7 +584,7 @@ static Type* check_struct_decl(TypeChecker* typeChecker, StructDecl* structDecl)
 
     if (!struct_has_valid_fields(typeChecker, structDecl->fields)) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid StructDecl: the struct has fields with invalid types --> (void) or (nil)\n");
+        printf("\nInvalid StructDecl: the struct has fields with invalid types --> (void) or (nil)\n");
         struct_decl_to_string(&structDecl);
         printf("\n");
         return NULL;
@@ -632,7 +635,7 @@ static Type* check_return_stmt(TypeChecker* typeChecker, ReturnStmt* returnStmt)
     ) {
         Type* returnType =  check_expr(typeChecker, returnStmt->expression);
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("To many return values");
+        printf("\nTo many return values");
         printf("\n\tHave: ");
         return_stmt_to_string(&returnStmt);
         printf(" (");
@@ -647,7 +650,12 @@ static Type* check_return_stmt(TypeChecker* typeChecker, ReturnStmt* returnStmt)
         equals(typeChecker->currentFunctionReturnType, get_type_of(VOID_TYPE))
     ) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Not expecting any return value\n");
+        printf("\nNot expecting any return value");
+        printf("\n\tRequire: ");
+        type_to_string(&typeChecker->currentFunctionReturnType);
+        printf("\n\tGot: ");
+        return_stmt_to_string(&returnStmt);
+        printf("\n");
         return NULL;
     }
 
@@ -663,7 +671,7 @@ static Type* check_return_stmt(TypeChecker* typeChecker, ReturnStmt* returnStmt)
 
     if (!functionReturnIsCompositeType && !equals(returnType, functionReturn)) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid FunctionReturn:");
+        printf("\nInvalid FunctionReturn:");
         printf("\n\tRequired: ");
         type_to_string(&functionReturn);
         printf("\n\tGot: ");
@@ -684,7 +692,7 @@ static Type* check_if_stmt(TypeChecker* typeChecker, IfStmt* ifStmt) {
     Type* conditionType = check_expr(typeChecker, ifStmt->condition);
     if (!equals(conditionType, get_type_of(BOOL_TYPE))) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid IfStmt: incompatible condition type");
+        printf("\nInvalid IfStmt: incompatible condition type");
         printf("\n\tRequired: bool");
         printf("\n\tGot: ");
         type_to_string(&conditionType);
@@ -710,7 +718,7 @@ static Type* check_while_stmt(TypeChecker* typeChecker, WhileStmt* whileStmt) {
     Type* conditionType = check_expr(typeChecker, whileStmt->condition);
     if (!equals(conditionType, get_type_of(BOOL_TYPE))) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid WhileStmt: incompatible condition type");
+        printf("\nInvalid WhileStmt: incompatible condition type");
         printf("\n\trequired: bool");
         printf("\n\tGot: ");
         type_to_string(&conditionType);
@@ -736,7 +744,7 @@ static Type* check_binary_expr(TypeChecker* typeChecker, BinaryExpr* binaryExpr)
 
     if (leftType == NULL || rightType == NULL) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid BinaryExpr: ");
+        printf("\nInvalid BinaryExpr: ");
         binary_expr_to_string(&binaryExpr);
         printf("\n");
         return NULL;
@@ -764,7 +772,7 @@ static Type* check_binary_expr(TypeChecker* typeChecker, BinaryExpr* binaryExpr)
 
         if (leftIsOk && !equals(leftType, rightType)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Invalid BinaryExpr: left type must be equals to right type\n\t");
+            printf("\nInvalid BinaryExpr: left type must be equals to right type\n\t");
             binary_expr_to_string(&binaryExpr);
             printf("\n");
             return NULL;
@@ -773,7 +781,7 @@ static Type* check_binary_expr(TypeChecker* typeChecker, BinaryExpr* binaryExpr)
 
     if (!leftIsOk) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Unexpected left type in BinaryExpr:\n\t");
+        printf("\nUnexpected left type in BinaryExpr:\n\t");
         type_to_string(&leftType);
         printf(" ");
         token_to_string(&binaryExpr->op);
@@ -817,7 +825,7 @@ static Type* check_binary_expr(TypeChecker* typeChecker, BinaryExpr* binaryExpr)
 
     if (!isConcat && !equals(leftType, rightType)) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid BinaryExpr: left type must be equals to right type\n\t");
+        printf("\nInvalid BinaryExpr: left type must be equals to right type\n\t");
         type_to_string(&leftType);
         printf(" ");
         token_to_string(&binaryExpr->op);
@@ -850,7 +858,7 @@ static Type* check_assign_expr(TypeChecker* typeChecker, AssignExpr* assignExpr)
         equals(valueType, get_type_of(VOID_TYPE))
     ) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid AssignExpr: call expression has no return");
+        printf("\nInvalid AssignExpr: call expression has no return");
         printf("\n\tRequired: ");
         type_to_string(&varType);
         printf("\n\tGot: ");
@@ -863,7 +871,7 @@ static Type* check_assign_expr(TypeChecker* typeChecker, AssignExpr* assignExpr)
 
     if (!equals(varType, valueType)) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid AssignExpr: incompatible types");
+        printf("\nInvalid AssignExpr: incompatible types");
         printf("\n\tRequired: ");
         type_to_string(&varType);
         printf("\n\tGot: ");
@@ -887,7 +895,7 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
     Type* calleeType = check_expr(typeChecker, callExpr->callee);
     if (calleeType == NULL) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid CallExpr: function not defined.");
+        printf("\nInvalid CallExpr: function not defined.");
         printf("\n\t---> ");
         call_expr_to_string(&callExpr);
         printf("\n");
@@ -909,7 +917,7 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
     if (nArgs > nParam) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
 
-        printf("Invalid CallExpr: to many arguments ---> ");
+        printf("\nInvalid CallExpr: to many arguments ---> ");
 
         function_type_to_string(&functionType);
 
@@ -945,7 +953,7 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
     } else if (nArgs < nParam) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
 
-        printf("Invalid CallExpr: insufficient number of arguments ---> ");
+        printf("\nInvalid CallExpr: insufficient number of arguments ---> ");
 
         function_type_to_string(&functionType);
 
@@ -987,7 +995,7 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
 
         if (!equals(argType, expectedType)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Invalid CallExpr: argument has invalid type.");
+            printf("\nInvalid CallExpr: argument has invalid type.");
             printf("\n\tRequired: ");
             type_to_string(&expectedType);
             printf("\n\tGot: ");
@@ -1013,7 +1021,7 @@ static Type* check_logical_expr(TypeChecker* typeChecker, LogicalExpr* logicalEx
 
     if (!equals(leftType, get_type_of(BOOL_TYPE))) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid LogicalExpr: invalid left type\n\t");
+        printf("\nInvalid LogicalExpr: invalid left type\n\t");
         logical_expr_to_string(&logicalExpr);
         printf("\n");
         return NULL;
@@ -1021,7 +1029,7 @@ static Type* check_logical_expr(TypeChecker* typeChecker, LogicalExpr* logicalEx
 
     if (!equals(rightType, get_type_of(BOOL_TYPE))) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid LogicalExpr: invalid right type\n\t");
+        printf("\nInvalid LogicalExpr: invalid right type\n\t");
         logical_expr_to_string(&logicalExpr);
         printf("\n");
         return NULL;
@@ -1054,7 +1062,7 @@ static Type* check_unary_expr(TypeChecker* typeChecker, UnaryExpr* unaryExpr) {
 
     if (!ok) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid UnaryExpr: invalid right type\n\t");
+        printf("\nInvalid UnaryExpr: invalid right type\n\t");
         unary_expr_to_string(&unaryExpr);
         printf(" (");
         type_to_string(&rightType);
@@ -1073,7 +1081,7 @@ static Type* check_update_expr(TypeChecker* typeChecker, UpdateExpr* updateExpr)
 
     if (!expect_expr_type(leftType, 2, INT_TYPE, FLOAT_TYPE)) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid UpdatedExpr: invalid left type");
+        printf("\nInvalid UpdatedExpr: invalid left type");
         printf("\n\t(");
         type_to_string(&leftType);
         printf(") ");
@@ -1092,7 +1100,7 @@ static Type* check_struct_init_expr(TypeChecker* typeChecker, StructInitExpr* st
     Type* structType = context_get(typeChecker->env, structInitExpr->name->literal);
     if (structType == NULL) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid StructInitExpr: undefined struct.\n\t");
+        printf("\nInvalid StructInitExpr: undefined struct.\n\t");
         struct_init_expr_to_string(&structInitExpr);
         printf("\n");
         return NULL;
@@ -1115,7 +1123,7 @@ static Type* check_struct_init_expr(TypeChecker* typeChecker, StructInitExpr* st
 
         if (namedType == NULL) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Invalid StructInitExpr: undeclared field\n\t");
+            printf("\nInvalid StructInitExpr: undeclared field\n\t");
             expr_to_string((Expr**) &field->value);
             printf("\n\tIn: ");
             struct_init_expr_to_string(&structInitExpr);
@@ -1128,7 +1136,7 @@ static Type* check_struct_init_expr(TypeChecker* typeChecker, StructInitExpr* st
 
         if (!equals(requiredType, fieldType)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Invalid StructInitExpr: type not match");
+            printf("\nInvalid StructInitExpr: type not match");
             printf("\n\tRequired: ");
             type_to_string(&namedType);
             printf("\n\tGot: ");
@@ -1154,7 +1162,7 @@ static Type* check_struct_inline_expr(TypeChecker* typeChecker, StructInlineExpr
 
     if (!struct_has_valid_fields(typeChecker, inlineStructTypeDefinition->fields)) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid StructInlineExpr: the struct has fields with invalid types --> (void) or (nil)\n");
+        printf("\nInvalid StructInlineExpr: the struct has fields with invalid types --> (void) or (nil)\n");
         struct_type_to_string(&inlineStructTypeDefinition);
         printf("\n");
         return NULL;
@@ -1175,7 +1183,7 @@ static Type* check_struct_inline_expr(TypeChecker* typeChecker, StructInlineExpr
 
         if (namedType == NULL) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Invalid StructInlineExpr: undeclared field\n\t");
+            printf("\nInvalid StructInlineExpr: undeclared field\n\t");
             expr_to_string((Expr**) &initExpr->value);
             printf("\n\tIn: ");
             struct_inline_expr_to_string(&structInlineExpr);
@@ -1188,7 +1196,7 @@ static Type* check_struct_inline_expr(TypeChecker* typeChecker, StructInlineExpr
 
         if (!equals(requiredType, fieldInitExprType)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Invalid StructInlineExpr: type not match");
+            printf("\nInvalid StructInlineExpr: type not match");
             printf("\n\tRequired: ");
             type_to_string(&namedType);
             printf("\n\tGot: ");
@@ -1216,7 +1224,7 @@ static Type* check_array_init_expr(TypeChecker* typeChecker, ArrayInitExpr* arra
         Type* elementType = check_expr(typeChecker, element->value);
         if (!equals(firstElementType, elementType)) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Invalid ArrayInitExpr: elements have diferent types");
+            printf("\nInvalid ArrayInitExpr: elements have diferent types");
             printf("\n\tGot: ");
             type_to_string(&elementType);
             printf("\n\tIn: ");
@@ -1245,7 +1253,7 @@ static Type* check_function_expr(TypeChecker* typeChecker, FunctionExpr* functio
 
     if (!function_has_valid_parameters(typeChecker, functionExpr->parameters)) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid FunctionExpr: the function has parameters with invalid types --> (void) or (nil)\n");
+        printf("\nInvalid FunctionExpr: the function has parameters with invalid types --> (void) or (nil)\n");
         function_expr_to_string(&functionExpr);
         printf("\n");
         return NULL;
@@ -1295,6 +1303,38 @@ static Type* check_function_expr(TypeChecker* typeChecker, FunctionExpr* functio
     return functionType;
 }
 
+static Type* check_conditional_expr(TypeChecker* typeChecker, ConditionalExpr* conditionalExpr) {
+    if (typeChecker == NULL || conditionalExpr == NULL)
+        return NULL;
+
+    Type* conditionType = check_expr(typeChecker, conditionalExpr->condition);
+
+    if (!equals(conditionType, get_type_of(BOOL_TYPE))) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("\nInvalid ConditionalExpr: condition should have type bool\n\t");
+        conditional_expr_to_string(&conditionalExpr);
+        printf("\n");
+        return NULL;
+    }
+
+    Type* isTrueType = check_expr(typeChecker, conditionalExpr->isTrue);
+    Type* isFalseType = check_expr(typeChecker, conditionalExpr->isFalse);
+
+    if (!equals(isTrueType, isFalseType)) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("\nInvalid ConditionalExpr: type mismatch in conditional expression\n\t");
+        conditional_expr_to_string(&conditionalExpr);
+        printf(" (");
+        type_to_string(&isTrueType);
+        printf(" : ");
+        type_to_string(&isFalseType);
+        printf(")\n");
+        return NULL;
+    }
+
+    return isTrueType;
+}
+
 static Type* check_array_member_expr(TypeChecker* typeChecker, ArrayMemberExpr* arrayMemberExpr) {
     if (typeChecker == NULL || arrayMemberExpr == NULL)
         return NULL;
@@ -1335,7 +1375,7 @@ static Type* check_literal_expr(TypeChecker* typeChecker, LiteralExpr* literalEx
     default:
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
 
-        printf("Unexpected literal type\n");
+        printf("\nUnexpected literal type\n");
 
         return NULL;
     }
@@ -1367,7 +1407,7 @@ static Type* do_struct_lookup(TypeChecker* typeChecker, StructType* type, Expr* 
 
     if (expression->type != MEMBER_EXPR) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-        printf("Invalid member access: \n\t");
+        printf("\nInvalid member access: \n\t");
         expr_to_string(&expression);
         printf("\n");
         return NULL;
@@ -1390,7 +1430,7 @@ static Type* do_struct_lookup(TypeChecker* typeChecker, StructType* type, Expr* 
         );
 
         if (structFieldType == NULL) {
-            printf("Struct field does not exist: (%s)\n\t", memberName->value);
+            printf("\nStruct field does not exist: (%s)\n\t", memberName->value);
             currentMemberType = NULL; // remove previous assignment
             break;
         }
@@ -1449,7 +1489,7 @@ static Type* lookup_object(TypeChecker* typeChecker, Expr* object, Expr* objectA
 
         if (currentMemberType == NULL) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Invalid member access: ");
+            printf("\nInvalid member access: ");
             expr_to_string(&objectAccess);
             printf("\n\tIn: ");
             type_to_string(&identType);
@@ -1463,7 +1503,7 @@ static Type* lookup_object(TypeChecker* typeChecker, Expr* object, Expr* objectA
         Type* isStruct = context_get(typeChecker->env, name);
         if (isStruct == NULL || isStruct->typeId != STRUCT_TYPE) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Undefined: %s\n", name);
+            printf("\nUndefined: %s\n", name);
             return NULL;
         }
 
@@ -1473,7 +1513,7 @@ static Type* lookup_object(TypeChecker* typeChecker, Expr* object, Expr* objectA
 
         if (currentMemberType == NULL) {
             typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("Invalid member access: ");
+            printf("\nInvalid member access: ");
             expr_to_string(&objectAccess);
             printf("\n\tIn: ");
             type_to_string(&isStruct);
@@ -1486,7 +1526,7 @@ static Type* lookup_object(TypeChecker* typeChecker, Expr* object, Expr* objectA
     default:
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
 
-        printf("Can only lookup strings, arrays, structs\n\t");
+        printf("\nCan only lookup strings, arrays, structs\n\t");
         expr_to_string(&object);
         printf(" (");
         type_to_string(&identType);
