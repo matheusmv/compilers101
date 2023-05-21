@@ -113,6 +113,11 @@ static bool struct_type_has_fields_with_valid_types(StructType* structType);
 static bool function_has_valid_parameters(TypeChecker* typeChecker, List* parameters);
 static bool struct_has_valid_fields(TypeChecker* typeChecker, List* fields);
 
+static bool is_argument_valid_for_parameter(TypeChecker* typeChecker,
+    Expr* argument, Type* parameterType);
+static bool call_expr_args_match_function_parameters(TypeChecker* typeChecker,
+    List* arguments, FunctionType* functionType);
+
 TypeCheckerStatus check(List* declarations) {
     init_type_lookup_object();
 
@@ -914,46 +919,12 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
     size_t nArgs = list_size(&callExpr->arguments);
     size_t nParam = list_size(&functionType->parameterTypes);
 
-    if (nArgs > nParam) {
+    // TODO: implement rest "args: ...string" operator
+
+    if (nArgs != nParam) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
 
-        printf("\nInvalid CallExpr: to many arguments ---> ");
-
-        function_type_to_string(&functionType);
-
-        printf("\n\tRequired: %ld (", nParam);
-
-        list_foreach(parameterType, functionType->parameterTypes) {
-            type_to_string((Type**) &parameterType->value);
-
-            if (parameterType->next != NULL) {
-                printf(", ");
-            }
-        }
-
-        printf(")\n\tGot: %ld (", nArgs);
-
-        list_foreach(argument, callExpr->arguments) {
-            Type* argumentType = check_expr(typeChecker, argument->value);
-
-            type_to_string(&argumentType);
-            
-            if (argument->next != NULL) {
-                printf(", ");
-            }
-        }
-
-        printf(")\n\tIn: ");
-
-        call_expr_to_string(&callExpr);
-
-        printf("\n");
-
-        return NULL;
-    } else if (nArgs < nParam) {
-        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-
-        printf("\nInvalid CallExpr: insufficient number of arguments ---> ");
+        printf("\nInvalid CallExpr: number of arguments does not match ---> ");
 
         function_type_to_string(&functionType);
 
@@ -988,23 +959,38 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
         return NULL;
     }
 
-    size_t index = 0;
-    list_foreach(arg, callExpr->arguments) {
-        Type* argType = check_expr(typeChecker, arg->value);
-        Type* expectedType = list_get_at(&functionType->parameterTypes, index);
+    if (!call_expr_args_match_function_parameters(typeChecker, callExpr->arguments, functionType)) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
 
-        if (!equals(argType, expectedType)) {
-            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("\nInvalid CallExpr: argument has invalid type.");
-            printf("\n\tRequired: ");
-            type_to_string(&expectedType);
-            printf("\n\tGot: ");
-            type_to_string(&argType);
-            printf("\n");
-            return NULL;
+        printf("\nInvalid CallExpr: ");
+
+        call_expr_to_string(&callExpr);
+
+        printf("\n\tRequired: %ld (", nParam);
+
+        list_foreach(parameterType, functionType->parameterTypes) {
+            type_to_string((Type**) &parameterType->value);
+
+            if (parameterType->next != NULL) {
+                printf(", ");
+            }
         }
 
-        index++;
+        printf(")\n\tGot: %ld (", nArgs);
+
+        list_foreach(argument, callExpr->arguments) {
+            Type* argumentType = check_expr(typeChecker, argument->value);
+
+            type_to_string(&argumentType);
+            
+            if (argument->next != NULL) {
+                printf(", ");
+            }
+        }
+
+        printf(")\n");
+
+        return NULL;
     }
 
     return !functionType->returnType
@@ -1673,4 +1659,63 @@ static bool struct_has_valid_fields(TypeChecker* typeChecker, List* fields) {
     }
 
     return true;
+}
+
+static bool is_argument_valid_for_parameter(TypeChecker* typeChecker,
+    Expr* argument, Type* parameterType
+) {
+    if (typeChecker == NULL || argument == NULL || parameterType == NULL)
+        return false;
+
+    Type* argumentType = check_expr(typeChecker, argument);
+
+    if (argumentType == NULL)
+        return false;
+
+    if (equals(argumentType, get_type_of(NIL_TYPE)) &&
+        expect_type_id(parameterType->typeId, 4, CUSTOM_TYPE, STRUCT_TYPE, ARRAY_TYPE, FUNC_TYPE)
+    ) {
+        return true;
+    }
+
+    if (argumentType->typeId == CUSTOM_TYPE) {
+        argumentType = context_get(typeChecker->env, ((AtomicType*)argumentType->type)->name);
+    }
+
+    if (parameterType->typeId == CUSTOM_TYPE) {
+        parameterType = context_get(typeChecker->env, ((AtomicType*)parameterType->type)->name);
+    }
+
+    return equals(argumentType, parameterType);
+}
+
+static bool call_expr_args_match_function_parameters(TypeChecker* typeChecker,
+    List* arguments, FunctionType* functionType
+) {
+    if (typeChecker == NULL || arguments == NULL || functionType == NULL)
+        return false;
+
+    bool success = true;
+
+    ListNode* argNode = arguments->head;
+    ListNode* paramNode = functionType->parameterTypes->head;
+
+    while (argNode != NULL && paramNode != NULL) {
+        Expr* argument = argNode->value;
+        Type* parameterType = paramNode->value;
+
+        if (!is_argument_valid_for_parameter(typeChecker, argument, parameterType)) {
+            printf("Type mismatch:\n\t");
+            expr_to_string(&argument);
+            printf(" != ");
+            type_to_string(&parameterType);
+            printf("\n");
+            success = false;
+        }
+
+        argNode = argNode->next;
+        paramNode = paramNode->next;
+    }
+
+    return success;
 }
