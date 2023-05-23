@@ -529,9 +529,15 @@ void return_stmt_to_string(ReturnStmt** returnStmt) {
     if (returnStmt == NULL || *returnStmt == NULL)
         return;
 
-    printf("return ");
+    printf("return");
 
-    expr_to_string(&(*returnStmt)->expression);
+    if ((*returnStmt)->expression != NULL) {
+        printf(" ");
+
+        expr_to_string(&(*returnStmt)->expression);
+    } else {
+        printf(";");
+    }
 }
 
 void return_stmt_free(ReturnStmt** returnStmt) {

@@ -602,7 +602,11 @@ BlockStatement
     ;
 
 ReturnStatement
-    : "return" Expression Semicolon
+    : "return" Semicolon
+        {
+            $$ = NEW_RETURN_STMT(NULL);
+        }
+    | "return" Expression Semicolon
         {
             $$ = NEW_RETURN_STMT($2);
         }

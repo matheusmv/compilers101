@@ -193,7 +193,11 @@ const anaAddress = getUserAddress(ana);
 const anaZip = anaAddress.zip;
 
 func getUserPhoto(user: User): Photo {
-    return nil;
+    if (user == nil) {
+        return nil;
+    }
+
+    return user.photo;
 }
 
 const anaPhotoUrl: string = getUserPhoto(ana).url;

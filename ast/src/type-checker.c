@@ -583,6 +583,17 @@ static Type* check_function_decl(TypeChecker* typeChecker, FunctionDecl* functio
 
     typeChecker->currentFunctionReturnType = previousFunctionType;
 
+    if (returnType != NULL &&
+        !equals(returnType, get_type_of(VOID_TYPE)) &&
+        !typeChecker->hasCurrentFunctionReturned
+    ) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Invalid FunctionDecl: a return value is specified in the function but none is provided\n");
+        function_decl_to_string(&functionDecl);
+        printf("\n");
+        return NULL;
+    }
+
     return functionType;
 }
 
@@ -638,9 +649,10 @@ static Type* check_return_stmt(TypeChecker* typeChecker, ReturnStmt* returnStmt)
     if (typeChecker == NULL || returnStmt == NULL)
         return NULL;
 
-    if (returnStmt->expression != NULL &&
-        typeChecker->currentFunctionReturnType == NULL
-    ) {
+    bool returningAnExpressionInAFunctionThatHasNotReturnValue =
+        returnStmt->expression != NULL && typeChecker->currentFunctionReturnType == NULL;
+
+    if (returningAnExpressionInAFunctionThatHasNotReturnValue) {
         Type* returnType =  check_expr(typeChecker, returnStmt->expression);
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
         printf("\nTo many return values");
@@ -653,12 +665,30 @@ static Type* check_return_stmt(TypeChecker* typeChecker, ReturnStmt* returnStmt)
         return NULL;
     }
 
-    if (returnStmt->expression != NULL &&
+    bool returningAnExpressionInAFunctionThatHasVoidReturn =
+        returnStmt->expression != NULL &&
         typeChecker->currentFunctionReturnType != NULL &&
-        equals(typeChecker->currentFunctionReturnType, get_type_of(VOID_TYPE))
-    ) {
+        equals(typeChecker->currentFunctionReturnType, get_type_of(VOID_TYPE));
+
+    if (returningAnExpressionInAFunctionThatHasVoidReturn) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
         printf("\nNot expecting any return value");
+        printf("\n\tRequire: ");
+        type_to_string(&typeChecker->currentFunctionReturnType);
+        printf("\n\tGot: ");
+        return_stmt_to_string(&returnStmt);
+        printf("\n");
+        return NULL;
+    }
+
+    bool returnValudIsSpecifiedInTheFunctionButNoneIsProvided =
+        returnStmt->expression == NULL &&
+        typeChecker->currentFunctionReturnType != NULL &&
+        !equals(typeChecker->currentFunctionReturnType, get_type_of(VOID_TYPE));
+
+    if (returnValudIsSpecifiedInTheFunctionButNoneIsProvided) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("\nExpecting return value");
         printf("\n\tRequire: ");
         type_to_string(&typeChecker->currentFunctionReturnType);
         printf("\n\tGot: ");
@@ -674,10 +704,18 @@ static Type* check_return_stmt(TypeChecker* typeChecker, ReturnStmt* returnStmt)
         functionReturn = context_get(typeChecker->env, ((AtomicType*) functionReturn->type)->name);
     }
 
-    bool functionReturnIsCompositeType = functionReturn != NULL &&
+    bool returnIsNilAndFunctionReturnIsCompositeType =
+        returnType != NULL && functionReturn != NULL &&
+        equals(returnType, get_type_of(NIL_TYPE)) &&
         expect_type_id(functionReturn->typeId, 3, STRUCT_TYPE, ARRAY_TYPE, FUNC_TYPE);
 
-    if (!functionReturnIsCompositeType && !equals(returnType, functionReturn)) {
+    bool emptyReturnInAFunctionThatHasVoidReturn = returnStmt->expression == NULL &&
+        (functionReturn == NULL || equals(functionReturn, get_type_of(VOID_TYPE)));
+
+    if (!returnIsNilAndFunctionReturnIsCompositeType &&
+        !emptyReturnInAFunctionThatHasVoidReturn &&
+        !equals(returnType, functionReturn)
+    ) {
         typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
         printf("\nInvalid FunctionReturn:");
         printf("\n\tRequired: ");
@@ -983,7 +1021,7 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
             Type* argumentType = check_expr(typeChecker, argument->value);
 
             type_to_string(&argumentType);
-            
+
             if (argument->next != NULL) {
                 printf(", ");
             }
@@ -1324,6 +1362,17 @@ static Type* check_function_expr(TypeChecker* typeChecker, FunctionExpr* functio
     typeChecker->env = previous;
 
     typeChecker->currentFunctionReturnType = previousFuncType;
+
+    if (returnType != NULL &&
+        !equals(returnType, get_type_of(VOID_TYPE)) &&
+        !typeChecker->hasCurrentFunctionReturned
+    ) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("Invalid FunctionExpr: a return value is specified in the function but none is provided\n");
+        function_expr_to_string(&functionExpr);
+        printf("\n");
+        return NULL;
+    }
 
     return functionType;
 }
