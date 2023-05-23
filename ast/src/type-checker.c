@@ -1331,6 +1331,9 @@ static Type* check_function_expr(TypeChecker* typeChecker, FunctionExpr* functio
 
     Type* functionType = NEW_FUNCTION_TYPE_WITH_PARAMS_AND_RETURN(paramTypes, returnType);
 
+    // TODO: (bug fix)
+    // FunctionExpr is returned by another and it is not possible to continue type checking
+
     if (!typeChecker->hasFunctionTypeToDefine) {
         typeChecker->hasFunctionTypeToDefine = true;
         return functionType;

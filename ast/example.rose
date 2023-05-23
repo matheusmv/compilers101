@@ -226,3 +226,15 @@ for (let i = 0; i < 10; i++) {
         break;
     }
 }
+
+func makeFunc(arg: string): func(): string {
+    return func(): string {
+        // TODO: (bug fix) -> type check not performed here
+        let i: string = 1;
+        return arg;
+    };
+}
+
+const funcBuilder = makeFunc;
+const funcReturnOkStr = funcBuilder("ok");
+const okStr = funcReturnOkStr();

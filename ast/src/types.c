@@ -479,8 +479,7 @@ bool function_type_equals(FunctionType** self, Type** other) {
     if (hasEqualParameters && selfReturnIsVoid && otherReturnIsVoid)
         return true;
 
-    bool hasEqualReturns = ((*self)->returnType != NULL && otherFunctionType->returnType != NULL) ||
-        type_equals(&(*self)->returnType, &otherFunctionType->returnType);
+    bool hasEqualReturns = type_equals(&(*self)->returnType, &otherFunctionType->returnType);
 
     return hasEqualParameters && hasEqualReturns;
 }
@@ -503,7 +502,6 @@ void function_type_to_string(FunctionType** functionType) {
 
     if ((*functionType)->returnType != NULL) {
         printf(": ");
-
         type_to_string(&(*functionType)->returnType);
     }
 }
