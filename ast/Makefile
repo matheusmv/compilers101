@@ -13,7 +13,7 @@ CC = gcc
 
 CFLAGS = -Wall -Wextra
 
-LFLAGS =
+LFLAGS = -lm
 
 VALGRIND = valgrind -s \
            --tool=memcheck \

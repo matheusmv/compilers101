@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "smem.h"
+#include "utils.h"
 
 
 IdentLiteral* ident_literal_new(const char* ident) {
@@ -119,6 +120,7 @@ StringLiteral* string_literal_new(const char* value) {
     }
 
     type->value = str_dup(value);
+    remove_quotes(&type->value);
 
     return type;
 }

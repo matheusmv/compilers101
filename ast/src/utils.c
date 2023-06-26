@@ -20,6 +20,68 @@ char* str_dup(const char* other) {
     return copy;
 }
 
+void remove_quotes(char** str) {
+    size_t len = strlen(*str);
+
+    if (len >= 2 && ((*str)[0] == '"' ||
+        (*str)[0] == '\'') && ((*str)[len-1] == '"' ||
+        (*str)[len-1] == '\'')
+    ) {
+        memmove(*str, *str + 1, len - 2);
+        (*str)[len - 2] = '\0';
+    }
+}
+
+char* escape_special_chars(const char* str) {
+    size_t str_len = strlen(str);
+    char* escaped_str = NULL;
+    escaped_str = safe_malloc((2 * str_len + 1) * sizeof(char), NULL);
+    size_t j = 0;
+
+    for (size_t i = 0; i < str_len; i++) {
+        switch (str[i]) {
+        case '\n':
+            escaped_str[j++] = '\\';
+            escaped_str[j++] = 'n';
+            break;
+        case '\t':
+            escaped_str[j++] = '\\';
+            escaped_str[j++] = 't';
+            break;
+        case '\r':
+            escaped_str[j++] = '\\';
+            escaped_str[j++] = 'r';
+            break;
+        case '\f':
+            escaped_str[j++] = '\\';
+            escaped_str[j++] = 'f';
+            break;
+        case '\v':
+            escaped_str[j++] = '\\';
+            escaped_str[j++] = 'v';
+            break;
+        case '\'':
+            escaped_str[j++] = '\\';
+            escaped_str[j++] = '\'';
+            break;
+        case '\"':
+            escaped_str[j++] = '\\';
+            escaped_str[j++] = '\"';
+            break;
+        case '\\':
+            escaped_str[j++] = '\\';
+            escaped_str[j++] = '\\';
+            break;
+        default:
+            escaped_str[j++] = str[i];
+            break;
+        }
+    }
+
+    escaped_str[j] = '\0';
+    return escaped_str;
+}
+
 unsigned long hash_int(int value) {
     unsigned long y = (unsigned long) value;
 

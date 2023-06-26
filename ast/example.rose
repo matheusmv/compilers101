@@ -1,240 +1,127 @@
-1 + -1;
--1 - +1;
+2 + 2;
+2 - 2;
+2 * 2;
+2 / 2;
+4 % 2;
+
+~2;
+2 & 2;
+2 | 2;
+2 ^ 2;
+1 << 2;
+4 >> 1;
+
+1 == 1;
+1 != 1;
+1 <= 10;
+1 >= 10;
+1 < 10;
+1 > 0;
 !true;
-1 + 2 + ~1;
 
-1 << 1;
-1 >> 1;
-1 | 1;
-1 ^ 1;
+"hello," + " world";
+'h' + "ello" + ',' + ' ' + "world";
 
-1++;
-1--;
+let a = 1;
+let b = 0;
+while (b < 10) {
+    println("a: ", a);
+    println("b: ", b);
 
-(1 + 1) > 1;
-(1 + 1) < 1;
-(1 + 1) >= 1;
-(1 + 1) <= 1;
-(1 + 1) == 2;
-
-1 < 10 && 1 > 0;
-true && true;
-false || true;
-
-let a: int = 1;
-let b: float = 1.1;
-let c: char = 'a';
-let d: string = "hello world\n";
-let e: bool = true;
-
-{
-    a = 2;
-    b = 2.2;
-    c = 'b';
-    d = "kjkszpj";
-    e = false;
-}
-
-const const_a: int = 1;
-const const_b: float = 1.1;
-const const_c: char = 'a';
-const const_d: string = "hello world\n";
-const const_e: bool = true;
-
-let a_uinit: int;
-a_uinit = 1;
-
-let b_uinit: string;
-b_uinit = "message";
-
-let counter: int = 0;
-while (counter < 10) {
-    counter += 1;
-}
-
-while (true) {
-    counter--;
-    if (counter == 0) {
-        break;
+    if (a == 2) {
+        b = b + 1;
+        continue;
     }
+
+    a++;
 }
 
-const numbers: []int = []int{0, 1, 2, 3};
-numbers[0] = 10;
-
-const username: string = "john doe";
-username[4] = '-';
+for (let i = 0; i < 10; i++) {
+    println(i);
+}
 
 func add(a: int, b: int): int {
     return a + b;
 }
 
-let result: int = add(1, 2);
-
-const sub = func(a: int, b: int): int {
+func sub(a: int, b: int): int {
     return a - b;
-};
-
-func execOperation(left: int, right: int, cb: func(int, int): int): int {
-    return cb(left, right);
 }
 
-let opResult: int = execOperation(2, 5, sub);
-
-func mul(a: int, b: int): int {
-    return a * b;
-}
-
-const mulResult: int = func(a: int, b: int, cb: func(int, int): int): int {
+func apply(a: int, b: int, cb: func(int, int): int): int {
     return cb(a, b);
-}(4, 4, mul);
-
-func fibonacci(num: int): int {
-    if (num <= 1) {
-        return num;
-    }
-
-    return fibonacci(num - 1) + fibonacci(num - 2);
 }
 
-let fib = func(num: int): int {
-    if (num <= 1) {
-        return num;
-    }
+apply(2, 2, add);
+apply(2, 5, sub);
 
-    return fib(num - 1) + fib(num - 2);
+let result = "";
+
+if (apply(2, 2, add) == 4) {
+    result = "apply(2, 2, add) == 4";
+}
+
+println(result);
+
+let addExpr = func(a: int, b: int): int {
+    return a + b;
 };
 
-func getCalcFunc(option: string): func(int, int): int {
-    const add = func(a: int, b: int): int {
-        return a + b;
-    };
+addExpr(4, 5);
 
-    const sub = func(a: int, b: int): int {
-        return a - b;
-    };
+let ok = 1 == 10 ? "1 == 10" : "1 != 10";
 
-    const mul = func(a: int, b: int): int {
-        return a * b;
-    };
+if (1 < 10 && 4 % 2 == 0) {
+    println("ok");
+}
 
-    const div = func(a: int, b: int): int {
-        return a / b;
-    };
+let username = input("say your name: ");
+println(username);
 
-    if (option == "add") {
-        return add;
-    } else if (option == "sub") {
-        return sub;
-    } else if (option == "mul") {
-        return mul;
-    } else if (option == "div") {
-        return div;
+let numberFive = "false";
+
+{
+    let j = numberFive.(bool);
+    let test = numberFive.(bool);
+    println(j, "-", test);
+    {
+        let testInner = "inner message";
+        println(j, " - ", !test, "(", testInner, ")");
     }
 }
 
-struct Photo {
-    url: string
-}
+let numberA = input("a: ").(float);
+let numberB = input("b: ").(float);
 
-struct User {
-    id: int
-    username: string
-    password: string
-    email: string
-    address: struct {
-        street: string
-        zip: string
-    }
-    photo: Photo
-}
+println(numberA, " + ", numberB, " = ", addExpr(numberA.(int), numberB.(int)));
 
-const john: User = User{
-    id: 1,
-    username: "john",
-    password: "12345",
-    email: "john@email.com",
-    address: struct{
-        street: string
-        zip: string
-    }{
-        street: "street name",
-        zip: "111222"
-    }
-};
+let numberC = 15;
 
-func makeUser(id: int, username: string, password: string, email: string, street: string, zip: string): User {
-    return User{
-        id: id,
-        username: username,
-        password: password,
-        email: email,
-        address: struct{
-            street: string
-            zip: string
-        }{
-            street: street,
-            zip: zip
-        }
-    };
-}
+numberC += 1;
+numberC -= 1;
+numberC *= 2;
+numberC /= 1;
+numberC %= 1;
 
-const ana: User = makeUser(1, "ana123", "12345", "ana@email.com", "street 2", "111222333");
-ana.photo.url = "[https]://fake-image.com";
+numberC &= 1;
+numberC |= 1;
+numberC ^= 1;
+numberC <<= 1;
+numberC >>= 1;
 
-const anaStreet: string = ana.address.street;
-const anaPhoto: string = ana.photo.url;
+let oneString = "hello";
 
-func getUserAddress(user: User): struct {street: string zip: string} {
-    return user.address;
-}
+oneString += ", ";
+oneString += "world";
 
-const anaAddress = getUserAddress(ana);
-const anaZip = anaAddress.zip;
+println(oneString);
+println(numberC);
 
-func getUserPhoto(user: User): Photo {
-    if (user == nil) {
-        return nil;
-    }
+numberC += 101;
+println(numberC);
 
-    return user.photo;
-}
+let sumFuncExprResult = func(a: int, b: int): int {
+    return a + b;
+}(1, numberC);
 
-const anaPhotoUrl: string = getUserPhoto(ana).url;
-
-func buildConfig(ip: string, enabled: bool): struct{
-    ip: string
-    enabled: bool
-} {
-    struct Config {
-        ip: string
-        enabled: bool
-    }
-
-    return Config{ enabled: enabled, ip: ip };
-}
-
-const ip = buildConfig("192.168.1.1", false).ip;
-const testConfig = buildConfig("192.168.1.10", true);
-
-let validIp: string = testConfig.enabled
-    ? testConfig.ip
-    : buildConfig("192.168.1.10", true).ip;
-
-for (let i = 0; i < 10; i++) {
-    if (i % 2 == 0) {
-        break;
-    }
-}
-
-func makeFunc(arg: string): func(): string {
-    return func(): string {
-        // TODO: (bug fix) -> type check not performed here
-        let i: string = 1;
-        return arg;
-    };
-}
-
-const funcBuilder = makeFunc;
-const funcReturnOkStr = funcBuilder("ok");
-const okStr = funcReturnOkStr();
+println(sumFuncExprResult);

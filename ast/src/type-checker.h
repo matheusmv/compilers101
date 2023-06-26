@@ -20,3 +20,9 @@ typedef struct TypeChecker {
 } TypeChecker;
 
 TypeCheckerStatus check(List* declarations);
+
+TypeCheckerStatus init_and_check(TypeChecker** typeChecker, List* declarations);
+void type_checker_destroy(TypeChecker** typeChecker);
+
+Type* get_decl_type(TypeChecker* typeChecker, Decl* declaration);
+Type* get_expr_type(TypeChecker* typeChecker, Expr* expression);

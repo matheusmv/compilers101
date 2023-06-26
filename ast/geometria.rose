@@ -1,0 +1,23 @@
+func calcularAreaCirculo(raio: float): float {
+    return 3.14 * raio * raio;
+}
+
+func calcularAreaRetangulo(base: float, altura: float): float {
+    return base * altura;
+}
+
+// Exemplo de chamada da função calcularAreaCirculo
+let areaCirculo = calcularAreaCirculo(2.5);
+
+// Exemplo de chamada da função calcularAreaRetangulo
+let areaRetangulo = calcularAreaRetangulo(4.0, 3.0);
+
+// Saída: 19.625
+println(areaCirculo);
+
+// Saída: 12.0
+println(areaRetangulo);
+
+for (let i = 0; i < 10; i++) {
+    println(i);
+}

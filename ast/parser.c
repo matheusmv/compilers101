@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "src/ast.h"
+#include "src/interpreter.h"
 #include "src/list.h"
 #include "src/type-checker.h"
 
@@ -39,19 +40,27 @@ int main(int argc, char* argv[]) {
 
     printf("Parsing Successful\n");
 
-    TypeCheckerStatus status = check(declarations);
-    if (status == TYPE_CHECKER_FAILURE) {
-        printf("Type checker error\n");
+    // TypeCheckerStatus status = check(declarations);
+    // if (status == TYPE_CHECKER_FAILURE) {
+    //     printf("Type checker error\n");
+    //     list_free(&declarations);
+    //     return EXIT_FAILURE;
+    // }
+
+    if (eval(declarations) == INTERPRETER_FAILURE) {
+        printf("Interpreter error\n");
         list_free(&declarations);
         return EXIT_FAILURE;
     }
 
-    list_foreach(declaration, declarations) {
-        decl_to_string((Decl**) &declaration->value);
-        printf("\n");
-    }
+    if (declarations != NULL) {
+        // list_foreach(declaration, declarations) {
+        //     decl_to_string((Decl**) &declaration->value);
+        //     printf("\n");
+        // }
 
-    list_free(&declarations);
+        list_free(&declarations);
+    }
 
     return EXIT_SUCCESS;
 }

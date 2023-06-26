@@ -1,0 +1,170 @@
+// typedef struct FunctionObject {
+//     Type* type;
+//     Context* env;
+//     List* parameters;
+//     Stmt* body;
+// } FunctionObject;
+
+// FunctionObject* function_object_new(Type* type, Context* env, List* parameters, Stmt* body);
+// Type* function_object_get_type(FunctionObject* self);
+// bool function_object_equals(FunctionObject* self, Object* other);
+// void function_object_to_string(ByteBuffer* byteBuffer, FunctionObject** functionObject);
+// void function_object_free(FunctionObject** functionObject);
+
+// typedef struct StructObject {
+//     Type* type;
+//     List* fields;
+// } StructObject;
+
+// StructObject* struct_object_new(Type* type, List* fields);
+// Type* struct_object_get_type(StructObject* self);
+// StructObject* struct_object_copy(StructObject* self);
+// bool struct_object_equals(StructObject* self, Object* other);
+// void struct_object_to_string(ByteBuffer* byteBuffer, StructObject** structObject);
+// void struct_object_free(StructObject** structObject);
+
+// typedef struct ArrayObject {
+//     Type* type;
+//     List* elements;
+// } ArrayObject;
+
+// ArrayObject* array_object_new(Type* type, List* fields);
+// Type* array_object_get_type(ArrayObject* self);
+// ArrayObject* array_object_copy(ArrayObject* self);
+// bool array_object_equals(ArrayObject* self, Object* other);
+// void array_object_to_string(ByteBuffer* byteBuffer, ArrayObject** arrayObject);
+// void array_object_free(ArrayObject** arrayObject);
+
+/**
+
+#include <stdlib.h>
+#include <stdbool.h>
+#include "interpreter.h"
+#include "environment.h"
+#include "stmt.h"
+
+typedef struct {
+    StmtFunction* declaration;
+} LoxFunction;
+
+LoxFunction* create_lox_function(StmtFunction* declaration) {
+    LoxFunction* function = (LoxFunction*)malloc(sizeof(LoxFunction));
+    function->declaration = declaration;
+    return function;
+}
+
+int arity(LoxFunction* function) {
+    return function->declaration->params->size;
+}
+
+Object* call(LoxFunction* function, Interpreter* interpreter, List* arguments) {
+    Environment* environment = create_environment(interpreter->globals);
+    int numParams = function->declaration->params->size;
+
+    for (int i = 0; i < numParams; i++) {
+        Token* param = (Token*)list_get_at(function->declaration->params, i);
+        Object* argument = (Object*)list_get_at(arguments, i);
+        environment_define(environment, param->lexeme, argument);
+    }
+
+    try {
+        execute_block(interpreter, function->declaration->body, environment);
+    } catch (Return* returnValue) {
+        return returnValue->value;
+    }
+
+    return NULL;
+}
+
+char* to_string(LoxFunction* function) {
+    char* name = function->declaration->name->lexeme;
+    char* result = (char*)malloc(strlen(name) + 5);
+    strcpy(result, "<fn ");
+    strcat(result, name);
+    strcat(result, ">");
+    return result;
+}
+
+
+#include <stdlib.h>
+#include <stdbool.h>
+#include "interpreter.h"
+#include "environment.h"
+#include "callable.h"
+
+typedef struct {
+    LoxCallable base;
+} ClockCallable;
+
+double clock_fn(Interpreter* interpreter, List* arguments) {
+    return (double)time(NULL);
+}
+
+int clock_arity() {
+    return 0;
+}
+
+char* clock_to_string() {
+    return "<native fn>";
+}
+
+LoxCallable* create_clock_callable() {
+    ClockCallable* clockCallable = (ClockCallable*)malloc(sizeof(ClockCallable));
+    clockCallable->base.arity = clock_arity;
+    clockCallable->base.call = clock_fn;
+    clockCallable->base.to_string = clock_to_string;
+    return (LoxCallable*)clockCallable;
+}
+
+// No código principal:
+
+Environment* globals = interpreter_get_globals(interpreter);
+LoxCallable* clockCallable = create_clock_callable();
+environment_define(globals, "clock", (Object*)clockCallable);
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include "interpreter.h"
+#include "environment.h"
+#include "callable.h"
+
+typedef struct {
+    LoxCallable base;
+} PrintCallable;
+
+Object* print_fn(Interpreter* interpreter, List* arguments) {
+    list_foreach(argument, arguments) {
+        Object* value = (Object*)argument->value;
+        char* str = object_to_string(value);
+        printf("%s ", str);
+        free(str);
+    }
+    printf("\n");
+    return NULL;
+}
+
+int print_arity() {
+    return -1; // Aceita qualquer número de argumentos
+}
+
+char* print_to_string() {
+    return "<native fn>";
+}
+
+LoxCallable* create_print_callable() {
+    PrintCallable* printCallable = (PrintCallable*)malloc(sizeof(PrintCallable));
+    printCallable->base.arity = print_arity;
+    printCallable->base.call = print_fn;
+    printCallable->base.to_string = print_to_string;
+    return (LoxCallable*)printCallable;
+}
+
+// No código principal:
+
+Environment* globals = interpreter_get_globals(interpreter);
+LoxCallable* printCallable = create_print_callable();
+environment_define(globals, "print", (Object*)printCallable);
+
+*/

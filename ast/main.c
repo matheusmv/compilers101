@@ -340,7 +340,7 @@ int main(void) {
     );
 
     Expr* arrayTest = NEW_ARRAY_INIT_EXPR(arrayType);
-    ARRAY_INIT_EXPR_ADD_ELEMENTS(arrayTest, 
+    ARRAY_INIT_EXPR_ADD_ELEMENTS(arrayTest,
         NEW_STRUCT_INIT_EXPR(NEW_TOKEN(TOKEN_IDENT, "User", 1)),
         NEW_STRUCT_INIT_EXPR(NEW_TOKEN(TOKEN_IDENT, "User", 1)),
         NEW_STRUCT_INIT_EXPR(NEW_TOKEN(TOKEN_IDENT, "User", 1)),

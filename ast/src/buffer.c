@@ -178,7 +178,7 @@ size_t byte_buffer_nappendf(ByteBuffer* byteBuffer, size_t maxSize, const char* 
 }
 
 char* byte_buffer_to_string(ByteBuffer* byteBuffer) {
-    if (byteBuffer == NULL || byte_buffer_size(byteBuffer) == 0)
+    if (byteBuffer == NULL)
         return "";
 
     size_t bufferSize = byteBuffer->size;
