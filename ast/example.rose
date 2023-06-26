@@ -125,3 +125,39 @@ let sumFuncExprResult = func(a: int, b: int): int {
 }(1, numberC);
 
 println(sumFuncExprResult);
+
+let arrStr = []string{
+    "context",
+    "interpreter",
+    "list",
+    "map"
+};
+
+let str = arrStr[0];
+str = "absdadsada";
+println(str);
+println(arrStr[0]);
+
+let matNum = [][]int{
+    []int{1, 2, 3},
+    []int{4, 5, 6},
+    []int{7, 8, 9}
+};
+
+println(matNum);
+// TODO: fix type check
+let idx: []int = matNum[0][1];
+println(idx);
+
+let concatF = func(strs: []string): string {
+    let result = "";
+
+    for (let i = 0; i < len(strs); i++) {
+        result += strs[i];
+    }
+
+    return result;
+}(arrStr);
+
+println(concatF);
+println(len(concatF));

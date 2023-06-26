@@ -1058,6 +1058,10 @@ static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
         if (strcmp(calleName, "input") == 0) {
             return get_type_of(STRING_TYPE);
         }
+
+        if (strcmp(calleName, "len") == 0) {
+            return get_type_of(INT_TYPE);
+        }
     }
 
     Type* calleeType = check_expr(typeChecker, callExpr->callee);

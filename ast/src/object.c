@@ -818,6 +818,81 @@ Object* function_object_run(Interpreter* interpreter, FunctionObject* functionOb
     return unwrap_return_value(result);
 }
 
+ArrayObject* array_object_new(Type* type, List* objects) {
+    ArrayObject* new_array_object = NULL;
+    new_array_object = safe_malloc(sizeof(ArrayObject), NULL);
+    if (new_array_object == NULL) {
+        type_free(&type);
+        list_free(&objects);
+    }
+
+    *new_array_object = (ArrayObject) {
+        .type = type,
+        .objects = objects
+    };
+
+    return new_array_object;
+}
+
+Type* array_object_get_type(ArrayObject* self) {
+    if (self == NULL)
+        return NULL;
+
+    return self->type;
+}
+
+bool array_object_equals(ArrayObject* self, Object* other) {
+    if (other == NULL || other->type != OBJ_ARRAY)
+        return false;
+
+    ArrayObject* otherArrayObject = other->object;
+
+    return type_equals(&self->type, &otherArrayObject->type);
+}
+
+void array_object_to_string(ByteBuffer* byteBuffer, ArrayObject** arrayObject) {
+    if (byteBuffer == NULL || arrayObject == NULL || *arrayObject == NULL)
+        return;
+
+    byte_buffer_append(byteBuffer, "[", 1);
+
+    list_foreach(object, (*arrayObject)->objects) {
+        object_to_string(byteBuffer, (Object**) &object->value);
+
+        if (object->next != NULL) {
+            byte_buffer_append(byteBuffer, ", ", 2);
+        }
+    }
+
+    byte_buffer_append(byteBuffer, "]", 1);
+}
+
+void array_object_free(ArrayObject** arrayObject) {
+    if (arrayObject == NULL || *arrayObject == NULL)
+        return;
+
+    type_free(&(*arrayObject)->type);
+    list_free(&(*arrayObject)->objects);
+
+    safe_free((void**) arrayObject);
+}
+
+size_t array_object_get_dimensions(ArrayObject* self) {
+    if (self == NULL)
+        return 0;
+
+    ArrayType* arrType = self->type->type;
+
+    return list_size(&arrType->dimensions);
+}
+
+Object* array_object_get_object_at(ArrayObject* self, int index) {
+    if (index < 0 || index >= list_size(&self->objects))
+        return NEW_ERROR_OBJECT(RUNTIME_ERROR, "index out of bounds");
+
+    return list_get_at(&self->objects, index);
+}
+
 Callable* callable_new(Object* functionObject,
     Object* (*function)(struct Interpreter*, FunctionObject*, List*),
     void (*to_string)(ByteBuffer*, void**),
@@ -970,3 +1045,21 @@ Object* input_function_run(Interpreter* interpreter, FunctionObject* functionObj
     return result;
 }
 
+Object* len_function_run(struct Interpreter* interpreter, FunctionObject* functionObject, List* arguments) {
+    if (arguments == NULL || list_size(&arguments) != 1)
+        return NEW_ERROR_OBJECT(RUNTIME_ERROR, "len_function_run: invalid arguments");
+
+    Object* argument = list_get_at(&arguments, 0);
+
+    if (argument->type == OBJ_STRING) {
+        StringObject* strObj = argument->object;
+        return NEW_INTEGER_OBJECT(strlen(strObj->value));
+    }
+
+    if (argument->type == OBJ_ARRAY) {
+        ArrayObject* arrObj = argument->object;
+        return NEW_INTEGER_OBJECT(list_size(&arrObj->objects));
+    }
+
+    return NEW_ERROR_OBJECT(RUNTIME_ERROR, "len_function_run: invalid argument");
+}

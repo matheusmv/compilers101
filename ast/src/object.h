@@ -6,6 +6,7 @@
 #include "interpreter.h"
 #include "list.h"
 #include "types.h"
+#include <stddef.h>
 
 
 typedef enum ObjectType {
@@ -194,6 +195,21 @@ void function_object_to_string(ByteBuffer* byteBuffer, FunctionObject** function
 void function_object_free(FunctionObject** functionObject);
 Object* function_object_run(struct Interpreter* interpreter, FunctionObject* functionObject, List* arguments);
 
+typedef struct ArrayObject {
+    Type* type;
+    List* objects;
+} ArrayObject;
+
+ArrayObject* array_object_new(Type* type, List* objects);
+Type* array_object_get_type(ArrayObject* self);
+bool array_object_equals(ArrayObject* self, Object* other);
+void array_object_to_string(ByteBuffer* byteBuffer, ArrayObject** arrayObject);
+void array_object_free(ArrayObject** arrayObject);
+
+size_t array_object_get_dimensions(ArrayObject* self);
+
+Object* array_object_get_object_at(ArrayObject* self, int index);
+
 #define NEW_FUNCTION_OBJECT(function_type, env, parameters, body)              \
     object_new(OBJ_FUNCTION,                                                   \
             function_object_new((function_type), (env), (parameters), (body)), \
@@ -202,6 +218,15 @@ Object* function_object_run(struct Interpreter* interpreter, FunctionObject* fun
         (bool (*)(void*, void*)) function_object_equals,                       \
         (void (*)(ByteBuffer*, void **)) function_object_to_string,            \
         (void (*)(void **)) function_object_free)
+
+#define NEW_ARRAY_OBJECT(array_type, objects)                                  \
+    object_new(OBJ_ARRAY,                                                      \
+            array_object_new((array_type), (objects)),                         \
+        (Type* (*)(void*)) array_object_get_type,                              \
+        (void* (*)(void*)) NULL,                                               \
+        (bool (*)(void*, void*)) array_object_equals,                          \
+        (void (*)(ByteBuffer*, void **)) array_object_to_string,               \
+        (void (*)(void **)) array_object_free)
 
 #define NEW_ERROR_OBJECT(error_type, message)                                  \
     object_new(OBJ_ERROR, error_new((error_type), (message)),                  \
@@ -311,6 +336,7 @@ void callable_free(Callable** callable);
 Object* print_function_run(struct Interpreter* interpreter, FunctionObject* functionObject, List* arguments);
 Object* println_function_run(struct Interpreter* interpreter, FunctionObject* functionObject, List* arguments);
 Object* input_function_run(struct Interpreter* interpreter, FunctionObject* functionObject, List* arguments);
+Object* len_function_run(struct Interpreter* interpreter, FunctionObject* functionObject, List* arguments);
 
 #define NEW_CALLABLE(func_obj, func_executer, func_obj_to_str, func_obj_free)  \
     callable_new(                                                              \
@@ -353,6 +379,20 @@ Object* input_function_run(struct Interpreter* interpreter, FunctionObject* func
             NEW_CALLABLE(                                                      \
                 NULL,                                                          \
                 input_function_run,                                            \
+                NULL,                                                          \
+                NULL                                                           \
+            ),                                                                 \
+        (Type* (*)(void*)) NULL,                                               \
+        (void* (*)(void*)) NULL,                                               \
+        (bool (*)(void*, void*)) NULL,                                         \
+        (void (*)(ByteBuffer*, void **)) callable_to_string,                   \
+        (void (*)(void **)) callable_free)
+
+#define NEW_LEN_FUNC()                                                         \
+    object_new(OBJ_CALLABLE,                                                   \
+            NEW_CALLABLE(                                                      \
+                NULL,                                                          \
+                len_function_run,                                              \
                 NULL,                                                          \
                 NULL                                                           \
             ),                                                                 \

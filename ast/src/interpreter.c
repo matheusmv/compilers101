@@ -110,6 +110,7 @@ InterpreterStatus eval(List* declarations) {
     context_define((Context*) globalEnv, "print", NEW_PRINT_FUNC());
     context_define((Context*) globalEnv, "println", NEW_PRINTLN_FUNC());
     context_define((Context*) globalEnv, "input", NEW_INPUT_FUNC());
+    context_define((Context*) globalEnv, "len", NEW_LEN_FUNC());
 
     TRUE_OBJECT     = NEW_BOOLEAN_OBJECT(true);
     FALSE_OBJECT    = NEW_BOOLEAN_OBJECT(false);
@@ -695,7 +696,21 @@ Object* eval_expr(Interpreter* interpreter, Expr* expression) {
         return NULL;
     }
     case ARRAY_INIT_EXPR: {
-        return NULL;
+        ArrayInitExpr* arrayInitExpr = expression->expr;
+
+        List* objects = list_new(NULL);
+        Object* result = NULL;
+        list_foreach(element, arrayInitExpr->elements) {
+            result = eval_expr(interpreter, element->value);
+            if (is_error(interpreter, result)) {
+                log_error(result->object);
+                return result;
+            }
+
+            list_insert_last(&objects, result);
+        }
+
+        return NEW_ARRAY_OBJECT(arrayInitExpr->type, objects);
     }
     case FUNC_EXPR: {
         FunctionExpr* functionExpr = expression->expr;
@@ -732,7 +747,38 @@ Object* eval_expr(Interpreter* interpreter, Expr* expression) {
         return NULL;
     }
     case ARRAY_MEMBER_EXPR: {
-        return NULL;
+        ArrayMemberExpr* arrayMemberExpr = expression->expr;
+
+        Object* array = eval_expr(interpreter, arrayMemberExpr->object);
+        if (is_error(interpreter, array)) {
+            log_error(array->object);
+            return array;
+        }
+
+        if (array_object_get_dimensions(array->object) < list_size(&arrayMemberExpr->levelOfAccess)) {
+            return NEW_ERROR_OBJECT(RUNTIME_ERROR, "invalid array access");
+        }
+
+        Object* result = array;
+        Object* index = NULL;
+
+        list_foreach(level, arrayMemberExpr->levelOfAccess) {
+            index = eval_expr(interpreter, level->value);
+
+            if (is_error(interpreter, index)) {
+                log_error(index->object);
+                return index;
+            }
+
+            result = array_object_get_object_at(result->object, ((IntegerObject*) index->object)->value);
+
+            if (is_error(interpreter, result)) {
+                log_error(result->object);
+                return index;
+            }
+        }
+
+        return result;
     }
     case CAST_EXPR: {
         CastExpr* castExpr = expression->expr;
