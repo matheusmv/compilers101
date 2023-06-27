@@ -125,7 +125,7 @@ extern List* declarations;
 %nterm <token_t> PostfixOperator UnaryOperator MultiplicativeOperator AdditiveOperator
                 ShiftOperator RelationalOperator EqualityOperator AssignmentOperator
 
-%nterm <type_t> TypeDeclaration StructType PrimitiveType FunctionType ArrayType
+%nterm <type_t> TypeDeclaration StructType AtomicType FunctionType ArrayType
                 ArrayDimension ValidArrayType NamedType FunctionReturnType
 
 %nterm <list_t> Declarations ArrayArguments FunctionParameterTypeList StructArguments
@@ -350,7 +350,7 @@ TypeDeclaration
             safe_free((void**) &$1);
             $$ = type;
         }
-    | PrimitiveType
+    | AtomicType
         {
             $$ = $1;
         }
@@ -368,7 +368,7 @@ TypeDeclaration
         }
     ;
 
-PrimitiveType
+AtomicType
     : "int"
         {
             $$ = NEW_INT_TYPE();
@@ -520,7 +520,7 @@ ValidArrayType
             safe_free((void**) &$1);
             $$ = type;
         }
-    | PrimitiveType
+    | AtomicType
         {
             $$ = $1;
         }

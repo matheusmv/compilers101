@@ -1,0 +1,13 @@
+func fibonacci(n: int): int {
+    if (n <= 1) {
+        return n;
+    } else {
+        return fibonacci(n - 1) + fibonacci(n - 2);
+    }
+}
+
+// Exemplo de chamada da função fibonacci
+let resultado = fibonacci(7);
+
+// Saída: 13
+println(resultado);

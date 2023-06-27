@@ -1,0 +1,15 @@
+func concatAll(strings: []string, sep: string): string {
+    let result = "";
+
+    for (let i = 0; i < len(strings); i++) {
+        result += strings[i];
+
+        if (i != len(strings) - 1) {
+            result += sep;
+        }
+    }
+
+    return result;
+}
+
+println(concatAll([]string{"a", "b", "c", "d", "e"}, "-"));

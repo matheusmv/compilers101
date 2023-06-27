@@ -120,6 +120,9 @@ static bool call_expr_args_match_function_parameters(TypeChecker* typeChecker,
     List* arguments, FunctionType* functionType);
 
 TypeCheckerStatus check(List* declarations) {
+    if (declarations == NULL)
+        return TYPE_CHECKER_SUCCESS;
+
     init_type_lookup_object();
 
     TypeChecker* typeChecker = type_checker_init();
@@ -135,6 +138,63 @@ TypeCheckerStatus check(List* declarations) {
     free_type_lookup_object();
 
     return status;
+}
+
+TypeCheckerStatus init_and_check(TypeChecker** typeChecker, List* declarations) {
+    if (declarations == NULL)
+        return TYPE_CHECKER_SUCCESS;
+
+    init_type_lookup_object();
+
+    *typeChecker = type_checker_init();
+
+    list_foreach(declaration, declarations) {
+        check_decl(*typeChecker, declaration->value);
+    }
+
+    TypeCheckerStatus status = (*typeChecker)->currentStatus;
+
+    return status;
+}
+
+void type_checker_destroy(TypeChecker** typeChecker) {
+    if (typeChecker == NULL || *typeChecker == NULL)
+        return;
+
+    type_checker_free(typeChecker);
+    free_type_lookup_object();
+}
+
+Type* get_decl_type(TypeChecker* typeChecker, Decl* declaration) {
+    if (declaration == NULL)
+        return NULL;
+
+    // init_type_lookup_object();
+
+    Type* type = check_decl(typeChecker, declaration);
+    type = type_copy((const Type**) &type);
+
+    // type_checker_free(&typeChecker);
+
+    // free_type_lookup_object();
+
+    return type;
+}
+
+Type* get_expr_type(TypeChecker* typeChecker, Expr* expression) {
+    if (expression == NULL)
+        return NULL;
+
+    // init_type_lookup_object();
+
+    Type* type = check_expr(typeChecker, expression);
+    type = type_copy((const Type**) &type);
+
+    // type_checker_free(&typeChecker);
+
+    // free_type_lookup_object();
+
+    return type;
 }
 
 static Type* check_decl(TypeChecker* typeChecker, Decl* declaration) {
@@ -328,7 +388,10 @@ static Type* check_expr(TypeChecker* typeChecker, Expr* expression) {
         return check_array_member_expr(typeChecker, arrayMemberExpr);
     }
     case CAST_EXPR: {
-        return NULL;
+        // trash impl
+        CastExpr* cast = expression->expr;
+
+        return cast->type;
     }
     case LITERAL_EXPR: {
         LiteralExpr* literalExpr = (LiteralExpr*) expression->expr;
@@ -883,7 +946,11 @@ static Type* check_binary_expr(TypeChecker* typeChecker, BinaryExpr* binaryExpr)
         equals(leftType, get_type_of(FLOAT_TYPE)) &&
         equals(rightType, get_type_of(INT_TYPE));
 
-    if (leftIntAndRightFloat || leftFloatAndRightInt) {
+    bool leftFloatAndRightFloat =
+        equals(leftType, get_type_of(FLOAT_TYPE)) &&
+        equals(rightType, get_type_of(FLOAT_TYPE));
+
+    if (leftIntAndRightFloat || leftFloatAndRightInt || leftFloatAndRightFloat) {
         return expect_token_type(operation, 6, TOKEN_LSS, TOKEN_GTR, TOKEN_LEQ, TOKEN_GEQ, TOKEN_EQL, TOKEN_NEQ)
             ? get_type_of(BOOL_TYPE)
             : get_type_of(FLOAT_TYPE);
@@ -973,6 +1040,29 @@ static Type* check_assign_expr(TypeChecker* typeChecker, AssignExpr* assignExpr)
 static Type* check_call_expr(TypeChecker* typeChecker, CallExpr* callExpr) {
     if (typeChecker == NULL || callExpr == NULL)
         return NULL;
+
+    Expr* callee = callExpr->callee;
+
+    if (callee != NULL && callee->type != FUNC_EXPR && callee->expr != NULL) {
+        IdentLiteral* calleeIdent = ((Expr*) callee->expr)->expr;
+        char* calleName = calleeIdent->value;
+
+        if (strcmp(calleName, "print") == 0) {
+            return get_type_of(VOID_TYPE);
+        }
+
+        if (strcmp(calleName, "println") == 0) {
+            return get_type_of(VOID_TYPE);
+        }
+
+        if (strcmp(calleName, "input") == 0) {
+            return get_type_of(STRING_TYPE);
+        }
+
+        if (strcmp(calleName, "len") == 0) {
+            return get_type_of(INT_TYPE);
+        }
+    }
 
     Type* calleeType = check_expr(typeChecker, callExpr->callee);
     if (calleeType == NULL) {
@@ -1431,8 +1521,7 @@ static Type* check_literal_expr(TypeChecker* typeChecker, LiteralExpr* literalEx
 
     switch (literalExpr->type) {
     case IDENT_LITERAL: {
-        IdentLiteral* identLiteral = (IdentLiteral*) literalExpr->value;
-
+        IdentLiteral* identLiteral = literalExpr->value;
         return context_get(typeChecker->env, identLiteral->value);
     }
     case INT_LITERAL:

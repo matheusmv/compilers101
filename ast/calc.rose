@@ -1,0 +1,101 @@
+func operations(left: float, operation: string, right: float): float {
+    let addFunc = func(a: float, b: float): float {
+        return a + b;
+    };
+
+    let subFunc = func(a: float, b: float): float {
+        return a - b;
+    };
+
+    let mulFunc = func(a: float, b: float): float {
+        return a * b;
+    };
+
+    let divFunc = func(a: float, b: float): float {
+        return a / b;
+    };
+
+    let modFunc = func(a: float, b: float): float {
+        return a % b;
+    };
+
+    let powFunc = func(base: float, exponent: int): float {
+        let result = 1.0;
+        let positiveExponent = exponent;
+
+        if (exponent < 0) {
+            positiveExponent = -exponent;
+        }
+
+        while (positiveExponent > 0) {
+            result *= base;
+            positiveExponent -= 1;
+        }
+
+        if (exponent < 0) {
+            result = 1.0 / result;
+        }
+
+        return result;
+    };
+
+    if (operation == "add") {
+        return addFunc(left, right);
+    }
+
+    if (operation == "sub") {
+        return subFunc(left, right);
+    }
+
+    if (operation == "mul") {
+        return mulFunc(left, right);
+    }
+
+    if (operation == "div") {
+        return divFunc(left, right);
+    }
+
+    if (operation == "mod") {
+        return modFunc(left, right);
+    }
+
+    if (operation == "pow") {
+        return powFunc(left, right.(int));
+    }
+}
+
+let validOperations = []string{"add", "sub", "mul", "div", "mod", "pow"};
+
+func checkUserInput(input: string): bool {
+    for (let i = 0; i < len(validOperations); i++) {
+        if (input == validOperations[i]) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+let running = true;
+
+while (running) {
+    let operation = input("Enter the operation (add, sub, mul, div, mod, pow): ");
+
+    let operationExists = checkUserInput(operation);
+    if (!operationExists) {
+        println("invalid operation: ", operation);
+        break;
+    }
+
+    let left = input("Enter the left operand: ").(float);
+    let right = input("Enter the right operand: ").(float);
+
+    let result = operations(left, operation, right);
+    println("Result: ", result);
+
+    let continuePrompt = input("Continue? (yes/no): ");
+
+    if (continuePrompt != "yes") {
+        running = false;
+    }
+}
