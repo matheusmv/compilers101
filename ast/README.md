@@ -1,3 +1,17 @@
+# ROSE (run once segfault everywhere)
+
+1. Compilar interpretador:
+
+```shell
+make rose
+```
+
+2. Executando um programa na linguagem:
+
+```shell
+./rose <programa>.rose
+```
+
 # Tipos de Dados
 
 A linguagem suporta os seguintes tipos de dados:
@@ -184,6 +198,21 @@ for (let i = 0; i < 10; i++) {
 }
 ```
 
+. **Declaração break**
+
+A declaração `break` é usada para interromper a iteração atual de um loop.
+
+Exemplo:
+
+```js
+for (let i = 0; i < 10; i++) {
+    if (i == 5) {
+        break;
+    }
+    println(i);
+}
+```
+
 # **Funções**
 
 Funções podem ser definidas usando a palavra-chave `func` seguida pelo nome da função, parâmetros entre parênteses e um tipo de retorno opcional.
@@ -208,7 +237,8 @@ let addFunc = func(a: int, b: int): int {
 
 # Entrada e Saída
 
- - A função `println` é usada para imprimir uma linha de texto no console.
+ - A função `print` é usada para imprimir uma linha de texto no console.
+ - A função `println` é usada para imprimir uma linha (com quebra `\n`) de texto no console.
  - A função `input` é usada para receber entrada do usuário. Ela retorna uma string.
 
 Exemplo:
@@ -217,6 +247,10 @@ Exemplo:
 let username = input("Digite seu nome: ");
 println("Olá, " + username + "!");
 ```
+
+# **Utilitários**
+
+ - A função `len` é usada para obter o tamanho de um objeto. Retorna o tamanho de uma string ou array.
 
 # **Comentários**
 

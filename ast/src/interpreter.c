@@ -373,11 +373,11 @@ Object* eval_stmt(Interpreter* interpreter, Stmt* statement) {
             result = eval_stmt(interpreter, whileStmt->body);
 
             if (result != NULL && result->type == OBJ_RETURN) {
-                return NIL_OBJECT;
+                return result;
             }
 
             if (result != NULL && result->type == OBJ_BREAK) {
-                return NIL_OBJECT;
+                return result;
             }
         }
 
@@ -428,7 +428,7 @@ Object* eval_stmt(Interpreter* interpreter, Stmt* statement) {
 
         interpreter->env = previous;
 
-        return NIL_OBJECT;
+        return result;
     }
     case EXPRESSION_STMT: {
         ExpressionStmt* exprStmt = statement->stmt;
@@ -789,12 +789,16 @@ Object* eval_expr(Interpreter* interpreter, Expr* expression) {
             return targetValue;
         }
 
-        Type* targetType = get_expr_type(types, castExpr->target);
+        Type* targetType = object_get_type(targetValue);
 
         Object* result = NULL;
 
         if (targetValue != NULL && targetType != NULL && targetType->typeId == STRING_TYPE) {
             StringObject* strObj = targetValue->object;
+
+            if (castExpr->type->typeId == STRING_TYPE) {
+                return NEW_STRING_OBJECT(strObj->value);
+            }
 
             if (castExpr->type->typeId == INT_TYPE && isInteger(strObj->value)) {
                 return NEW_INTEGER_OBJECT(atoi(strObj->value));
@@ -816,6 +820,10 @@ Object* eval_expr(Interpreter* interpreter, Expr* expression) {
         if (targetValue != NULL && targetType != NULL && targetType->typeId == INT_TYPE) {
             IntegerObject* intObj = targetValue->object;
 
+            if (castExpr->type->typeId == INT_TYPE) {
+                return NEW_INTEGER_OBJECT(intObj->value);
+            }
+
             if (castExpr->type->typeId == FLOAT_TYPE) {
                 return NEW_FLOAT_OBJECT(intObj->value);
             }
@@ -824,8 +832,12 @@ Object* eval_expr(Interpreter* interpreter, Expr* expression) {
         if (targetValue != NULL && targetType != NULL && targetType->typeId == FLOAT_TYPE) {
             FloatObject* floatObj = targetValue->object;
 
-            if (castExpr->type->typeId == INT_TYPE) {
+            if (castExpr->type->typeId == FLOAT_TYPE) {
                 return NEW_INTEGER_OBJECT(floatObj->value);
+            }
+
+            if (castExpr->type->typeId == INT_TYPE) {
+                return NEW_INTEGER_OBJECT((int)floatObj->value);
             }
         }
 
@@ -845,7 +857,7 @@ Object* eval_expr(Interpreter* interpreter, Expr* expression) {
             }
         }
 
-        return NEW_ERROR_OBJECT(RUNTIME_ERROR, "invalid cast");;
+        return NEW_ERROR_OBJECT(RUNTIME_ERROR, "invalid cast");
     }
     case LITERAL_EXPR: {
         LiteralExpr* literalExpr = expression->expr;
@@ -996,6 +1008,20 @@ static Object* eval_binary_expr(Interpreter* interpreter, Type* type, Object* le
     }
 
     if (type->typeId == INT_TYPE || type->typeId == FLOAT_TYPE || type->typeId == BOOL_TYPE) {
+        if ((left->type == OBJ_STRING || left->type == OBJ_CHARACTER)
+            && (right->type == OBJ_STRING || right->type == OBJ_CHARACTER)) {
+
+            if (operation->type == TOKEN_EQL) {
+                return NEW_BOOLEAN_OBJECT(object_equals(left, right));
+            }
+
+            if (operation->type == TOKEN_NEQ) {
+                return NEW_BOOLEAN_OBJECT(!object_equals(left, right));
+            }
+
+            return NEW_ERROR_OBJECT(RUNTIME_ERROR, "eval_binary_expr: invalid operation");
+        }
+
         double left_value = 0;
         double right_value = 0;
         ObjectType returnType = OBJ_BOOLEAN;
@@ -1127,10 +1153,10 @@ static Object* eval_assign_expr(Interpreter* interpreter, Token* op, char* ident
         left_value = ((FloatObject*)identValue->object)->value;
 
         if (identValue->type == value->type) {
-            right_value = ((IntegerObject*) value->object)->value;
+            right_value = ((FloatObject*) value->object)->value;
             returnType = identValue->type;
         } else if (value->type == OBJ_INTEGER) {
-            right_value = ((FloatObject*) value->object)->value;
+            right_value = ((IntegerObject*) value->object)->value;
             returnType = OBJ_FLOAT;
         } else {
             return NEW_ERROR_OBJECT(RUNTIME_ERROR, "invalid operation");
