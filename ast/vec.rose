@@ -1,0 +1,47 @@
+let numbers = []int{1, 2, 3};
+println(numbers);
+println(numbers[0]);
+
+numbers[0] = 10;
+
+println(numbers);
+println(numbers[0]);
+
+func get(val: int): int {
+    return val;
+}
+
+for (let i = 0; i < len(numbers); i++) {
+    // TODO: implement remaining assign operators (+=, -=, ...)
+    numbers[get(i)] = numbers[i] * 2;
+}
+
+println(numbers);
+
+let i = numbers[0];
+println("i: ", i);
+
+i += 1;
+
+println("i: ", i);
+println(numbers);
+
+let matNumbers = [][]int{
+    []int{0, 1, 2},
+    []int{3, 4, 5},
+    []int{6, 7, 8}
+};
+
+matNumbers[0] = []int{10, 15, 20};
+
+for (let i = 0; i < len(matNumbers); i++) {
+    for (let j = 0; j < len(matNumbers[0]); j++) {
+        matNumbers[i][j] = matNumbers[i][j] * 2;
+    }
+}
+
+for (let i = 0; i < len(matNumbers); i++) {
+    for (let j = 0; j < len(matNumbers[0]); j++) {
+        println("matNumbers[", i, "][", j, "] = ", matNumbers[i][j]);
+    }
+}

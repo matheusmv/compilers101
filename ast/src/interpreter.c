@@ -495,6 +495,52 @@ Object* eval_expr(Interpreter* interpreter, Expr* expression) {
     case ASSIGN_EXPR: {
         AssignExpr* assignExpr = expression->expr;
 
+        if (assignExpr != NULL && assignExpr->identifier != NULL && assignExpr->identifier->type == ARRAY_MEMBER_EXPR) {
+            ArrayMemberExpr* arrayMember = assignExpr->identifier->expr;
+
+            Object* array = eval_expr(interpreter, arrayMember->object);
+            if (is_error(interpreter, array)) {
+                log_error(array->object);
+                return array;
+            }
+
+            Object* ident = array;
+
+            list_foreach(level, arrayMember->levelOfAccess) {
+                Object* index = eval_expr(interpreter, level->value);
+
+                if (ident != NULL && ident->type == OBJ_ARRAY) {
+                    ident = array_object_get_object_at(ident->object, ((IntegerObject*) index->object)->value);
+                }
+            }
+
+            if (is_error(interpreter, ident)) {
+                log_error(ident->object);
+                return ident;
+            }
+
+            Object* value = eval_expr(interpreter, assignExpr->expression);
+            if (is_error(interpreter, value)) {
+                log_error(value->object);
+                return value;
+            }
+
+            Type* identType = object_get_type(ident);
+            Type* valueType = object_get_type(value);
+            if (!type_equals(&identType, &valueType)) {
+                type_to_string(&identType);
+                printf("\n");
+                type_to_string(&valueType);
+                printf("\n");
+                return NEW_ERROR_OBJECT(RUNTIME_ERROR, "invalid assign: type mismatch");
+            }
+
+            // TODO: implement remaining operators
+            ident->object = value->object;
+
+            return ident;
+        }
+
         Object* ident = eval_expr(interpreter, assignExpr->identifier);
         if (is_error(interpreter, ident)) {
             log_error(ident->object);
