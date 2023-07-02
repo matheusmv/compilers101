@@ -1367,29 +1367,35 @@ static Type* check_struct_inline_expr(TypeChecker* typeChecker, StructInlineExpr
     return structInlineExpr->type;
 }
 
+static bool array_init_expr_has_elements(ArrayInitExpr* arrayInitExpr) {
+    return arrayInitExpr != NULL && list_size(&arrayInitExpr->elements) > 0;
+}
+
 static Type* check_array_init_expr(TypeChecker* typeChecker, ArrayInitExpr* arrayInitExpr) {
     if (typeChecker == NULL || arrayInitExpr == NULL)
         return NULL;
 
-    Type* firstElementType = check_expr(typeChecker, arrayInitExpr->elements->head->value);
+    if (array_init_expr_has_elements(arrayInitExpr)) {
+        Type* firstElementType = check_expr(typeChecker, arrayInitExpr->elements->head->value);
 
-    list_foreach(element, arrayInitExpr->elements) {
-        Type* elementType = check_expr(typeChecker, element->value);
-        if (!equals(firstElementType, elementType)) {
-            typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
-            printf("\nInvalid ArrayInitExpr: elements have diferent types");
-            printf("\n\tGot: ");
-            type_to_string(&elementType);
-            printf("\n\tIn: ");
-            array_init_expr_to_string(&arrayInitExpr);
-            printf("\n");
-            return NULL;
+        list_foreach(element, arrayInitExpr->elements) {
+            Type* elementType = check_expr(typeChecker, element->value);
+            if (!equals(firstElementType, elementType)) {
+                typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+                printf("\nInvalid ArrayInitExpr: elements have diferent types");
+                printf("\n\tGot: ");
+                type_to_string(&elementType);
+                printf("\n\tIn: ");
+                array_init_expr_to_string(&arrayInitExpr);
+                printf("\n");
+                return NULL;
+            }
         }
     }
 
     ArrayType* arrayInitExprType = (ArrayType*) arrayInitExpr->type->type;
 
-    Type* arrayType = NEW_ARRAY_TYPE(firstElementType);
+    Type* arrayType = NEW_ARRAY_TYPE(arrayInitExprType->type);
 
     list_foreach(dimension, arrayInitExprType->dimensions) {
         const ArrayDimension* dim = (ArrayDimension*) ((Type*) dimension->value)->type;
@@ -1506,10 +1512,43 @@ static Type* check_array_member_expr(TypeChecker* typeChecker, ArrayMemberExpr* 
     if (typeChecker == NULL || arrayMemberExpr == NULL)
         return NULL;
 
-    Type* memberType = NULL;
+    Type* objectType = check_expr(typeChecker, arrayMemberExpr->object);
+    if (objectType == NULL || objectType->typeId != ARRAY_TYPE) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("\nInvalid ArrayMemberExpr: invalid member access\n\t");
+        array_member_expr_to_string(&arrayMemberExpr);
+        printf("\n");
+        return NULL;
+    }
+
+    ArrayType* arrayType = objectType->type;
+
+    if (list_size(&arrayMemberExpr->levelOfAccess) > list_size(&arrayType->dimensions)) {
+        typeChecker->currentStatus = TYPE_CHECKER_FAILURE;
+        printf("\nInvalid ArrayMemberExpr: invalid member access\n\t");
+        array_member_expr_to_string(&arrayMemberExpr);
+        printf("\n");
+        return NULL;
+    }
+
+    if (list_size(&arrayMemberExpr->levelOfAccess) == list_size(&arrayType->dimensions)) {
+        return type_copy((const Type**) &arrayType->type);
+    }
+
+    Type* memberType = NEW_ARRAY_TYPE(type_copy((const Type**) &arrayType->type));
+
+    size_t current_dimension = 0;
+    Type* arrayDimension = list_get_at(&arrayType->dimensions, current_dimension);
 
     list_foreach(level, arrayMemberExpr->levelOfAccess) {
-        memberType = lookup_object(typeChecker, arrayMemberExpr->object, level->value);
+        size_t dimension_size = ((ArrayDimension*) arrayDimension->type)->size;
+
+        ARRAY_TYPE_ADD_DIMENSION(memberType, NEW_ARRAY_DIMENSION(dimension_size));
+
+        if (level->next != NULL) {
+            current_dimension += 1;
+            arrayDimension = list_get_at(&arrayType->dimensions, current_dimension);
+        }
     }
 
     return memberType;

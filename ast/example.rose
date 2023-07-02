@@ -144,10 +144,38 @@ let matNum = [][]int{
     []int{7, 8, 9}
 };
 
-println(matNum);
-// TODO: fix type check
-let idx: []int = matNum[0][1];
-println(idx);
+println("matNum: ", matNum);
+
+let arrayAtIndexZero: []int = matNum[0];
+let arrayAtIndexOne: []int = matNum[1];
+let arrayAtIndexTwo: []int = matNum[2];
+
+print(
+    "matNum[0]: ", arrayAtIndexZero, "\n",
+    "matNum[1]: ", arrayAtIndexOne, "\n",
+    "matNum[2]: ", arrayAtIndexTwo, "\n"
+);
+
+func arrayEquals(a: []int, b: []int): bool {
+    if (len(a) != len(b)) {
+        return false;
+    }
+
+    for (let i = 0; i < len(a); i++) {
+        if (a[i] != b[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+println(arrayEquals(arrayAtIndexZero, arrayAtIndexZero));
+println(arrayEquals(arrayAtIndexOne, arrayAtIndexOne));
+println(arrayEquals(arrayAtIndexTwo, arrayAtIndexTwo));
+println(arrayEquals(arrayAtIndexZero, arrayAtIndexOne));
+println(arrayEquals(arrayAtIndexZero, arrayAtIndexTwo));
+println(arrayEquals(arrayAtIndexZero, []int{1, 2, 3}));
 
 let concatF = func(strs: []string): string {
     let result = "";
